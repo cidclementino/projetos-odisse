@@ -6,17 +6,17 @@ projetos:
 
   - nome: "Residência DCMCC"
     localizacao: "João Pessoa, PB"
-    metragem: "--- m²"
+    metragem: "1.110 m²"
     imagem: "residencia-dcmcc.jpg"
 
   - nome: "Residência Altavista"
     localizacao: "João Pessoa, PB"
-    metragem: "--- m²"
+    metragem: "520 m²"
     imagem: "residencia-altavista.jpg"
 
-  - nome: "---"
+  - nome: "Residência FTF"
     localizacao: "João Pessoa, PB"
-    metragem: "--- m²"
+    metragem: "240 m²"
     imagem: ""
 
 obras:
