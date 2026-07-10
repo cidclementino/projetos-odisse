@@ -327,6 +327,10 @@
     margin-top:7px;
     flex-shrink:0;
   }
+  .scope-photo{
+    aspect-ratio:3/1;
+    margin-top:40px;
+  }
 
   /* ---------- FAQ ---------- */
   .faq-list{
@@ -372,6 +376,19 @@
     max-width:640px;
     font-size:15px;
     color:var(--escuro);
+  }
+  .faq-frame{ text-align:center; }
+  .faq-frame .section-eyebrow{ text-align:center; }
+  .faq-frame .section-title, .faq-frame .section-body{
+    max-width:680px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+  }
+  .faq-frame .faq-list{
+    margin-left:auto;
+    margin-right:auto;
+    text-align:left;
   }
 
   /* ---------- PROVA VISUAL (projetos finalizados) ---------- */
@@ -470,14 +487,15 @@
   footer{
     background:var(--escuro);
     color:rgba(244,244,244,0.6);
-    padding:48px 0 30px;
+    padding:56px 0 30px;
   }
-  .footer-top{
+  .footer-center{
     display:flex;
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
     gap:12px;
-    margin-bottom:20px;
+    margin-bottom:48px;
   }
   .footer-logo{
     height:48px;
@@ -497,11 +515,16 @@
     letter-spacing:0.2em;
     text-transform:uppercase;
     color:var(--claro);
-    margin-bottom:14px;
+    margin-top:4px;
   }
   .footer-mark span{ color:var(--gold); }
+  .footer-bottom-row{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:14px;
+  }
   .footer-links{
-    margin-top:20px;
     font-size:12.5px;
     letter-spacing:0.03em;
   }
@@ -512,17 +535,7 @@
   }
   .footer-links a:hover{ color:var(--claro); }
   .footer-links .sep{ color:rgba(244,244,244,0.3); margin:0 10px; }
-  .dot-strip{
-    display:flex;
-    gap:7px;
-    margin-top:24px;
-  }
-  .dot-strip .d{
-    width:3px; height:3px;
-    border-radius:50%;
-    background:rgba(244,244,244,0.3);
-  }
-  .footer-note{ font-size:12px; margin-top:0; }
+  .footer-note{ font-size:12px; }
 
   .fab{
     position:fixed;
