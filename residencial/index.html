@@ -158,6 +158,48 @@ title: "Odisse Arquitetos — Projetos Residenciais"
 
 <hr class="hairline">
 
+<!-- FAQ -->
+<section>
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">{{ site.data.residencial_faq.eyebrow }}</div>
+    <h2 class="display section-title">{{ site.data.residencial_faq.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_faq.descricao }}</p>
+
+    <div class="faq-list">
+      {% for item in site.data.residencial_faq.perguntas %}
+      <details class="faq-item"{% if forloop.first %} open{% endif %}>
+        <summary>
+          {{ item.pergunta }}
+          <span class="faq-icon"></span>
+        </summary>
+        <div class="faq-answer">{{ item.resposta }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for item in site.data.residencial_faq.perguntas %}
+    {
+      "@type": "Question",
+      "name": {{ item.pergunta | jsonify }},
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": {{ item.resposta | jsonify }}
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<hr class="hairline">
+
 <!-- DARK BAND: OS ARQUITETOS > NÚMEROS > CTA FINAL (fundo preto sólido) -->
 <div class="dark-band">
 
