@@ -5,17 +5,17 @@ projetos:
     imagem: "residencia-yvc.jpg"
 
   - nome: "Residência DCMCC"
-    localizacao: "Cidade, UF"
+    localizacao: "João Pessoa, PB"
     metragem: "--- m²"
     imagem: "residencia-dcmcc.jpg"
 
   - nome: "Residência Altavista"
-    localizacao: "Cidade, UF"
+    localizacao: "João Pessoa, PB"
     metragem: "--- m²"
     imagem: "residencia-altavista.jpg"
 
   - nome: "---"
-    localizacao: "Cidade, UF"
+    localizacao: "João Pessoa, PB"
     metragem: "--- m²"
     imagem: ""
 
@@ -24,7 +24,7 @@ obras:
     status: "Em execução"
     categoria: "Acabamento"
     endereco: "Cidade, UF"
-    legenda: "Obra em execução, Mata Redonda, Paraíba"
+    legenda: "Obra em execução, Mata Redonda, PB"
     imagem: "odisse-obras-001.jpg"
 
   - nome: "Residência ---"
