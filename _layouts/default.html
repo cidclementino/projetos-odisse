@@ -328,6 +328,52 @@
     flex-shrink:0;
   }
 
+  /* ---------- FAQ ---------- */
+  .faq-list{
+    margin-top:40px;
+    max-width:860px;
+    border-top:1px solid rgba(26,26,26,0.12);
+  }
+  .faq-item{
+    border-bottom:1px solid rgba(26,26,26,0.12);
+  }
+  .faq-item summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    padding:22px 0;
+    cursor:pointer;
+    font-family:'Archivo', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    color:var(--escuro);
+    list-style:none;
+  }
+  .faq-item summary::-webkit-details-marker{ display:none; }
+  .faq-item summary::marker{ content:""; }
+  .faq-icon{
+    position:relative;
+    width:18px;
+    height:18px;
+    flex-shrink:0;
+  }
+  .faq-icon::before, .faq-icon::after{
+    content:"";
+    position:absolute;
+    background:var(--slate);
+    transition:transform 0.2s ease;
+  }
+  .faq-icon::before{ width:12px; height:2px; top:8px; left:3px; }
+  .faq-icon::after{ width:2px; height:12px; top:3px; left:8px; }
+  .faq-item[open] .faq-icon::after{ transform:scaleY(0); }
+  .faq-answer{
+    padding:0 0 24px;
+    max-width:640px;
+    font-size:15px;
+    color:var(--escuro);
+  }
+
   /* ---------- PROVA VISUAL (projetos finalizados) ---------- */
   .prova-grid{
     display:grid;
