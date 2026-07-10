@@ -52,6 +52,11 @@
     border-top:1px solid rgba(26,26,26,0.12);
     margin:0;
   }
+  .hairline-light{
+    border:none;
+    border-top:1px solid rgba(244,244,244,0.14);
+    margin:0;
+  }
 
   /* ---------- MARK / HEADER ---------- */
   .viewport-hero{
@@ -59,6 +64,7 @@
     min-height:100svh;
     display:flex;
     flex-direction:column;
+    position:relative;
   }
   .mark-bar{
     padding:clamp(16px, 3vh, 28px) 40px;
@@ -66,6 +72,8 @@
     justify-content:space-between;
     align-items:center;
     flex-shrink:0;
+    position:relative;
+    z-index:3;
   }
   .mark{
     font-family:'Archivo', sans-serif;
@@ -73,30 +81,46 @@
     font-weight:800;
     letter-spacing:0.22em;
     text-transform:uppercase;
-    color:var(--escuro);
+    color:var(--claro);
   }
   .mark-sub{
     font-size:10px;
     letter-spacing:0.16em;
-    color:var(--copper);
+    color:rgba(244,244,244,0.7);
     text-transform:uppercase;
     font-weight:600;
   }
 
-  /* ---------- HERO ---------- */
+  /* ---------- HERO (full-bleed background image) ---------- */
   .hero{
     position:relative;
-    padding:clamp(24px, 5vh, 64px) 0;
     flex:1;
     display:flex;
     align-items:center;
     min-height:0;
+    overflow:hidden;
   }
-  .hero-inner{
-    display:grid;
-    grid-template-columns:1.1fr 0.9fr;
-    gap:clamp(28px, 4vw, 64px);
-    align-items:center;
+  .hero-bg{
+    position:absolute;
+    inset:0;
+    background:rgba(73,87,99,0.18);
+    border:none;
+    border-radius:0;
+    aspect-ratio:auto;
+  }
+  .hero-bg .label{
+    color:rgba(244,244,244,0.6);
+  }
+  .hero-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(26,26,26,0.72) 0%, rgba(26,26,26,0.5) 45%, rgba(26,26,26,0.28) 100%);
+    z-index:1;
+  }
+  .hero-content{
+    position:relative;
+    z-index:2;
+    padding:clamp(24px, 5vh, 64px) 0;
     width:100%;
   }
   .hero-gold-rule{
@@ -108,15 +132,15 @@
   .hero h1{
     font-size:clamp(30px, 4vw + 1vh, 54px);
     line-height:1.1;
-    color:var(--escuro);
+    color:var(--claro);
     margin-bottom:clamp(14px, 2.5vh, 26px);
-    max-width:620px;
+    max-width:640px;
     font-weight:800;
     letter-spacing:-0.02em;
   }
   .hero p.sub{
     font-size:clamp(15px, 1vw + 0.6vh, 17px);
-    color:var(--escuro);
+    color:rgba(244,244,244,0.85);
     max-width:480px;
     margin-bottom:clamp(16px, 3vh, 30px);
   }
@@ -124,11 +148,11 @@
     font-family:'Archivo', sans-serif;
     font-size:12.5px;
     letter-spacing:0.04em;
-    color:var(--slate);
+    color:rgba(244,244,244,0.9);
     font-weight:600;
     margin-bottom:clamp(18px, 3vh, 34px);
   }
-  .proof-line b{ color:var(--escuro); font-weight:800; }
+  .proof-line b{ color:var(--claro); font-weight:800; }
   .proof-line .dot{ color:var(--gold); margin:0 10px; }
 
   .cta-btn{
@@ -153,7 +177,7 @@
 
   .hero-form-note{
     font-size:12px;
-    color:var(--copper);
+    color:rgba(244,244,244,0.65);
     margin-top:14px;
   }
 
@@ -177,16 +201,23 @@
     padding:0 20px;
   }
   .img-placeholder.wide{ aspect-ratio:16/10; }
+  .img-placeholder.landscape{ aspect-ratio:16/11; }
 
-  .corner-tl, .corner-br{
+  /* Tape-corner brand motif */
+  .tape-frame{ position:relative; }
+  .tape{
     position:absolute;
-    width:22px; height:22px;
-    border-color:var(--slate);
+    width:36px;
+    height:15px;
+    background:var(--slate);
+    opacity:0.9;
+    z-index:5;
+    box-shadow:0 2px 4px rgba(0,0,0,0.2);
   }
-  .corner-tl{ top:12px; left:12px; border-top:1px solid; border-left:1px solid; }
-  .corner-br{ bottom:12px; right:12px; border-bottom:1px solid; border-right:1px solid; }
-  .img-wrap{ position:relative; max-height:70vh; }
-  .img-wrap .img-placeholder{ max-height:70vh; }
+  .tape-tl{ top:-7px; left:14px; transform:rotate(-7deg); }
+  .tape-tr{ top:-7px; right:14px; transform:rotate(7deg); }
+  .tape-bl{ bottom:-7px; left:14px; transform:rotate(6deg); }
+  .tape-br{ bottom:-7px; right:14px; transform:rotate(-6deg); }
 
   /* ---------- SECTION SHELL ---------- */
   section{ padding:88px 0; }
@@ -260,49 +291,37 @@
   }
 
   /* ---------- PROVA VISUAL (projetos finalizados) ---------- */
-  .prova-section{ background:var(--escuro); color:var(--claro); }
-  .prova-section .eyebrow{ color:var(--gold); }
-  .prova-section .section-body{ color:rgba(244,244,244,0.65); }
   .prova-grid{
     display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:20px;
+    grid-template-columns:1fr 1fr;
+    gap:32px 32px;
     margin-top:56px;
   }
   .card{ position:relative; }
-  .card .img-placeholder{
-    aspect-ratio:3/4;
-    background:rgba(244,244,244,0.06);
-    border-color:rgba(244,244,244,0.28);
-  }
-  .card .img-placeholder .label{ color:rgba(244,244,244,0.55); }
   .card .caption{
-    margin-top:12px;
+    margin-top:18px;
     font-size:13.5px;
   }
-  .card .caption b{ font-family:'Archivo', sans-serif; font-size:15px; font-weight:700; }
-  .card .caption span{ color:rgba(244,244,244,0.5); display:block; margin-top:2px; font-size:12.5px; }
+  .card .caption b{ font-family:'Archivo', sans-serif; font-size:15px; font-weight:700; color:var(--escuro); }
+  .card .caption span{ color:var(--copper); display:block; margin-top:2px; font-size:12.5px; }
 
   /* ---------- OBRAS EM EXECUÇÃO ---------- */
-  .obra-section{ background:var(--parchment); }
   .obra-layout{
     display:grid;
     grid-template-columns:0.8fr 1.2fr;
     gap:64px;
     align-items:center;
-    margin-top:0;
   }
-  .obra-layout .section-eyebrow, .obra-layout .section-title, .obra-layout .section-body{ margin-top:0; }
   .obra-images{
     display:grid;
     grid-template-columns:1fr 1fr;
-    gap:20px;
+    gap:32px;
   }
-  .obra-grid .img-placeholder{ aspect-ratio:4/5; background:rgba(255,255,255,0.4); }
-  .obra-grid .caption{
-    margin-top:10px;
+  .obra-images .img-placeholder{ aspect-ratio:4/5; }
+  .obra-images .caption{
+    margin-top:14px;
     font-size:13px;
-    color:var(--escuro);
+    color:var(--copper);
   }
 
   /* ---------- OS ARQUITETOS ---------- */
@@ -312,12 +331,7 @@
     gap:64px;
     align-items:center;
   }
-  .fund-photos{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px;
-  }
-  .fund-photos .img-placeholder{ aspect-ratio:3/4; }
+  .fund-photo .img-placeholder{ aspect-ratio:4/3; }
   .fund-names{
     margin-top:24px;
     font-size:13px;
@@ -326,30 +340,37 @@
     font-weight:700;
   }
 
-  /* ---------- STATS ---------- */
-  .stats-section{ background:var(--claro); border-top:1px solid rgba(26,26,26,0.1); border-bottom:1px solid rgba(26,26,26,0.1); }
+  /* ---------- GRADIENT BAND (Arquitetos > Números > CTA final > Footer) ---------- */
+  .gradient-band{
+    background:linear-gradient(to bottom, var(--claro) 0%, #cfc9c2 22%, #726b66 55%, var(--escuro) 88%);
+  }
+  .gradient-band .stat .figure{ color:var(--gold); }
+  .gradient-band .stat .caption{ color:rgba(244,244,244,0.8); }
+  .gradient-band .stats-grid{ text-align:center; }
+
   .stats-grid{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
     gap:40px;
-    text-align:center;
   }
   .stat .figure{
     font-family:'Archivo', sans-serif;
     font-weight:800;
     font-size:clamp(32px,3.6vw,44px);
-    color:var(--slate);
   }
   .stat .caption{
     font-size:13px;
-    color:var(--escuro);
     margin-top:6px;
   }
 
   /* ---------- CTA FINAL ---------- */
   .final-cta{ text-align:center; }
+  .final-cta .eyebrow{ color:var(--gold); text-align:center; }
+  .final-cta .section-title{ color:var(--claro); }
+  .final-cta .section-body{ color:rgba(244,244,244,0.8); }
   .final-cta .section-title, .final-cta .section-body{ margin-left:auto; margin-right:auto; }
-  .final-cta .cta-btn{ margin-top:12px; font-size:15px; padding:19px 38px; }
+  .final-cta .cta-btn{ margin-top:12px; font-size:15px; padding:19px 38px; background:var(--gold); color:var(--escuro); }
+  .final-cta .cta-btn:hover{ background:#c68f52; }
 
   /* ---------- FOOTER ---------- */
   footer{
@@ -396,16 +417,15 @@
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width:860px){
-    .hero-inner, .fundadores, .obra-layout{ grid-template-columns:1fr; gap:40px; }
-    .hero-inner{ display:flex; flex-direction:column-reverse; }
+    .fundadores, .obra-layout{ grid-template-columns:1fr; gap:40px; }
     .numbered-grid, .numbered-grid.cols-4{ grid-template-columns:1fr; gap:32px; }
-    .prova-grid{ grid-template-columns:1fr 1fr; }
+    .prova-grid{ grid-template-columns:1fr; }
     .obra-images{ grid-template-columns:1fr 1fr; }
     .stats-grid{ grid-template-columns:1fr; gap:32px; }
     .scope-list{ grid-template-columns:1fr; }
     .frame{ padding:0 24px; }
     section{ padding:64px 0; }
-    .fund-photos{ max-width:300px; }
+    .hero-overlay{ background:rgba(26,26,26,0.62); }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -421,28 +441,21 @@
   <div class="mark-sub">João Pessoa · Atendimento em todo o Brasil</div>
 </div>
 
-<hr class="hairline">
-
 <!-- HERO -->
 <section class="hero">
-  <div class="frame hero-inner">
-    <div>
-      <div class="hero-gold-rule"></div>
-      <h1 class="display">Sua casa, projetada com identidade própria e rigor técnico.</h1>
-      <p class="sub">Projetamos residências em todo o Brasil combinando rigor técnico, investigação histórica e sensibilidade artística — para famílias que não buscam apenas metros quadrados, mas identidade.</p>
-      <div class="proof-line">
-        <b>+100.000 m²</b> projetados <span class="dot">·</span> <b>+50 projetos</b> <span class="dot">·</span> <b>5 anos</b> de atuação
-      </div>
-      <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Quero conversar sobre meu projeto <span class="arrow">→</span></a>
-      <div class="hero-form-note">Resposta em até 1 dia útil.</div>
+  <div class="hero-bg img-placeholder">
+    <div class="label">IMAGEM DE FUNDO<br>Residência finalizada — ambiente amplo, luz natural</div>
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="frame hero-content">
+    <div class="hero-gold-rule"></div>
+    <h1 class="display">Sua casa, projetada com identidade própria e rigor técnico.</h1>
+    <p class="sub">Projetamos residências em todo o Brasil combinando rigor técnico, investigação histórica e sensibilidade artística — para famílias que não buscam apenas metros quadrados, mas identidade.</p>
+    <div class="proof-line">
+      <b>+100.000 m²</b> projetados <span class="dot">·</span> <b>+50 projetos</b> <span class="dot">·</span> <b>5 anos</b> de atuação
     </div>
-    <div class="img-wrap">
-      <div class="img-placeholder">
-        <div class="corner-tl"></div>
-        <div class="label">IMAGEM<br>Residência finalizada — ambiente amplo, luz natural</div>
-        <div class="corner-br"></div>
-      </div>
-    </div>
+    <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Quero conversar sobre meu projeto <span class="arrow">→</span></a>
+    <div class="hero-form-note">Resposta em até 1 dia útil.</div>
   </div>
 </section>
 </div>
@@ -480,8 +493,64 @@
   </div>
 </section>
 
+<hr class="hairline">
+
+<!-- PROVA VISUAL -->
+<section>
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Projetos</div>
+    <h2 class="display section-title">Projetos que já ganharam forma</h2>
+    <p class="section-body">Uma seleção do que já construímos em diferentes territórios do país.</p>
+
+    <div class="prova-grid">
+      <div class="card">
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder landscape">
+            <div class="label">IMAGEM<br>Projeto 1</div>
+          </div>
+        </div>
+        <div class="caption"><b>Residência YVC</b><span>João Pessoa, PB · 480 m²</span></div>
+      </div>
+      <div class="card">
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder landscape">
+            <div class="label">IMAGEM<br>Projeto 2</div>
+          </div>
+        </div>
+        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+      </div>
+      <div class="card">
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder landscape">
+            <div class="label">IMAGEM<br>Projeto 3</div>
+          </div>
+        </div>
+        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+      </div>
+      <div class="card">
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder landscape">
+            <div class="label">IMAGEM<br>Projeto 4</div>
+          </div>
+        </div>
+        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+      </div>
+    </div>
+
+    <div class="center-cta">
+      <a href="https://wa.me/5583991223088" class="cta-btn" style="background:var(--gold); color:var(--escuro);" target="_blank" rel="noopener">Ver meu projeto tomar essa forma <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
 <!-- ETAPAS DO SERVIÇO -->
-<section style="background:var(--parchment);">
+<section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">Como trabalhamos</div>
     <h2 class="display section-title">Do conceito à obra, em quatro passos.</h2>
@@ -516,6 +585,8 @@
   </div>
 </section>
 
+<hr class="hairline">
+
 <!-- O QUE ESTÁ INCLUSO -->
 <section>
   <div class="frame">
@@ -532,73 +603,48 @@
   </div>
 </section>
 
-<!-- PROVA VISUAL -->
-<section class="prova-section">
-  <div class="frame">
-    <div class="eyebrow section-eyebrow">Projetos</div>
-    <h2 class="display section-title" style="color:var(--claro);">Projetos que já ganharam forma</h2>
-    <p class="section-body">Uma seleção do que já construímos em diferentes territórios do país.</p>
-
-    <div class="prova-grid">
-      <div class="card">
-        <div class="img-placeholder">
-          <div class="label">IMAGEM<br>Projeto 1</div>
-        </div>
-        <div class="caption"><b>Residência YVC</b><span>João Pessoa, PB · 480 m²</span></div>
-      </div>
-      <div class="card">
-        <div class="img-placeholder">
-          <div class="label">IMAGEM<br>Projeto 2</div>
-        </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
-      </div>
-      <div class="card">
-        <div class="img-placeholder">
-          <div class="label">IMAGEM<br>Projeto 3</div>
-        </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
-      </div>
-      <div class="card">
-        <div class="img-placeholder">
-          <div class="label">IMAGEM<br>Projeto 4</div>
-        </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
-      </div>
-    </div>
-
-    <div class="center-cta">
-      <a href="https://wa.me/5583991223088" class="cta-btn" style="background:var(--gold); color:var(--escuro);" target="_blank" rel="noopener">Ver meu projeto tomar essa forma <span class="arrow">→</span></a>
-    </div>
-  </div>
-</section>
+<hr class="hairline">
 
 <!-- OBRAS EM EXECUÇÃO -->
-<section class="obra-section">
+<section>
   <div class="frame obra-layout">
     <div>
       <div class="eyebrow section-eyebrow">Do papel à obra</div>
       <h2 class="display section-title">Acompanhamos até o último detalhe ser erguido</h2>
       <p class="section-body">Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído.</p>
     </div>
-    <div class="obra-images obra-grid">
+    <div class="obra-images">
       <div>
-        <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — acabamento</div></div>
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — acabamento</div></div>
+        </div>
         <div class="caption">Obra em execução — Residência ---, Cidade, UF</div>
       </div>
       <div>
-        <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — visita técnica</div></div>
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — visita técnica</div></div>
+        </div>
         <div class="caption">Visita técnica em andamento</div>
       </div>
     </div>
   </div>
 </section>
 
+<hr class="hairline">
+
+<!-- GRADIENT BAND: OS ARQUITETOS > NÚMEROS > CTA FINAL -->
+<div class="gradient-band">
+
 <!-- OS ARQUITETOS -->
 <section>
   <div class="frame fundadores">
-    <div class="fund-photos">
-      <div class="img-placeholder"><div class="label">IMAGEM<br>Cid Clementino</div></div>
-      <div class="img-placeholder" style="margin-top:28px;"><div class="label">IMAGEM<br>Nathalia Linhares</div></div>
+    <div class="fund-photo">
+      <div class="tape-frame">
+        <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+        <div class="img-placeholder"><div class="label">IMAGEM<br>Cid Clementino e Nathalia Linhares</div></div>
+      </div>
     </div>
     <div>
       <div class="eyebrow section-eyebrow">Autoria</div>
@@ -609,8 +655,10 @@
   </div>
 </section>
 
-<!-- STATS -->
-<section class="stats-section">
+<hr class="hairline-light">
+
+<!-- NÚMEROS -->
+<section>
   <div class="frame">
     <div class="stats-grid">
       <div class="stat">
@@ -629,10 +677,12 @@
   </div>
 </section>
 
+<hr class="hairline-light">
+
 <!-- CTA FINAL -->
 <section class="final-cta">
   <div class="frame">
-    <div class="eyebrow section-eyebrow" style="text-align:center;">Comece agora</div>
+    <div class="eyebrow section-eyebrow">Comece agora</div>
     <h2 class="display section-title">Vamos começar seu projeto?</h2>
     <p class="section-body">Conte um pouco sobre a sua residência — cidade do terreno, momento do projeto — e fale diretamente com o Odisse pelo WhatsApp.</p>
     <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Falar no WhatsApp <span class="arrow">→</span></a>
@@ -650,6 +700,8 @@
     </div>
   </div>
 </footer>
+
+</div><!-- /gradient-band -->
 
 <a href="https://wa.me/5583991223088" class="fab" target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
 
