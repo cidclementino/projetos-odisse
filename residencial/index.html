@@ -42,7 +42,7 @@
   }
 
   .frame{
-    max-width:1400px;
+    max-width:min(1680px, 94vw);
     margin:0 auto;
     padding:0 32px;
   }
@@ -54,11 +54,18 @@
   }
 
   /* ---------- MARK / HEADER ---------- */
+  .viewport-hero{
+    min-height:100vh;
+    min-height:100svh;
+    display:flex;
+    flex-direction:column;
+  }
   .mark-bar{
-    padding:28px 40px;
+    padding:clamp(16px, 3vh, 28px) 40px;
     display:flex;
     justify-content:space-between;
     align-items:center;
+    flex-shrink:0;
   }
   .mark{
     font-family:'Archivo', sans-serif;
@@ -79,34 +86,39 @@
   /* ---------- HERO ---------- */
   .hero{
     position:relative;
-    padding:64px 0 96px;
+    padding:clamp(24px, 5vh, 64px) 0;
+    flex:1;
+    display:flex;
+    align-items:center;
+    min-height:0;
   }
   .hero-inner{
     display:grid;
     grid-template-columns:1.1fr 0.9fr;
-    gap:64px;
+    gap:clamp(28px, 4vw, 64px);
     align-items:center;
+    width:100%;
   }
   .hero-gold-rule{
     width:56px;
     height:2px;
     background:var(--gold);
-    margin-bottom:22px;
+    margin-bottom:clamp(12px, 2vh, 22px);
   }
   .hero h1{
-    font-size:clamp(34px, 4.2vw, 54px);
+    font-size:clamp(30px, 4vw + 1vh, 54px);
     line-height:1.1;
     color:var(--escuro);
-    margin-bottom:26px;
+    margin-bottom:clamp(14px, 2.5vh, 26px);
     max-width:620px;
     font-weight:800;
     letter-spacing:-0.02em;
   }
   .hero p.sub{
-    font-size:17px;
+    font-size:clamp(15px, 1vw + 0.6vh, 17px);
     color:var(--escuro);
     max-width:480px;
-    margin-bottom:30px;
+    margin-bottom:clamp(16px, 3vh, 30px);
   }
   .proof-line{
     font-family:'Archivo', sans-serif;
@@ -114,7 +126,7 @@
     letter-spacing:0.04em;
     color:var(--slate);
     font-weight:600;
-    margin-bottom:34px;
+    margin-bottom:clamp(18px, 3vh, 34px);
   }
   .proof-line b{ color:var(--escuro); font-weight:800; }
   .proof-line .dot{ color:var(--gold); margin:0 10px; }
@@ -173,7 +185,8 @@
   }
   .corner-tl{ top:12px; left:12px; border-top:1px solid; border-left:1px solid; }
   .corner-br{ bottom:12px; right:12px; border-bottom:1px solid; border-right:1px solid; }
-  .img-wrap{ position:relative; }
+  .img-wrap{ position:relative; max-height:70vh; }
+  .img-wrap .img-placeholder{ max-height:70vh; }
 
   /* ---------- SECTION SHELL ---------- */
   section{ padding:88px 0; }
@@ -402,6 +415,7 @@
 </head>
 <body>
 
+<div class="viewport-hero">
 <div class="mark-bar">
   <div class="mark">ODISSE ARQUITETOS</div>
   <div class="mark-sub">João Pessoa · Atendimento em todo o Brasil</div>
@@ -431,6 +445,7 @@
     </div>
   </div>
 </section>
+</div>
 
 <hr class="hairline">
 
