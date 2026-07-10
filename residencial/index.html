@@ -42,9 +42,9 @@
   }
 
   .frame{
-    max-width:1180px;
+    max-width:1400px;
     margin:0 auto;
-    padding:0 40px;
+    padding:0 32px;
   }
 
   .hairline{
@@ -89,7 +89,7 @@
   }
   .hero-gold-rule{
     width:56px;
-    height:4px;
+    height:2px;
     background:var(--gold);
     margin-bottom:22px;
   }
@@ -104,7 +104,7 @@
   }
   .hero p.sub{
     font-size:17px;
-    color:var(--copper);
+    color:var(--escuro);
     max-width:480px;
     margin-bottom:30px;
   }
@@ -147,7 +147,7 @@
 
   .img-placeholder{
     aspect-ratio:4/5;
-    border:1.5px dashed rgba(73,87,99,0.45);
+    border:1px dashed rgba(73,87,99,0.4);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -171,8 +171,8 @@
     width:22px; height:22px;
     border-color:var(--slate);
   }
-  .corner-tl{ top:12px; left:12px; border-top:1.5px solid; border-left:1.5px solid; }
-  .corner-br{ bottom:12px; right:12px; border-bottom:1.5px solid; border-right:1.5px solid; }
+  .corner-tl{ top:12px; left:12px; border-top:1px solid; border-left:1px solid; }
+  .corner-br{ bottom:12px; right:12px; border-bottom:1px solid; border-right:1px solid; }
   .img-wrap{ position:relative; }
 
   /* ---------- SECTION SHELL ---------- */
@@ -186,7 +186,7 @@
   }
   .section-body{
     font-size:16px;
-    color:var(--copper);
+    color:var(--escuro);
     max-width:600px;
   }
 
@@ -199,14 +199,14 @@
   }
   .numbered-grid.cols-4{ grid-template-columns:1fr 1fr 1fr 1fr; }
   .num-card{
-    border-top:3px solid var(--slate);
+    border-top:1px solid var(--slate);
     padding-top:20px;
   }
   .num-card .num{
     font-family:'Archivo', sans-serif;
     font-weight:800;
     font-size:28px;
-    color:var(--gold);
+    color:var(--slate);
     display:block;
     margin-bottom:10px;
   }
@@ -218,7 +218,7 @@
   }
   .num-card p{
     font-size:14.5px;
-    color:var(--copper);
+    color:var(--escuro);
   }
 
   .center-cta{ margin-top:56px; text-align:center; }
@@ -252,14 +252,13 @@
   .prova-section .section-body{ color:rgba(244,244,244,0.65); }
   .prova-grid{
     display:grid;
-    grid-template-columns:1.3fr 1fr 1fr;
-    grid-template-rows:auto auto;
+    grid-template-columns:repeat(4, 1fr);
     gap:20px;
     margin-top:56px;
   }
-  .prova-grid .card:nth-child(1){ grid-row:span 2; }
   .card{ position:relative; }
   .card .img-placeholder{
+    aspect-ratio:3/4;
     background:rgba(244,244,244,0.06);
     border-color:rgba(244,244,244,0.28);
   }
@@ -273,17 +272,24 @@
 
   /* ---------- OBRAS EM EXECUÇÃO ---------- */
   .obra-section{ background:var(--parchment); }
-  .obra-grid{
+  .obra-layout{
     display:grid;
-    grid-template-columns:repeat(3, 1fr);
-    gap:20px;
-    margin-top:56px;
+    grid-template-columns:0.8fr 1.2fr;
+    gap:64px;
+    align-items:center;
+    margin-top:0;
   }
-  .obra-grid .img-placeholder{ aspect-ratio:4/3; background:rgba(255,255,255,0.4); }
+  .obra-layout .section-eyebrow, .obra-layout .section-title, .obra-layout .section-body{ margin-top:0; }
+  .obra-images{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+  }
+  .obra-grid .img-placeholder{ aspect-ratio:4/5; background:rgba(255,255,255,0.4); }
   .obra-grid .caption{
     margin-top:10px;
     font-size:13px;
-    color:var(--copper);
+    color:var(--escuro);
   }
 
   /* ---------- OS ARQUITETOS ---------- */
@@ -323,7 +329,7 @@
   }
   .stat .caption{
     font-size:13px;
-    color:var(--copper);
+    color:var(--escuro);
     margin-top:6px;
   }
 
@@ -377,12 +383,11 @@
 
   /* ---------- RESPONSIVE ---------- */
   @media (max-width:860px){
-    .hero-inner, .fundadores{ grid-template-columns:1fr; gap:40px; }
+    .hero-inner, .fundadores, .obra-layout{ grid-template-columns:1fr; gap:40px; }
     .hero-inner{ display:flex; flex-direction:column-reverse; }
     .numbered-grid, .numbered-grid.cols-4{ grid-template-columns:1fr; gap:32px; }
-    .prova-grid{ grid-template-columns:1fr; }
-    .prova-grid .card:nth-child(1){ grid-row:auto; }
-    .obra-grid{ grid-template-columns:1fr; }
+    .prova-grid{ grid-template-columns:1fr 1fr; }
+    .obra-images{ grid-template-columns:1fr 1fr; }
     .stats-grid{ grid-template-columns:1fr; gap:32px; }
     .scope-list{ grid-template-columns:1fr; }
     .frame{ padding:0 24px; }
@@ -521,26 +526,26 @@
 
     <div class="prova-grid">
       <div class="card">
-        <div class="img-placeholder wide" style="aspect-ratio:4/5;">
-          <div class="label">IMAGEM<br>Projeto em destaque</div>
+        <div class="img-placeholder">
+          <div class="label">IMAGEM<br>Projeto 1</div>
         </div>
         <div class="caption"><b>Residência YVC</b><span>João Pessoa, PB · 480 m²</span></div>
       </div>
       <div class="card">
-        <div class="img-placeholder wide">
+        <div class="img-placeholder">
           <div class="label">IMAGEM<br>Projeto 2</div>
         </div>
         <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
       </div>
       <div class="card">
-        <div class="img-placeholder wide">
+        <div class="img-placeholder">
           <div class="label">IMAGEM<br>Projeto 3</div>
         </div>
         <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
       </div>
-      <div class="card" style="grid-column:2 / span 2;">
-        <div class="img-placeholder" style="aspect-ratio:16/6;">
-          <div class="label">IMAGEM<br>Projeto 4 — formato horizontal</div>
+      <div class="card">
+        <div class="img-placeholder">
+          <div class="label">IMAGEM<br>Projeto 4</div>
         </div>
         <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
       </div>
@@ -554,16 +559,13 @@
 
 <!-- OBRAS EM EXECUÇÃO -->
 <section class="obra-section">
-  <div class="frame">
-    <div class="eyebrow section-eyebrow">Do papel à obra</div>
-    <h2 class="display section-title">Acompanhamos até o último detalhe ser erguido</h2>
-    <p class="section-body">Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído.</p>
-
-    <div class="obra-grid">
-      <div>
-        <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — estrutura</div></div>
-        <div class="caption">Obra em execução — Residência ---, Cidade, UF</div>
-      </div>
+  <div class="frame obra-layout">
+    <div>
+      <div class="eyebrow section-eyebrow">Do papel à obra</div>
+      <h2 class="display section-title">Acompanhamos até o último detalhe ser erguido</h2>
+      <p class="section-body">Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído.</p>
+    </div>
+    <div class="obra-images obra-grid">
       <div>
         <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — acabamento</div></div>
         <div class="caption">Obra em execução — Residência ---, Cidade, UF</div>
