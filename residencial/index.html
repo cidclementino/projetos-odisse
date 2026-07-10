@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-7LPHDFTZ5T"></script>
-  <script src="/analytics.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7LPHDFTZ5T"></script>
+<script src="/analytics.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Odisse Arquitetos — Projetos Residenciais</title>
@@ -203,7 +203,18 @@
     padding:0 20px;
   }
   .img-placeholder.wide{ aspect-ratio:16/10; }
-  .img-placeholder.landscape{ aspect-ratio:16/11; }
+  .img-placeholder.landscape{ aspect-ratio:3/2; }
+  .photo-frame{
+    aspect-ratio:3/2;
+    overflow:hidden;
+    position:relative;
+  }
+  .photo-frame img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
 
   /* Tape-corner brand motif */
   .tape-frame{ position:relative; }
@@ -508,8 +519,8 @@
       <div class="card">
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="img-placeholder landscape">
-            <div class="label">IMAGEM<br>Projeto 1</div>
+          <div class="photo-frame">
+            <img src="images/residencia-yvc.jpg" alt="Residência YVC — fachada, João Pessoa, PB">
           </div>
         </div>
         <div class="caption"><b>Residência YVC</b><span>João Pessoa, PB · 480 m²</span></div>
@@ -517,20 +528,20 @@
       <div class="card">
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="img-placeholder landscape">
-            <div class="label">IMAGEM<br>Projeto 2</div>
+          <div class="photo-frame">
+            <img src="images/residencia-dcmcc.jpg" alt="Residência DCMCC — fachada">
           </div>
         </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+        <div class="caption"><b>Residência DCMCC</b><span>Cidade, UF · --- m²</span></div>
       </div>
       <div class="card">
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="img-placeholder landscape">
-            <div class="label">IMAGEM<br>Projeto 3</div>
+          <div class="photo-frame">
+            <img src="images/residencia-altavista.jpg" alt="Residência Altavista — fachada">
           </div>
         </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+        <div class="caption"><b>Residência Altavista</b><span>Cidade, UF · --- m²</span></div>
       </div>
       <div class="card">
         <div class="tape-frame">
