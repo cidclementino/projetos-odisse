@@ -1,0 +1,31 @@
+eyebrow: "Dúvidas frequentes"
+titulo: "Perguntas antes de começar"
+descricao: "Se ficou alguma dúvida sobre como funciona, respondemos as mais comuns abaixo. Para o resto, é só chamar no WhatsApp."
+
+perguntas:
+  - pergunta: "Quanto custa um projeto de arquitetura residencial?"
+    resposta: "O valor de um projeto residencial varia conforme a metragem, a complexidade e a fase de execução da obra (Projeto Legal, Executivo, ou os dois). Fazemos um orçamento personalizado a partir de uma conversa inicial sobre o seu terreno e o que você tem em mente — sem custo nessa etapa."
+
+  - pergunta: "Quanto tempo leva um projeto residencial, do conceito à obra?"
+    resposta: "Cada projeto tem um cronograma próprio, definido conforme a complexidade e a fase contratada. O que garantimos é um processo com etapas claras — Conceito, Projeto Legal, Projeto Executivo e Acompanhamento — sem surpresas de prazo pelo caminho. Detalhamos o cronograma específico já na proposta."
+
+  - pergunta: "O Odisse atende só em João Pessoa, ou projetos em outras cidades também?"
+    resposta: "Atendemos residências em todo o Brasil. O processo de projeto — conceito, desenvolvimento e aprovação — funciona remotamente com a mesma qualidade e proximidade, independente de onde o terreno esteja. A única etapa com abrangência específica é a visita presencial durante a obra."
+
+  - pergunta: "Preciso já ter o terreno definido para começar?"
+    resposta: "Não necessariamente. Se você já tem o terreno, começamos pela leitura do contexto e do programa da família. Se ainda está avaliando um imóvel ou terreno, também podemos ajudar a entender o potencial construtivo antes da compra."
+
+  - pergunta: "O projeto já inclui a aprovação na prefeitura?"
+    resposta: "Sim. O acompanhamento da aprovação junto à prefeitura e aos órgãos competentes faz parte do escopo do Projeto Legal — você não precisa correr atrás disso sozinho."
+
+  - pergunta: "Vocês só fazem o projeto, ou acompanham a obra também?"
+    resposta: "Acompanhamos. Depois da entrega do Projeto Executivo, seguimos com suporte técnico durante a execução — para garantir que o que foi desenhado seja exatamente o que é construído. O acompanhamento presencial, com visitas técnicas à obra, está disponível para projetos na Região Metropolitana de João Pessoa, Campina Grande e Bananeiras. Casos fora dessa área podem ser avaliados pontualmente, mediante análise de viabilidade. Para as demais localidades, o acompanhamento é remoto: seguimos à disposição da equipe que está executando a obra para esclarecer dúvidas técnicas, sem visita presencial ao canteiro."
+
+  - pergunta: "O Odisse também projeta reforma, ou só construção nova?"
+    resposta: "Trabalhamos tanto com projetos de residências novas quanto com reformas e ampliações. A abordagem — leitura do terreno ou do espaço existente, depois conceito, depois execução — é a mesma nos dois casos."
+
+  - pergunta: "Quem vai conduzir o meu projeto?"
+    resposta: "Cid Clementino e Nathalia Linhares acompanham pessoalmente cada projeto residencial, do primeiro traço à entrega da obra — não é repassado para uma equipe terceirizada no meio do caminho."
+
+  - pergunta: "Falar no WhatsApp já é um compromisso, ou posso só entender melhor como funciona?"
+    resposta: "É só uma conversa. Contamos como funciona o processo, entendemos o seu projeto e, se fizer sentido para os dois lados, seguimos para uma proposta."
