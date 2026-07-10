@@ -82,7 +82,7 @@
     gap:10px;
   }
   .header-logo{
-    height:20px;
+    height:30px;
     width:auto;
     display:block;
   }
@@ -232,7 +232,7 @@
     position:relative;
     transition:transform 0.35s ease;
   }
-  .tape-frame:hover{ transform:scale(1.03); }
+  .tape-frame:hover{ transform:scale(1.02); }
   .tape{
     position:absolute;
     width:36px;
@@ -260,6 +260,13 @@
     font-size:16px;
     color:var(--escuro);
     max-width:52%;
+  }
+  /* Dentro de layouts de 2 colunas, a coluna já é ~40% da página —
+     usar 52% de novo aí espremia o texto. Aqui ele volta a ocupar
+     a coluna inteira. */
+  .obra-layout .section-title, .obra-layout .section-body,
+  .fundadores .section-title, .fundadores .section-body{
+    max-width:100%;
   }
 
   /* ---------- DIFERENCIAL / ETAPAS (shared numbered-card pattern) ---------- */
@@ -408,16 +415,16 @@
   .footer-top{
     display:flex;
     align-items:center;
-    gap:14px;
-    margin-bottom:18px;
+    gap:18px;
+    margin-bottom:20px;
   }
   .footer-logo{
-    height:30px;
+    height:48px;
     width:auto;
     display:block;
   }
   .footer-studio-name{
-    font-size:13px;
+    font-size:14px;
     color:rgba(244,244,244,0.75);
   }
   .footer-mark{
