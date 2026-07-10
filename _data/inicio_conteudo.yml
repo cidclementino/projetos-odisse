@@ -1,1 +1,17 @@
+hero:
+  titulo: "Odisse Arquitetos"
+  subtitulo: "Cada projeto começa com uma pergunta certa. Escolha a sua."
 
+cards:
+  - titulo: "Projeto Residencial"
+    texto: "Um espaço que responde a como você vive — não a um modelo pronto."
+    imagem: "capa-residencial.jpg"
+    link: "/residencial/"
+  - titulo: "Reforma"
+    texto: "Transformar o que já existe também é criar do zero."
+    imagem: "capa-reforma.jpg"
+    link: "/reforma/"
+  - titulo: "Estudo de Viabilidade"
+    texto: "Decida com clareza antes de investir."
+    imagem: "capa-viabilidade.jpg"
+    link: "/viabilidade/"
