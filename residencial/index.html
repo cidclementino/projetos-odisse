@@ -158,9 +158,6 @@ title: "Odisse Arquitetos — Projetos Residenciais"
 
 <hr class="hairline">
 
-<!-- GRADIENT BAND: OS ARQUITETOS > NÚMEROS > CTA FINAL -->
-<div class="gradient-band">
-
 <!-- OS ARQUITETOS -->
 {% assign arq_img = site.data.residencial_conteudo.arquitetos.imagem %}
 <section>
@@ -186,18 +183,23 @@ title: "Odisse Arquitetos — Projetos Residenciais"
   </div>
 </section>
 
-<hr class="hairline-light">
+<hr class="hairline">
+
+<!-- GRADIENT BAND: NÚMEROS > CTA FINAL -->
+<div class="gradient-band">
 
 <!-- NÚMEROS -->
 <section>
   <div class="frame">
-    <div class="stats-grid">
-      {% for stat in site.data.residencial_conteudo.numeros %}
-      <div class="stat">
-        <div class="figure">{{ stat.valor }}</div>
-        <div class="caption">{{ stat.legenda }}</div>
+    <div class="stats-box">
+      <div class="stats-grid">
+        {% for stat in site.data.residencial_conteudo.numeros %}
+        <div class="stat">
+          <div class="figure">{{ stat.valor }}</div>
+          <div class="caption">{{ stat.legenda }}</div>
+        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
   </div>
 </section>
