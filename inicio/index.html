@@ -1,0 +1,147 @@
+---
+layout: default
+title: "Odisse Arquitetos — Projetos"
+---
+<style>
+  /* ---------- HUB HERO (texto, sem imagem de fundo) ---------- */
+  .hub-hero{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--escuro);
+    text-align:center;
+    min-height:0;
+  }
+  .hub-hero-content{
+    max-width:720px;
+    margin:0 auto;
+    padding:clamp(24px, 5vh, 64px) 32px;
+  }
+  .hub-hero .hero-gold-rule{ margin:0 auto clamp(14px, 2.5vh, 24px); }
+  .hub-hero h1{
+    font-size:clamp(32px, 4vw + 1vh, 56px);
+    line-height:1.08;
+    color:var(--claro);
+    margin-bottom:clamp(14px, 2.5vh, 22px);
+    font-weight:800;
+    letter-spacing:-0.02em;
+  }
+  .hub-hero .hub-sub{
+    font-size:clamp(16px, 1vw + 0.6vh, 19px);
+    color:rgba(244,244,244,0.82);
+  }
+
+  /* ---------- HUB CARDS ---------- */
+  .hub-cards-section{ padding:88px 0; }
+  .hub-cards-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr 1fr;
+    gap:40px;
+  }
+  .hub-card{
+    position:relative;
+    display:block;
+    aspect-ratio:3/4;
+    overflow:hidden;
+    text-decoration:none;
+  }
+  .hub-card-bg{
+    position:absolute;
+    inset:0;
+    background-size:cover;
+    background-position:center;
+    transition:transform 0.4s ease;
+  }
+  .hub-card-bg.img-placeholder{
+    position:absolute;
+    inset:0;
+    border:none;
+    border-radius:0;
+    aspect-ratio:auto;
+    background:rgba(73,87,99,0.18);
+  }
+  .hub-card:hover .hub-card-bg{ transform:scale(1.04); }
+  .hub-card-overlay{
+    position:absolute;
+    inset:0;
+    background:linear-gradient(180deg, rgba(26,26,26,0.1) 0%, rgba(26,26,26,0.88) 100%);
+    z-index:1;
+  }
+  .hub-card-content{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    z-index:2;
+    padding:28px;
+  }
+  .hub-card-content h3{
+    font-family:'Archivo', sans-serif;
+    font-size:20px;
+    font-weight:800;
+    color:var(--claro);
+    margin-bottom:10px;
+    letter-spacing:-0.01em;
+  }
+  .hub-card-content p{
+    font-size:14px;
+    color:rgba(244,244,244,0.85);
+    max-width:92%;
+    margin-bottom:18px;
+  }
+  .hub-card-cta{
+    font-family:'Archivo', sans-serif;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+  }
+  .hub-card-cta .arrow{ transition:transform 0.2s ease; }
+  .hub-card:hover .hub-card-cta .arrow{ transform:translateX(3px); }
+
+  @media (max-width:860px){
+    .hub-cards-grid{ grid-template-columns:1fr; }
+    .hub-cards-section{ padding:64px 0; }
+  }
+</style>
+
+<!-- HERO -->
+<section class="hub-hero">
+  <div class="hub-hero-content">
+    <div class="hero-gold-rule" style="margin-left:auto;margin-right:auto;"></div>
+    <h1 class="display">{{ site.data.inicio_conteudo.hero.titulo }}</h1>
+    <p class="hub-sub">{{ site.data.inicio_conteudo.hero.subtitulo }}</p>
+  </div>
+</section>
+</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
+
+<hr class="hairline">
+
+<!-- CARDS -->
+<section class="hub-cards-section">
+  <div class="frame">
+    <div class="hub-cards-grid">
+      {% for card in site.data.inicio_conteudo.cards %}
+      {% assign card_img = card.imagem %}
+      <a href="{{ card.link }}" class="hub-card">
+        {% if card_img and card_img != "" %}
+        <div class="hub-card-bg" style="background-image:url('images/{{ card_img }}');"></div>
+        {% else %}
+        <div class="hub-card-bg img-placeholder">
+          <div class="label">IMAGEM<br>{{ card.titulo }}</div>
+        </div>
+        {% endif %}
+        <div class="hub-card-overlay"></div>
+        <div class="hub-card-content">
+          <h3>{{ card.titulo }}</h3>
+          <p>{{ card.texto }}</p>
+          <span class="hub-card-cta">Ver projeto <span class="arrow">→</span></span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
