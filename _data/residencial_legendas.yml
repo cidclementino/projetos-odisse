@@ -14,10 +14,10 @@ projetos:
     metragem: "520 m²"
     imagem: "residencia-altavista.jpg"
 
-  - nome: "Residência FTF"
-    localizacao: "João Pessoa, PB"
+  - nome: "Residência FAF"
+    localizacao: "Bananeiras, PB"
     metragem: "240 m²"
-    imagem: ""
+    imagem: "residencia-faf.jpg"
 
 obras:
   - nome: "Residência ---"
