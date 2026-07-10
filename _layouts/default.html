@@ -172,7 +172,7 @@
     display:inline-flex;
     align-items:center;
     gap:10px;
-    background:var(--slate);
+    background:linear-gradient(180deg, #5A6D80 0%, var(--slate) 100%);
     color:var(--claro);
     font-family:'Archivo', sans-serif;
     font-size:14px;
@@ -180,12 +180,13 @@
     letter-spacing:0.01em;
     padding:17px 30px;
     border:none;
+    border-radius:8px;
     cursor:pointer;
     transition:background 0.2s ease;
     text-decoration:none;
   }
   .cta-btn:hover{ background:#374049; }
-  .cta-btn.gold{ background:var(--gold); color:var(--escuro); }
+  .cta-btn.gold{ background:linear-gradient(180deg, #E4BA82 0%, var(--gold) 100%); color:var(--escuro); }
   .cta-btn.gold:hover{ background:#c68f52; }
   .cta-btn .arrow{ transition:transform 0.2s ease; }
   .cta-btn:hover .arrow{ transform:translateX(3px); }
@@ -234,7 +235,7 @@
     position:relative;
     transition:transform 0.35s ease;
   }
-  .tape-frame:hover{ transform:scale(1.02); }
+  .tape-frame:hover{ transform:scale(1.01); }
   .tape{
     position:absolute;
     width:36px;
@@ -354,7 +355,8 @@
     grid-template-columns:1fr 1fr;
     gap:32px;
   }
-  .obra-images .img-placeholder{ aspect-ratio:4/5; }
+  .obra-images .img-placeholder{ aspect-ratio:3/4; }
+  .obra-images .photo-frame{ aspect-ratio:3/4; }
   .obra-images .caption{
     margin-top:14px;
     font-size:13px;
@@ -368,7 +370,8 @@
     gap:64px;
     align-items:center;
   }
-  .fund-photo .img-placeholder{ aspect-ratio:4/3; }
+  .fund-photo .img-placeholder{ aspect-ratio:1/1; }
+  .fund-photo .photo-frame{ aspect-ratio:1/1; }
   .fund-names{
     margin-top:24px;
     font-size:13px;
@@ -381,23 +384,28 @@
   .gradient-band{
     background:linear-gradient(to bottom, var(--claro) 0%, var(--escuro) 100%);
   }
-  .gradient-band .stat .figure{ color:var(--gold); }
-  .gradient-band .stat .caption{ color:rgba(244,244,244,0.8); }
-  .gradient-band .stats-grid{ text-align:center; }
 
+  .stats-box{
+    background:var(--gold);
+    border-radius:20px;
+    padding:52px 40px;
+  }
   .stats-grid{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
     gap:40px;
+    text-align:center;
   }
   .stat .figure{
     font-family:'Archivo', sans-serif;
     font-weight:800;
     font-size:clamp(32px,3.6vw,44px);
+    color:var(--escuro);
   }
   .stat .caption{
     font-size:13px;
     margin-top:6px;
+    color:rgba(26,26,26,0.65);
   }
 
   /* ---------- CTA FINAL ---------- */
@@ -416,8 +424,9 @@
   }
   .footer-top{
     display:flex;
-    align-items:center;
-    gap:18px;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:12px;
     margin-bottom:20px;
   }
   .footer-logo{
@@ -468,12 +477,13 @@
   .fab{
     position:fixed;
     bottom:26px; right:26px;
-    background:#3E7C5A;
+    background:linear-gradient(180deg, #4E9370 0%, #3E7C5A 100%);
     color:var(--claro);
     font-family:'Archivo', sans-serif;
     font-size:13px;
     font-weight:700;
     padding:14px 22px 14px 18px;
+    border-radius:8px;
     display:flex; align-items:center; gap:9px;
     box-shadow:0 6px 20px rgba(0,0,0,0.18);
     z-index:50;
@@ -490,6 +500,7 @@
     .prova-grid{ grid-template-columns:1fr; }
     .obra-images{ grid-template-columns:1fr 1fr; }
     .stats-grid{ grid-template-columns:1fr; gap:32px; }
+    .stats-box{ padding:36px 24px; }
     .section-title, .section-body{ max-width:100%; }
     .scope-list{ grid-template-columns:1fr; }
     .frame{ padding:0 24px; }
