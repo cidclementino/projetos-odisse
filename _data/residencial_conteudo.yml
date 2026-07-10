@@ -9,17 +9,17 @@ hero:
 
 diferencial:
   titulo: "Cada projeto, um mundo próprio"
-  descricao: "Não trabalhamos com fórmulas prontas nem com análises de contexto estereotipadas. Cada residência que projetamos nasce da tensão entre o território que ocupa, a história de quem vai habitá-la e a potencialidade do que ainda não existe. O resultado: casas tão enraizadas em seu contexto quanto abertas ao futuro."
+  descricao: "Não trabalhamos com fórmulas prontas nem com análises de contexto estereotipadas. Cada residência nasce do encontro entre o terreno que você ocupa, a sua história e o modo como pretende viver daqui pra frente. O resultado: uma casa com identidade própria — enraizada no seu contexto, construída para durar e valorizar o que você investiu nela."
   itens:
     - numero: "I."
       titulo: "Rigor técnico"
-      texto: "Projetos executivos completos, do conceito à obra."
+      texto: "Projetos executivos completos, do conceito à obra — com o seu orçamento sob controle em cada etapa."
     - numero: "II."
       titulo: "Leitura de contexto"
-      texto: "Terreno, entorno e uso — analisados antes de qualquer traço."
+      texto: "Terreno, entorno e o seu modo de viver — analisados antes de qualquer traço."
     - numero: "III."
       titulo: "Sensibilidade artística"
-      texto: "Arquitetura como linguagem, não apenas como solução."
+      texto: "Mais do que uma solução: arquitetura como linguagem que expressa quem você é."
 
 prova_visual:
   titulo: "Projetos que já ganharam forma"
