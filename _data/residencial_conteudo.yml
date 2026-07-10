@@ -28,7 +28,7 @@ prova_visual:
 
 etapas:
   titulo: "Do conceito à obra, em quatro passos."
-  descricao: "Cada projeto passa por um processo com começo, meio e entrega definidos. Você acompanha cada etapa — sem surpresas no caminho."
+  descricao: "Cada projeto passa por um processo com começo, meio e entrega definidos. Você aprova cada etapa antes de avançarmos para a próxima — sem surpresas no caminho."
   itens:
     - numero: "I."
       titulo: "Conceito"
@@ -38,7 +38,7 @@ etapas:
       texto: "Documentação técnica completa para aprovação junto à prefeitura e aos órgãos competentes."
     - numero: "III."
       titulo: "Projeto Executivo"
-      texto: "Detalhamento técnico completo — plantas, cortes, fachadas e memorial descritivo — pronto para a obra."
+      texto: "Detalhamento técnico completo — plantas, cortes, fachadas e memorial descritivo — com cronograma definido junto com você, pronto para a obra."
     - numero: "IV."
       titulo: "Acompanhamento"
       texto: "Suporte técnico durante a execução, com visitas à obra até a entrega."
@@ -49,12 +49,12 @@ escopo:
   itens:
     - "Projeto do conceito à execução"
     - "Acompanhamento da aprovação junto à prefeitura"
-    - "Compatibilização com projetos complementares (elétrico, hidráulico, estrutural)"
+    - "Compatibilização com projetos complementares (elétrico, hidráulico, estrutural) — resolvido no papel, antes da obra começar."
     - "Suporte técnico até a entrega da obra"
 
 obras_secao:
   titulo: "Acompanhamos até o último detalhe ser erguido"
-  descricao: "Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído."
+  descricao: "Um projeto não termina na entrega das plantas. Continuamos presentes durante toda a execução, com suporte técnico à construtora e à equipe de obra, seja esclarecendo dúvidas, seja em visitas técnicas à obra, para que o projeto tenha o suporte necessário para se tornar realidade como foi desenhado."
 
 arquitetos:
   titulo: "Os Arquitetos"
