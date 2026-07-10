@@ -1,477 +1,28 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7LPHDFTZ5T"></script>
-<script src="/analytics.js"></script>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Odisse Arquitetos — Projetos Residenciais</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --claro: #F4F4F4;
-    --escuro: #1A1A1A;
-    --slate: #495763;
-    --copper: #7F675F;
-    --gold: #D8A263;
-    --parchment: #F3DFC1;
-  }
-
-  *{ margin:0; padding:0; box-sizing:border-box; }
-
-  body{
-    background:var(--claro);
-    color:var(--escuro);
-    font-family:'Archivo', sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  .display{
-    font-family:'Archivo', sans-serif;
-    font-weight:700;
-    letter-spacing:-0.02em;
-  }
-
-  .eyebrow{
-    font-family:'Archivo', sans-serif;
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:0.18em;
-    text-transform:uppercase;
-    color:var(--slate);
-  }
-
-  .frame{
-    max-width:min(1680px, 94vw);
-    margin:0 auto;
-    padding:0 32px;
-  }
-
-  .hairline{
-    border:none;
-    border-top:1px solid rgba(26,26,26,0.12);
-    margin:0;
-  }
-  .hairline-light{
-    border:none;
-    border-top:1px solid rgba(244,244,244,0.14);
-    margin:0;
-  }
-
-  /* ---------- MARK / HEADER ---------- */
-  .viewport-hero{
-    min-height:100vh;
-    min-height:100svh;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-  }
-  .mark-bar{
-    padding:clamp(16px, 3vh, 28px) 40px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-shrink:0;
-    position:relative;
-    z-index:3;
-  }
-  .mark{
-    font-family:'Archivo', sans-serif;
-    font-size:12px;
-    font-weight:800;
-    letter-spacing:0.22em;
-    text-transform:uppercase;
-    color:var(--claro);
-  }
-  .mark-sub{
-    font-size:10px;
-    letter-spacing:0.16em;
-    color:rgba(244,244,244,0.7);
-    text-transform:uppercase;
-    font-weight:600;
-  }
-
-  /* ---------- HERO (full-bleed background image) ---------- */
-  .hero{
-    position:relative;
-    flex:1;
-    display:flex;
-    align-items:center;
-    min-height:0;
-    overflow:hidden;
-  }
-  .hero-bg{
-    position:absolute;
-    inset:0;
-    background:rgba(73,87,99,0.18);
-    border:none;
-    border-radius:0;
-    aspect-ratio:auto;
-  }
-  .hero-bg .label{
-    color:rgba(244,244,244,0.6);
-  }
-  .hero-overlay{
-    position:absolute;
-    inset:0;
-    background:linear-gradient(90deg, rgba(26,26,26,0.72) 0%, rgba(26,26,26,0.5) 45%, rgba(26,26,26,0.28) 100%);
-    z-index:1;
-  }
-  .hero-content{
-    position:relative;
-    z-index:2;
-    padding:clamp(24px, 5vh, 64px) 0;
-    width:100%;
-  }
-  .hero-gold-rule{
-    width:56px;
-    height:2px;
-    background:var(--gold);
-    margin-bottom:clamp(12px, 2vh, 22px);
-  }
-  .hero h1{
-    font-size:clamp(30px, 4vw + 1vh, 54px);
-    line-height:1.1;
-    color:var(--claro);
-    margin-bottom:clamp(14px, 2.5vh, 26px);
-    max-width:640px;
-    font-weight:800;
-    letter-spacing:-0.02em;
-  }
-  .hero p.sub{
-    font-size:clamp(15px, 1vw + 0.6vh, 17px);
-    color:rgba(244,244,244,0.85);
-    max-width:480px;
-    margin-bottom:clamp(16px, 3vh, 30px);
-  }
-  .proof-line{
-    font-family:'Archivo', sans-serif;
-    font-size:12.5px;
-    letter-spacing:0.04em;
-    color:rgba(244,244,244,0.9);
-    font-weight:600;
-    margin-bottom:clamp(18px, 3vh, 34px);
-  }
-  .proof-line b{ color:var(--claro); font-weight:800; }
-  .proof-line .dot{ color:var(--gold); margin:0 10px; }
-
-  .cta-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    background:var(--slate);
-    color:var(--claro);
-    font-family:'Archivo', sans-serif;
-    font-size:14px;
-    font-weight:700;
-    letter-spacing:0.01em;
-    padding:17px 30px;
-    border:none;
-    cursor:pointer;
-    transition:background 0.2s ease;
-    text-decoration:none;
-  }
-  .cta-btn:hover{ background:#374049; }
-  .cta-btn .arrow{ transition:transform 0.2s ease; }
-  .cta-btn:hover .arrow{ transform:translateX(3px); }
-
-  .hero-form-note{
-    font-size:12px;
-    color:rgba(244,244,244,0.65);
-    margin-top:14px;
-  }
-
-  .img-placeholder{
-    aspect-ratio:4/5;
-    border:1px dashed rgba(73,87,99,0.4);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(243,223,193,0.35);
-    position:relative;
-  }
-  .img-placeholder .label{
-    font-family:'Archivo', sans-serif;
-    font-size:11px;
-    font-weight:600;
-    letter-spacing:0.1em;
-    text-transform:uppercase;
-    color:var(--copper);
-    text-align:center;
-    padding:0 20px;
-  }
-  .img-placeholder.wide{ aspect-ratio:16/10; }
-  .img-placeholder.landscape{ aspect-ratio:3/2; }
-  .photo-frame{
-    aspect-ratio:3/2;
-    overflow:hidden;
-    position:relative;
-  }
-  .photo-frame img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    display:block;
-  }
-
-  /* Tape-corner brand motif */
-  .tape-frame{ position:relative; }
-  .tape{
-    position:absolute;
-    width:36px;
-    height:15px;
-    background:var(--slate);
-    opacity:0.9;
-    z-index:5;
-    box-shadow:0 2px 4px rgba(0,0,0,0.2);
-  }
-  .tape-tl{ top:-7px; left:14px; transform:rotate(-7deg); }
-  .tape-tr{ top:-7px; right:14px; transform:rotate(7deg); }
-  .tape-bl{ bottom:-7px; left:14px; transform:rotate(6deg); }
-  .tape-br{ bottom:-7px; right:14px; transform:rotate(-6deg); }
-
-  /* ---------- SECTION SHELL ---------- */
-  section{ padding:88px 0; }
-  .section-eyebrow{ margin-bottom:16px; }
-  .section-title{
-    font-size:clamp(26px, 2.8vw, 36px);
-    max-width:620px;
-    margin-bottom:20px;
-    font-weight:800;
-  }
-  .section-body{
-    font-size:16px;
-    color:var(--escuro);
-    max-width:600px;
-  }
-
-  /* ---------- DIFERENCIAL / ETAPAS (shared numbered-card pattern) ---------- */
-  .numbered-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:36px;
-    margin-top:56px;
-  }
-  .numbered-grid.cols-4{ grid-template-columns:1fr 1fr 1fr 1fr; }
-  .num-card{
-    border-top:1px solid var(--slate);
-    padding-top:20px;
-  }
-  .num-card .num{
-    font-family:'Archivo', sans-serif;
-    font-weight:800;
-    font-size:28px;
-    color:var(--slate);
-    display:block;
-    margin-bottom:10px;
-  }
-  .num-card h3{
-    font-family:'Archivo', sans-serif;
-    font-size:15px;
-    font-weight:700;
-    margin-bottom:8px;
-  }
-  .num-card p{
-    font-size:14.5px;
-    color:var(--escuro);
-  }
-
-  .center-cta{ margin-top:56px; text-align:center; }
-
-  /* ---------- ESCOPO (o que está incluso) ---------- */
-  .scope-list{
-    margin-top:32px;
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px 40px;
-  }
-  .scope-item{
-    display:flex;
-    align-items:flex-start;
-    gap:12px;
-    font-size:15px;
-    color:var(--escuro);
-    padding-bottom:16px;
-    border-bottom:1px solid rgba(26,26,26,0.1);
-  }
-  .scope-item .mark-dot{
-    width:8px; height:8px;
-    background:var(--gold);
-    margin-top:7px;
-    flex-shrink:0;
-  }
-
-  /* ---------- PROVA VISUAL (projetos finalizados) ---------- */
-  .prova-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:32px 32px;
-    margin-top:56px;
-  }
-  .card{ position:relative; }
-  .card .caption{
-    margin-top:18px;
-    font-size:13.5px;
-  }
-  .card .caption b{ font-family:'Archivo', sans-serif; font-size:15px; font-weight:700; color:var(--escuro); }
-  .card .caption span{ color:var(--copper); display:block; margin-top:2px; font-size:12.5px; }
-
-  /* ---------- OBRAS EM EXECUÇÃO ---------- */
-  .obra-layout{
-    display:grid;
-    grid-template-columns:0.8fr 1.2fr;
-    gap:64px;
-    align-items:center;
-  }
-  .obra-images{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:32px;
-  }
-  .obra-images .img-placeholder{ aspect-ratio:4/5; }
-  .obra-images .caption{
-    margin-top:14px;
-    font-size:13px;
-    color:var(--copper);
-  }
-
-  /* ---------- OS ARQUITETOS ---------- */
-  .fundadores{
-    display:grid;
-    grid-template-columns:0.8fr 1.2fr;
-    gap:64px;
-    align-items:center;
-  }
-  .fund-photo .img-placeholder{ aspect-ratio:4/3; }
-  .fund-names{
-    margin-top:24px;
-    font-size:13px;
-    letter-spacing:0.04em;
-    color:var(--slate);
-    font-weight:700;
-  }
-
-  /* ---------- GRADIENT BAND (Arquitetos > Números > CTA final > Footer) ---------- */
-  .gradient-band{
-    background:linear-gradient(to bottom, var(--claro) 0%, #cfc9c2 22%, #726b66 55%, var(--escuro) 88%);
-  }
-  .gradient-band .stat .figure{ color:var(--gold); }
-  .gradient-band .stat .caption{ color:rgba(244,244,244,0.8); }
-  .gradient-band .stats-grid{ text-align:center; }
-
-  .stats-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr 1fr;
-    gap:40px;
-  }
-  .stat .figure{
-    font-family:'Archivo', sans-serif;
-    font-weight:800;
-    font-size:clamp(32px,3.6vw,44px);
-  }
-  .stat .caption{
-    font-size:13px;
-    margin-top:6px;
-  }
-
-  /* ---------- CTA FINAL ---------- */
-  .final-cta{ text-align:center; }
-  .final-cta .eyebrow{ color:var(--gold); text-align:center; }
-  .final-cta .section-title{ color:var(--claro); }
-  .final-cta .section-body{ color:rgba(244,244,244,0.8); }
-  .final-cta .section-title, .final-cta .section-body{ margin-left:auto; margin-right:auto; }
-  .final-cta .cta-btn{ margin-top:12px; font-size:15px; padding:19px 38px; background:var(--gold); color:var(--escuro); }
-  .final-cta .cta-btn:hover{ background:#c68f52; }
-
-  /* ---------- FOOTER ---------- */
-  footer{
-    background:var(--escuro);
-    color:rgba(244,244,244,0.6);
-    padding:48px 0 30px;
-  }
-  .footer-mark{
-    font-family:'Archivo', sans-serif;
-    font-size:11px;
-    font-weight:700;
-    letter-spacing:0.2em;
-    text-transform:uppercase;
-    color:var(--claro);
-    margin-bottom:22px;
-  }
-  .footer-mark span{ color:var(--gold); }
-  .dot-strip{
-    display:flex;
-    gap:7px;
-    margin-top:24px;
-  }
-  .dot-strip .d{
-    width:3px; height:3px;
-    border-radius:50%;
-    background:rgba(244,244,244,0.3);
-  }
-  .footer-note{ font-size:12px; margin-top:20px; }
-
-  .fab{
-    position:fixed;
-    bottom:26px; right:26px;
-    background:var(--gold);
-    color:var(--escuro);
-    font-family:'Archivo', sans-serif;
-    font-size:13px;
-    font-weight:700;
-    padding:14px 20px;
-    display:flex; align-items:center; gap:8px;
-    box-shadow:0 6px 20px rgba(0,0,0,0.18);
-    z-index:50;
-    text-decoration:none;
-  }
-
-  /* ---------- RESPONSIVE ---------- */
-  @media (max-width:860px){
-    .fundadores, .obra-layout{ grid-template-columns:1fr; gap:40px; }
-    .numbered-grid, .numbered-grid.cols-4{ grid-template-columns:1fr; gap:32px; }
-    .prova-grid{ grid-template-columns:1fr; }
-    .obra-images{ grid-template-columns:1fr 1fr; }
-    .stats-grid{ grid-template-columns:1fr; gap:32px; }
-    .scope-list{ grid-template-columns:1fr; }
-    .frame{ padding:0 24px; }
-    section{ padding:64px 0; }
-    .hero-overlay{ background:rgba(26,26,26,0.62); }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    *{ transition:none !important; }
-  }
-</style>
-</head>
-<body>
-
-<div class="viewport-hero">
-<div class="mark-bar">
-  <div class="mark">ODISSE ARQUITETOS</div>
-  <div class="mark-sub">João Pessoa · Atendimento em todo o Brasil</div>
-</div>
-
+---
+layout: default
+title: "Odisse Arquitetos — Projetos Residenciais"
+---
+{% assign hero_img = site.data.residencial_conteudo.hero.imagem %}
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg img-placeholder">
+  <div class="hero-bg img-placeholder"{% if hero_img and hero_img != "" %} style="background-image:url('images/{{ hero_img }}'); background-size:cover; background-position:center;"{% endif %}>
+    {% unless hero_img and hero_img != "" %}
     <div class="label">IMAGEM DE FUNDO<br>Residência finalizada — ambiente amplo, luz natural</div>
+    {% endunless %}
   </div>
   <div class="hero-overlay"></div>
   <div class="frame hero-content">
     <div class="hero-gold-rule"></div>
-    <h1 class="display">Sua casa, projetada com identidade própria e rigor técnico.</h1>
-    <p class="sub">Projetamos residências em todo o Brasil combinando rigor técnico, investigação histórica e sensibilidade artística — para famílias que não buscam apenas metros quadrados, mas identidade.</p>
+    <h1 class="display">{{ site.data.residencial_conteudo.hero.titulo }}</h1>
+    <p class="sub">{{ site.data.residencial_conteudo.hero.descricao }}</p>
     <div class="proof-line">
-      <b>+100.000 m²</b> projetados <span class="dot">·</span> <b>+50 projetos</b> <span class="dot">·</span> <b>5 anos</b> de atuação
+      <b>{{ site.data.residencial_conteudo.hero.m2 }}</b> projetados <span class="dot">·</span> <b>{{ site.data.residencial_conteudo.hero.projetos }}</b> <span class="dot">·</span> <b>{{ site.data.residencial_conteudo.hero.anos }}</b> de atuação
     </div>
-    <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Quero conversar sobre meu projeto <span class="arrow">→</span></a>
+    <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">{{ site.data.residencial_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
     <div class="hero-form-note">Resposta em até 1 dia útil.</div>
   </div>
 </section>
-</div>
+</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
 
 <hr class="hairline">
 
@@ -479,29 +30,21 @@
 <section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">O diferencial</div>
-    <h2 class="display section-title">Cada projeto, um mundo próprio</h2>
-    <p class="section-body">Não trabalhamos com fórmulas prontas nem com análises de contexto estereotipadas. Cada residência que projetamos nasce da tensão entre o território que ocupa, a história de quem vai habitá-la e a potencialidade do que ainda não existe. O resultado: casas tão enraizadas em seu contexto quanto abertas ao futuro.</p>
+    <h2 class="display section-title">{{ site.data.residencial_conteudo.diferencial.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_conteudo.diferencial.descricao }}</p>
 
     <div class="numbered-grid">
+      {% for item in site.data.residencial_conteudo.diferencial.itens %}
       <div class="num-card">
-        <span class="num">I.</span>
-        <h3>Rigor técnico</h3>
-        <p>Projetos executivos completos, do conceito à obra.</p>
+        <span class="num">{{ item.numero }}</span>
+        <h3>{{ item.titulo }}</h3>
+        <p>{{ item.texto }}</p>
       </div>
-      <div class="num-card">
-        <span class="num">II.</span>
-        <h3>Leitura de contexto</h3>
-        <p>Terreno, entorno e uso — analisados antes de qualquer traço.</p>
-      </div>
-      <div class="num-card">
-        <span class="num">III.</span>
-        <h3>Sensibilidade artística</h3>
-        <p>Arquitetura como linguagem, não apenas como solução.</p>
-      </div>
+      {% endfor %}
     </div>
 
     <div class="center-cta">
-      <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Quero conversar sobre meu projeto <span class="arrow">→</span></a>
+      <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">{{ site.data.residencial_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -512,50 +55,31 @@
 <section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">Projetos</div>
-    <h2 class="display section-title">Projetos que já ganharam forma</h2>
-    <p class="section-body">Uma seleção do que já construímos em diferentes territórios do país.</p>
+    <h2 class="display section-title">{{ site.data.residencial_conteudo.prova_visual.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_conteudo.prova_visual.descricao }}</p>
 
     <div class="prova-grid">
+      {% for projeto in site.data.residencial_legendas.projetos %}
       <div class="card">
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          {% if projeto.imagem and projeto.imagem != "" %}
           <div class="photo-frame">
-            <img src="images/residencia-yvc.jpg" alt="Residência YVC — fachada, João Pessoa, PB">
+            <img src="images/{{ projeto.imagem }}" alt="{{ projeto.nome }} — fachada">
           </div>
-        </div>
-        <div class="caption"><b>Residência YVC</b><span>João Pessoa, PB · 480 m²</span></div>
-      </div>
-      <div class="card">
-        <div class="tape-frame">
-          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="photo-frame">
-            <img src="images/residencia-dcmcc.jpg" alt="Residência DCMCC — fachada">
-          </div>
-        </div>
-        <div class="caption"><b>Residência DCMCC</b><span>Cidade, UF · --- m²</span></div>
-      </div>
-      <div class="card">
-        <div class="tape-frame">
-          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="photo-frame">
-            <img src="images/residencia-altavista.jpg" alt="Residência Altavista — fachada">
-          </div>
-        </div>
-        <div class="caption"><b>Residência Altavista</b><span>Cidade, UF · --- m²</span></div>
-      </div>
-      <div class="card">
-        <div class="tape-frame">
-          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          {% else %}
           <div class="img-placeholder landscape">
-            <div class="label">IMAGEM<br>Projeto 4</div>
+            <div class="label">IMAGEM<br>{{ projeto.nome }}</div>
           </div>
+          {% endif %}
         </div>
-        <div class="caption"><b>Residência ---</b><span>Cidade, UF · --- m²</span></div>
+        <div class="caption"><b>{{ projeto.nome }}</b><span>{{ projeto.localizacao }} · {{ projeto.metragem }}</span></div>
       </div>
+      {% endfor %}
     </div>
 
     <div class="center-cta">
-      <a href="https://wa.me/5583991223088" class="cta-btn" style="background:var(--gold); color:var(--escuro);" target="_blank" rel="noopener">Ver meu projeto tomar essa forma <span class="arrow">→</span></a>
+      <a href="https://wa.me/5583991223088" class="cta-btn gold" target="_blank" rel="noopener">{{ site.data.residencial_conteudo.prova_visual.cta_texto }} <span class="arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -566,34 +90,21 @@
 <section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">Como trabalhamos</div>
-    <h2 class="display section-title">Do conceito à obra, em quatro passos.</h2>
-    <p class="section-body">Cada projeto passa por um processo com começo, meio e entrega definidos. Você acompanha cada etapa — sem surpresas no caminho.</p>
+    <h2 class="display section-title">{{ site.data.residencial_conteudo.etapas.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_conteudo.etapas.descricao }}</p>
 
     <div class="numbered-grid cols-4">
+      {% for item in site.data.residencial_conteudo.etapas.itens %}
       <div class="num-card">
-        <span class="num">I.</span>
-        <h3>Conceito</h3>
-        <p>Entendemos o terreno, as necessidades da sua família e o modo de viver de quem vai habitar a casa. Você já acompanha os primeiros estudos e volumes — a forma da residência começa a aparecer diante de você.</p>
+        <span class="num">{{ item.numero }}</span>
+        <h3>{{ item.titulo }}</h3>
+        <p>{{ item.texto }}</p>
       </div>
-      <div class="num-card">
-        <span class="num">II.</span>
-        <h3>Projeto Legal</h3>
-        <p>Documentação técnica completa para aprovação junto à prefeitura e aos órgãos competentes.</p>
-      </div>
-      <div class="num-card">
-        <span class="num">III.</span>
-        <h3>Projeto Executivo</h3>
-        <p>Detalhamento técnico completo — plantas, cortes, fachadas e memorial descritivo — pronto para a obra.</p>
-      </div>
-      <div class="num-card">
-        <span class="num">IV.</span>
-        <h3>Acompanhamento</h3>
-        <p>Suporte técnico durante a execução, com visitas à obra até a entrega.</p>
-      </div>
+      {% endfor %}
     </div>
 
     <div class="center-cta">
-      <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Quero conversar sobre meu projeto <span class="arrow">→</span></a>
+      <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">{{ site.data.residencial_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
     </div>
   </div>
 </section>
@@ -604,14 +115,13 @@
 <section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">Escopo</div>
-    <h2 class="display section-title">O que você recebe</h2>
-    <p class="section-body">Um serviço completo, sem lacunas entre o projeto e a obra:</p>
+    <h2 class="display section-title">{{ site.data.residencial_conteudo.escopo.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_conteudo.escopo.descricao }}</p>
 
     <div class="scope-list">
-      <div class="scope-item"><span class="mark-dot"></span>Projeto do conceito à execução</div>
-      <div class="scope-item"><span class="mark-dot"></span>Acompanhamento da aprovação junto à prefeitura</div>
-      <div class="scope-item"><span class="mark-dot"></span>Compatibilização com projetos complementares (elétrico, hidráulico, estrutural)</div>
-      <div class="scope-item"><span class="mark-dot"></span>Suporte técnico até a entrega da obra</div>
+      {% for item in site.data.residencial_conteudo.escopo.itens %}
+      <div class="scope-item"><span class="mark-dot"></span>{{ item }}</div>
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -623,24 +133,25 @@
   <div class="frame obra-layout">
     <div>
       <div class="eyebrow section-eyebrow">Do papel à obra</div>
-      <h2 class="display section-title">Acompanhamos até o último detalhe ser erguido</h2>
-      <p class="section-body">Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído.</p>
+      <h2 class="display section-title">{{ site.data.residencial_conteudo.obras_secao.titulo }}</h2>
+      <p class="section-body">{{ site.data.residencial_conteudo.obras_secao.descricao }}</p>
     </div>
     <div class="obra-images">
+      {% for obra in site.data.residencial_legendas.obras %}
       <div>
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — acabamento</div></div>
+          {% if obra.imagem and obra.imagem != "" %}
+          <div class="photo-frame">
+            <img src="images/{{ obra.imagem }}" alt="{{ obra.legenda }}">
+          </div>
+          {% else %}
+          <div class="img-placeholder"><div class="label">IMAGEM<br>{{ obra.legenda }}</div></div>
+          {% endif %}
         </div>
-        <div class="caption">Obra em execução — Residência ---, Cidade, UF</div>
+        <div class="caption">{{ obra.legenda }}</div>
       </div>
-      <div>
-        <div class="tape-frame">
-          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
-          <div class="img-placeholder"><div class="label">IMAGEM<br>Obra em execução — visita técnica</div></div>
-        </div>
-        <div class="caption">Visita técnica em andamento</div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -661,9 +172,9 @@
     </div>
     <div>
       <div class="eyebrow section-eyebrow">Autoria</div>
-      <h2 class="display section-title">Os Arquitetos</h2>
-      <p class="section-body">Cid Clementino e Nathalia Linhares conduzem pessoalmente cada projeto residencial, do primeiro traço à entrega da obra.</p>
-      <div class="fund-names">CID CLEMENTINO &nbsp;·&nbsp; NATHALIA LINHARES</div>
+      <h2 class="display section-title">{{ site.data.residencial_conteudo.arquitetos.titulo }}</h2>
+      <p class="section-body">{{ site.data.residencial_conteudo.arquitetos.descricao }}</p>
+      <div class="fund-names">{{ site.data.residencial_conteudo.arquitetos.nomes }}</div>
     </div>
   </div>
 </section>
@@ -674,18 +185,12 @@
 <section>
   <div class="frame">
     <div class="stats-grid">
+      {% for stat in site.data.residencial_conteudo.numeros %}
       <div class="stat">
-        <div class="figure">+100.000 m²</div>
-        <div class="caption">de arquitetura projetada</div>
+        <div class="figure">{{ stat.valor }}</div>
+        <div class="caption">{{ stat.legenda }}</div>
       </div>
-      <div class="stat">
-        <div class="figure">+50 projetos</div>
-        <div class="caption">entregues</div>
-      </div>
-      <div class="stat">
-        <div class="figure">5 anos</div>
-        <div class="caption">de atuação contínua</div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </section>
@@ -696,27 +201,10 @@
 <section class="final-cta">
   <div class="frame">
     <div class="eyebrow section-eyebrow">Comece agora</div>
-    <h2 class="display section-title">Vamos começar seu projeto?</h2>
-    <p class="section-body">Conte um pouco sobre a sua residência — cidade do terreno, momento do projeto — e fale diretamente com o Odisse pelo WhatsApp.</p>
-    <a href="https://wa.me/5583991223088" class="cta-btn" target="_blank" rel="noopener">Falar no WhatsApp <span class="arrow">→</span></a>
+    <h2 class="display section-title">{{ site.data.residencial_conteudo.cta_final.titulo }}</h2>
+    <p class="section-body">{{ site.data.residencial_conteudo.cta_final.descricao }}</p>
+    <a href="https://wa.me/5583991223088" class="cta-btn gold" target="_blank" rel="noopener">{{ site.data.residencial_conteudo.cta_final.cta_texto }} <span class="arrow">→</span></a>
   </div>
 </section>
 
-<footer>
-  <div class="frame">
-    <div class="footer-mark">RESERVA <span>·</span> CRIATIVA</div>
-    <div class="footer-note">Odisse Arquitetos — João Pessoa, PB. Atendimento em todo o Brasil.</div>
-    <div class="dot-strip">
-      <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
-      <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
-      <div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div>
-    </div>
-  </div>
-</footer>
-
 </div><!-- /gradient-band -->
-
-<a href="https://wa.me/5583991223088" class="fab" target="_blank" rel="noopener">💬 Falar no WhatsApp</a>
-
-</body>
-</html>
