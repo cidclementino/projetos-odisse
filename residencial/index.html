@@ -162,12 +162,19 @@ title: "Odisse Arquitetos — Projetos Residenciais"
 <div class="gradient-band">
 
 <!-- OS ARQUITETOS -->
+{% assign arq_img = site.data.residencial_conteudo.arquitetos.imagem %}
 <section>
   <div class="frame fundadores">
     <div class="fund-photo">
       <div class="tape-frame">
         <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+        {% if arq_img and arq_img != "" %}
+        <div class="photo-frame">
+          <img src="images/{{ arq_img }}" alt="Cid Clementino e Nathalia Linhares">
+        </div>
+        {% else %}
         <div class="img-placeholder"><div class="label">IMAGEM<br>Cid Clementino e Nathalia Linhares</div></div>
+        {% endif %}
       </div>
     </div>
     <div>
