@@ -1,0 +1,74 @@
+hero:
+  titulo: "Sua casa, projetada com identidade própria e rigor técnico."
+  descricao: "Projetamos residências em todo o Brasil combinando rigor técnico, investigação histórica e sensibilidade artística — para famílias que não buscam apenas metros quadrados, mas identidade."
+  m2: "+100.000 m²"
+  projetos: "+50 projetos"
+  anos: "5 anos"
+  cta_texto: "Quero conversar sobre meu projeto"
+
+diferencial:
+  titulo: "Cada projeto, um mundo próprio"
+  descricao: "Não trabalhamos com fórmulas prontas nem com análises de contexto estereotipadas. Cada residência que projetamos nasce da tensão entre o território que ocupa, a história de quem vai habitá-la e a potencialidade do que ainda não existe. O resultado: casas tão enraizadas em seu contexto quanto abertas ao futuro."
+  itens:
+    - numero: "I."
+      titulo: "Rigor técnico"
+      texto: "Projetos executivos completos, do conceito à obra."
+    - numero: "II."
+      titulo: "Leitura de contexto"
+      texto: "Terreno, entorno e uso — analisados antes de qualquer traço."
+    - numero: "III."
+      titulo: "Sensibilidade artística"
+      texto: "Arquitetura como linguagem, não apenas como solução."
+
+prova_visual:
+  titulo: "Projetos que já ganharam forma"
+  descricao: "Uma seleção do que já construímos em diferentes territórios do país."
+  cta_texto: "Ver meu projeto tomar essa forma"
+
+etapas:
+  titulo: "Do conceito à obra, em quatro passos."
+  descricao: "Cada projeto passa por um processo com começo, meio e entrega definidos. Você acompanha cada etapa — sem surpresas no caminho."
+  itens:
+    - numero: "I."
+      titulo: "Conceito"
+      texto: "Entendemos o terreno, as necessidades da sua família e o modo de viver de quem vai habitar a casa. Você já acompanha os primeiros estudos e volumes — a forma da residência começa a aparecer diante de você."
+    - numero: "II."
+      titulo: "Projeto Legal"
+      texto: "Documentação técnica completa para aprovação junto à prefeitura e aos órgãos competentes."
+    - numero: "III."
+      titulo: "Projeto Executivo"
+      texto: "Detalhamento técnico completo — plantas, cortes, fachadas e memorial descritivo — pronto para a obra."
+    - numero: "IV."
+      titulo: "Acompanhamento"
+      texto: "Suporte técnico durante a execução, com visitas à obra até a entrega."
+
+escopo:
+  titulo: "O que você recebe"
+  descricao: "Um serviço completo, sem lacunas entre o projeto e a obra:"
+  itens:
+    - "Projeto do conceito à execução"
+    - "Acompanhamento da aprovação junto à prefeitura"
+    - "Compatibilização com projetos complementares (elétrico, hidráulico, estrutural)"
+    - "Suporte técnico até a entrega da obra"
+
+obras_secao:
+  titulo: "Acompanhamos até o último detalhe ser erguido"
+  descricao: "Um projeto não termina na entrega das plantas. A equipe do Odisse permanece presente durante toda a execução, em visitas técnicas à obra, esclarecendo dúvidas e garantindo que o que foi desenhado se torne exatamente o que foi construído."
+
+arquitetos:
+  titulo: "Os Arquitetos"
+  descricao: "Cid Clementino e Nathalia Linhares conduzem pessoalmente cada projeto residencial, do primeiro traço à entrega da obra."
+  nomes: "CID CLEMENTINO · NATHALIA LINHARES"
+
+numeros:
+  - valor: "+100.000 m²"
+    legenda: "de arquitetura projetada"
+  - valor: "+50 projetos"
+    legenda: "entregues"
+  - valor: "5 anos"
+    legenda: "de atuação contínua"
+
+cta_final:
+  titulo: "Vamos começar seu projeto?"
+  descricao: "Conte um pouco sobre a sua residência — cidade do terreno, momento do projeto — e fale diretamente com o Odisse pelo WhatsApp."
+  cta_texto: "Falar no WhatsApp"
