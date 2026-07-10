@@ -112,6 +112,7 @@ title: "Odisse Arquitetos — Projetos Residenciais"
 <hr class="hairline">
 
 <!-- O QUE ESTÁ INCLUSO -->
+{% assign escopo_img = site.data.residencial_conteudo.escopo.imagem %}
 <section>
   <div class="frame">
     <div class="eyebrow section-eyebrow">Escopo</div>
@@ -123,6 +124,16 @@ title: "Odisse Arquitetos — Projetos Residenciais"
       <div class="scope-item"><span class="mark-dot"></span>{{ item }}</div>
       {% endfor %}
     </div>
+
+    {% if escopo_img and escopo_img != "" %}
+    <div class="photo-frame scope-photo">
+      <img src="images/{{ escopo_img }}" alt="Plantas e documentação técnica do projeto">
+    </div>
+    {% else %}
+    <div class="img-placeholder scope-photo">
+      <div class="label">IMAGEM<br>Plantas e documentação técnica do projeto</div>
+    </div>
+    {% endif %}
   </div>
 </section>
 
@@ -160,7 +171,7 @@ title: "Odisse Arquitetos — Projetos Residenciais"
 
 <!-- FAQ -->
 <section>
-  <div class="frame">
+  <div class="frame faq-frame">
     <div class="eyebrow section-eyebrow">{{ site.data.residencial_faq.eyebrow }}</div>
     <h2 class="display section-title">{{ site.data.residencial_faq.titulo }}</h2>
     <p class="section-body">{{ site.data.residencial_faq.descricao }}</p>
