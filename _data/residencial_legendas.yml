@@ -1,0 +1,35 @@
+projetos:
+  - nome: "Residência YVC"
+    localizacao: "João Pessoa, PB"
+    metragem: "480 m²"
+    imagem: "residencia-yvc.jpg"
+
+  - nome: "Residência DCMCC"
+    localizacao: "Cidade, UF"
+    metragem: "--- m²"
+    imagem: "residencia-dcmcc.jpg"
+
+  - nome: "Residência Altavista"
+    localizacao: "Cidade, UF"
+    metragem: "--- m²"
+    imagem: "residencia-altavista.jpg"
+
+  - nome: "---"
+    localizacao: "Cidade, UF"
+    metragem: "--- m²"
+    imagem: ""
+
+obras:
+  - nome: "Residência ---"
+    status: "Em execução"
+    categoria: "Acabamento"
+    endereco: "Cidade, UF"
+    legenda: "Obra em execução — Residência ---, Cidade, UF"
+    imagem: ""
+
+  - nome: "Residência ---"
+    status: "Em execução"
+    categoria: "Visita técnica"
+    endereco: "Cidade, UF"
+    legenda: "Visita técnica em andamento"
+    imagem: ""
