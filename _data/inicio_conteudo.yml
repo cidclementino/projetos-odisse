@@ -1,6 +1,6 @@
 hero:
-  titulo: "Odisse Arquitetos"
-  subtitulo: "Cada projeto começa com uma pergunta certa. Escolha a sua."
+  titulo: "Encontre o projeto certo pra você."
+  descricao: "Esta é a porta de entrada dos projetos do Odisse Arquitetos. Escolha abaixo o tipo de projeto mais próximo do seu momento — residencial, reforma ou estudo de viabilidade — pra conhecer como trabalhamos e falar diretamente com a gente."
 
 cards:
   - titulo: "Projeto Residencial"
@@ -15,3 +15,24 @@ cards:
     texto: "Decida com clareza antes de investir."
     imagem: "capa-viabilidade.jpg"
     link: "/viabilidade/"
+
+arquitetos:
+  titulo: "Os Arquitetos"
+  descricao: "Cid Clementino e Nathalia Linhares conduzem pessoalmente cada projeto, do primeiro traço à entrega da obra. Ambos são arquitetos e urbanistas formados pela Universidade Federal da Paraíba e coordenam o Odisse, Estúdio de Arquitetura e Design (CAU PJ 670011).
+Juntos, já assinaram mais de 50 projetos — de reformas e ambientações a residências e edifícios institucionais, como a sede administrativa da VRV. Cid é coordenador criativo do estúdio, com experiência em consultoria arquitetônica para incorporadoras; Nathalia é coordenadora executiva, com passagem pela gestão de projeto e obra em reformas de condomínios residenciais verticais.
+Em 2023, o Odisse participou da CASACOR Paraíba, onde recebeu o prêmio de Melhor Uso de Materiais Inovadores e foi finalista do Prêmio Salão Design."
+  nomes: "CID CLEMENTINO · NATHALIA LINHARES"
+  imagem: "odisse-arquitetos-003.jpg"
+
+numeros:
+  - valor: "+100.000 m²"
+    legenda: "de arquitetura projetada"
+  - valor: "+50 projetos"
+    legenda: "entregues"
+  - valor: "5 anos"
+    legenda: "de atuação contínua"
+
+cta_final:
+  titulo: "Ainda não sabe qual caminho seguir?"
+  descricao: "Conte um pouco sobre o seu projeto — o que você tem em mãos e o que pretende fazer — e fale diretamente com o Odisse pelo WhatsApp."
+  cta_texto: "Falar no WhatsApp"
