@@ -110,6 +110,12 @@ title: "Odisse Arquitetos — Projetos"
   .hub-card-cta .arrow{ transition:transform 0.2s ease; }
   .hub-card:hover .hub-card-cta .arrow{ transform:translateX(3px); }
 
+  /* ---------- FAQ CTA (botão dentro de cada resposta) ---------- */
+  .faq-answer .faq-cta{
+    display:inline-flex;
+    margin-top:16px;
+  }
+
   @media (max-width:860px){
     .hub-hero-grid{ max-width:100%; }
     .hub-cards-section{ display:block; padding:0 0 64px; }
@@ -154,6 +160,51 @@ title: "Odisse Arquitetos — Projetos"
   </div>
 </section>
 </div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
+
+<hr class="hairline">
+
+<!-- FAQ: o que é cada serviço, com CTA direto pra LP correspondente -->
+<section>
+  <div class="frame faq-frame">
+    <div class="eyebrow section-eyebrow">{{ site.data.inicio_faq.eyebrow }}</div>
+    <h2 class="display section-title">{{ site.data.inicio_faq.titulo }}</h2>
+    <p class="section-body">{{ site.data.inicio_faq.descricao }}</p>
+
+    <div class="faq-list">
+      {% for item in site.data.inicio_faq.perguntas %}
+      <details class="faq-item"{% if forloop.first %} open{% endif %}>
+        <summary>
+          {{ item.pergunta }}
+          <span class="faq-icon"></span>
+        </summary>
+        <div class="faq-answer">
+          <p>{{ item.resposta }}</p>
+          <a href="{{ item.link }}" class="cta-btn gold faq-cta">{{ item.cta_texto }} <span class="arrow">→</span></a>
+        </div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for item in site.data.inicio_faq.perguntas %}
+    {
+      "@type": "Question",
+      "name": {{ item.pergunta | jsonify }},
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": {{ item.resposta | jsonify }}
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>
 
 <hr class="hairline">
 
