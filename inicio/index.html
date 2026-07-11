@@ -5,44 +5,14 @@ title: "Odisse Arquitetos — Projetos"
 <style>
   /* ---------- HUB HERO (texto, sem imagem — dois blocos lado a lado) ---------- */
   .hub-hero-v2{
-    flex:1;
-    display:flex;
-    align-items:center;
     background:var(--claro);
-    position:relative;
-    overflow:hidden;
-    min-height:0;
+    padding:76px 0 40px;
   }
-  .hub-hero-decor{
-    position:absolute;
-    inset:0;
-    z-index:0;
-    pointer-events:none;
-  }
-  .hub-hero-arc{
-    position:absolute;
-    right:-60px;
-    bottom:-100px;
-    width:min(46vw, 480px);
-    height:auto;
-    opacity:0.45;
-  }
-  .hub-hero-guide{
-    position:absolute;
-    top:0; bottom:0;
-    width:1px;
-    background:rgba(26,26,26,0.08);
-  }
-  .hub-hero-guide.g1{ left:18%; }
-  .hub-hero-guide.g2{ left:64%; }
-
   .hub-hero-grid{
-    position:relative;
-    z-index:1;
     display:grid;
     grid-template-columns:1.3fr 1fr;
     gap:64px;
-    align-items:center;
+    align-items:start;
   }
   .hub-hero-title{
     font-size:clamp(32px, 4vw + 1vh, 58px);
@@ -62,7 +32,7 @@ title: "Odisse Arquitetos — Projetos"
   }
 
   /* ---------- HUB CARDS ---------- */
-  .hub-cards-section{ padding:88px 0; }
+  .hub-cards-section{ padding:0 0 88px; }
   .hub-cards-grid{
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
@@ -139,15 +109,11 @@ title: "Odisse Arquitetos — Projetos"
   }
 </style>
 
-<!-- HERO -->
+
+</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
+
+<!-- HERO + CARDS, como um único bloco -->
 <section class="hub-hero-v2">
-  <div class="hub-hero-decor" aria-hidden="true">
-    <svg class="hub-hero-arc" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="380" cy="380" r="260" fill="none" stroke="var(--slate)" stroke-width="1"/>
-    </svg>
-    <div class="hub-hero-guide g1"></div>
-    <div class="hub-hero-guide g2"></div>
-  </div>
   <div class="frame hub-hero-grid">
     <h1 class="display hub-hero-title">{{ site.data.inicio_conteudo.hero.titulo }}</h1>
     <div class="hub-hero-desc-col">
@@ -155,11 +121,7 @@ title: "Odisse Arquitetos — Projetos"
     </div>
   </div>
 </section>
-</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
 
-<hr class="hairline">
-
-<!-- CARDS -->
 <section class="hub-cards-section">
   <div class="frame">
     <div class="hub-cards-grid">
