@@ -7,7 +7,7 @@ cards:
     texto: "Um espaço que responde a como você vive — não a um modelo pronto."
     imagem: "capa-residencial.jpg"
     link: "/residencial/"
-  - titulo: "Projeto de Reforma e Decoração"
+  - titulo: "Projeto de Interiores e Ambientação"
     texto: "Transformar o que já existe também é criar do zero."
     imagem: "capa-reforma.jpg"
     link: "/reforma/"
