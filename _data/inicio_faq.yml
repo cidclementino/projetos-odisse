@@ -1,0 +1,19 @@
+eyebrow: "Ainda com dúvidas?"
+titulo: "O que é cada um dos nossos serviços?"
+descricao: "Se você ainda não sabe qual projeto é o seu, aqui vai um resumo rápido de cada um."
+
+perguntas:
+  - pergunta: "O que é o Projeto Residencial?"
+    resposta: "É o serviço para quem vai construir do zero ou redesenhar por completo a casa ou apartamento onde vive — da concepção arquitetônica ao acompanhamento da obra, sempre a partir de como você vive, não de um modelo pronto."
+    link: "/residencial/"
+    cta_texto: "Ver Projeto Residencial"
+
+  - pergunta: "O que é a Reforma?"
+    resposta: "É para quem já tem um espaço pronto mas quer transformá-lo — otimizar o layout, atualizar acabamentos ou resolver problemas de uso, sem precisar partir do zero."
+    link: "/reforma/"
+    cta_texto: "Ver Reforma"
+
+  - pergunta: "O que é o Estudo de Viabilidade?"
+    resposta: "É a etapa anterior à decisão de compra ou investimento: analisamos potencial construtivo, restrições legais e viabilidade financeira de um terreno ou imóvel antes de você assumir o compromisso."
+    link: "/viabilidade/"
+    cta_texto: "Ver Estudo de Viabilidade"
