@@ -3,16 +3,18 @@ layout: default
 title: "Odisse Arquitetos — Projetos"
 ---
 <style>
-  /* ---------- HUB HERO (texto, sem imagem — dois blocos lado a lado) ---------- */
+  /* Esta página não usa hero em tela cheia — anula o min-height:100vh
+     do .viewport-hero herdado do layout, que só teria o header dentro
+     e empurraria hero+cards pra fora da tela. */
+  .viewport-hero{ min-height:0; }
+
+  /* ---------- HUB HERO (texto empilhado, sem imagem) ---------- */
   .hub-hero-v2{
     background:var(--claro);
-    padding:76px 0 40px;
+    padding:64px 0 48px;
   }
   .hub-hero-grid{
-    display:grid;
-    grid-template-columns:1.3fr 1fr;
-    gap:64px;
-    align-items:start;
+    max-width:640px;
   }
   .hub-hero-title{
     font-size:clamp(32px, 4vw + 1vh, 58px);
@@ -20,15 +22,12 @@ title: "Odisse Arquitetos — Projetos"
     color:var(--escuro);
     font-weight:800;
     letter-spacing:-0.02em;
-  }
-  .hub-hero-desc-col{
-    border-left:1px solid rgba(26,26,26,0.15);
-    padding-left:32px;
+    margin-bottom:24px;
   }
   .hub-hero-desc{
     font-size:clamp(15px, 1vw + 0.5vh, 17px);
     color:rgba(26,26,26,0.72);
-    max-width:380px;
+    max-width:480px;
   }
 
   /* ---------- HUB CARDS ---------- */
@@ -102,8 +101,6 @@ title: "Odisse Arquitetos — Projetos"
   .hub-card:hover .hub-card-cta .arrow{ transform:translateX(3px); }
 
   @media (max-width:860px){
-    .hub-hero-grid{ grid-template-columns:1fr; gap:28px; }
-    .hub-hero-desc-col{ border-left:none; padding-left:0; border-top:1px solid rgba(26,26,26,0.15); padding-top:20px; }
     .hub-cards-grid{ grid-template-columns:1fr; }
     .hub-cards-section{ padding:64px 0; }
   }
@@ -116,9 +113,7 @@ title: "Odisse Arquitetos — Projetos"
 <section class="hub-hero-v2">
   <div class="frame hub-hero-grid">
     <h1 class="display hub-hero-title">{{ site.data.inicio_conteudo.hero.titulo }}</h1>
-    <div class="hub-hero-desc-col">
-      <p class="hub-hero-desc">{{ site.data.inicio_conteudo.hero.descricao }}</p>
-    </div>
+    <p class="hub-hero-desc">{{ site.data.inicio_conteudo.hero.descricao }}</p>
   </div>
 </section>
 
