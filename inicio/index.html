@@ -7,7 +7,8 @@ title: "Odisse Arquitetos — Projetos"
   /* ---------- HUB HERO (texto empilhado, sem imagem) ---------- */
   .hub-hero-v2{
     background:var(--claro);
-    padding:56px 0 32px;
+    padding:48px 0 32px;
+    flex-shrink:0;
   }
   .hub-hero-grid{
     max-width:50%;
@@ -25,20 +26,29 @@ title: "Odisse Arquitetos — Projetos"
     color:rgba(26,26,26,0.72);
   }
 
-  /* ---------- HUB CARDS ---------- */
+  /* ---------- HUB CARDS (preenchem o espaço restante da tela) ---------- */
   .hub-cards-section{
-    padding:0 0 88px;
+    flex:1;
+    min-height:0;
+    display:flex;
+    padding-bottom:40px;
+  }
+  .hub-cards-section .frame{
+    flex:1;
+    display:flex;
+    min-height:0;
   }
   .hub-cards-grid{
-    width:100%;
+    flex:1;
     display:grid;
     grid-template-columns:1fr 1fr 1fr;
     gap:clamp(16px, 2vw, 40px);
+    min-height:0;
   }
   .hub-card{
     position:relative;
     display:block;
-    aspect-ratio:1/1;
+    height:100%;
     width:100%;
     overflow:hidden;
     text-decoration:none;
@@ -101,15 +111,14 @@ title: "Odisse Arquitetos — Projetos"
 
   @media (max-width:860px){
     .hub-hero-grid{ max-width:100%; }
+    .hub-cards-section{ display:block; padding:0 0 64px; }
+    .hub-cards-section .frame{ display:block; }
     .hub-cards-grid{ grid-template-columns:1fr; }
-    .hub-cards-section{ padding:0 0 64px; }
+    .hub-card{ height:60vh; }
   }
 </style>
 
-
-</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
-
-<!-- HERO + CARDS, como um único bloco -->
+<!-- HERO + CARDS, como um único bloco, ocupando o espaço disponível na primeira tela -->
 <section class="hub-hero-v2">
   <div class="frame">
     <div class="hub-hero-grid">
@@ -143,6 +152,7 @@ title: "Odisse Arquitetos — Projetos"
     </div>
   </div>
 </section>
+</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
 
 <hr class="hairline">
 
