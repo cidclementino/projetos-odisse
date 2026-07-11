@@ -24,15 +24,18 @@ title: "Odisse Arquitetos — Projetos"
   .hub-hero-desc{
     font-size:clamp(13px, 0.6vw + 0.8vh, 16px);
     color:rgba(26,26,26,0.72);
-    max-width:480px;
   }
 
   /* ---------- HUB CARDS ---------- */
   .hub-cards-section{
     flex:1;
+    position:relative;
     min-height:0;
-    padding-top:clamp(16px, 3vh, 32px);
-    padding-bottom:clamp(16px, 3vh, 32px);
+  }
+  .hub-cards-section .frame{
+    position:absolute;
+    left:0; right:0;
+    bottom:48px;
   }
   .hub-cards-grid{
     width:100%;
@@ -109,7 +112,8 @@ title: "Odisse Arquitetos — Projetos"
   @media (max-width:860px){
     .hub-hero-grid{ max-width:100%; }
     .hub-cards-grid{ grid-template-columns:1fr; }
-    .hub-cards-section{ padding:64px 0; }
+    .hub-cards-section{ position:static; padding:32px 0 64px; }
+    .hub-cards-section .frame{ position:static; }
   }
 </style>
 
