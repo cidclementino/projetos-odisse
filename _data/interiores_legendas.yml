@@ -1,0 +1,35 @@
+projetos:
+  - nome: "Projeto de Interiores 01"
+    localizacao: "João Pessoa, PB"
+    metragem: "-- m²"
+    imagem: ""
+
+  - nome: "Projeto de Interiores 02"
+    localizacao: "João Pessoa, PB"
+    metragem: "-- m²"
+    imagem: ""
+
+  - nome: "Projeto de Interiores 03"
+    localizacao: "João Pessoa, PB"
+    metragem: "-- m²"
+    imagem: ""
+
+  - nome: "Projeto de Interiores 04"
+    localizacao: "João Pessoa, PB"
+    metragem: "-- m²"
+    imagem: ""
+
+obras:
+  - nome: "Projeto ---"
+    status: "Em execução"
+    categoria: "Marcenaria"
+    endereco: "Cidade, UF"
+    legenda: "Execução de marcenaria sob medida"
+    imagem: ""
+
+  - nome: "Projeto ---"
+    status: "Em execução"
+    categoria: "Instalação"
+    endereco: "Cidade, UF"
+    legenda: "Instalação de mobiliário e iluminação"
+    imagem: ""
