@@ -1,0 +1,80 @@
+hero:
+  titulo: "Um espaço que já é seu, pensado como se fosse novo."
+  descricao: "Cuidamos do projeto de interiores e ambientação de espaços já construídos — layout, marcenaria, iluminação e mobiliário — com o mesmo rigor técnico e sensibilidade artística de um projeto do zero."
+  m2: "+100.000 m²"
+  projetos: "+50 projetos"
+  anos: "5 anos"
+  cta_texto: "Quero conversar sobre meu espaço"
+  imagem: ""
+
+diferencial:
+  titulo: "Cada espaço, um projeto próprio"
+  descricao: "Não aplicamos um estilo pronto sobre um espaço que já existe. Cada ambiente nasce da leitura de como você já vive ali, do que funciona e do que precisa mudar — e vira um projeto com identidade própria, não uma decoração genérica."
+  itens:
+    - numero: "I."
+      titulo: "Rigor técnico"
+      texto: "Projeto executivo completo — layout, marcenaria, iluminação — com o seu orçamento sob controle em cada etapa."
+    - numero: "II."
+      titulo: "Leitura de contexto"
+      texto: "O espaço como ele é hoje, o seu uso real e o que você quer que ele se torne — analisados antes de qualquer traço."
+    - numero: "III."
+      titulo: "Sensibilidade artística"
+      texto: "Mais do que resolver um layout: um ambiente que expressa quem mora ou trabalha nele."
+
+prova_visual:
+  titulo: "Espaços que já ganharam nova forma"
+  descricao: "Uma seleção de projetos de interiores que já entregamos."
+  cta_texto: "Ver meu espaço tomar essa forma"
+
+etapas:
+  titulo: "Do diagnóstico à entrega, em quatro passos."
+  descricao: "Cada projeto passa por um processo com começo, meio e entrega definidos. Você aprova cada etapa antes de avançarmos para a próxima — sem surpresas no caminho."
+  itens:
+    - numero: "I."
+      titulo: "Diagnóstico"
+      texto: "Visita técnica ao espaço, levantamento métrico e entendimento de como você usa cada ambiente hoje."
+    - numero: "II."
+      titulo: "Conceito"
+      texto: "Estudo de layout, referências e paleta — você já visualiza a proposta antes de qualquer execução."
+    - numero: "III."
+      titulo: "Projeto Executivo"
+      texto: "Marcenaria, iluminação, especificação de mobiliário e acabamentos — detalhado e pronto para orçar e executar."
+    - numero: "IV."
+      titulo: "Acompanhamento"
+      texto: "Suporte técnico durante a execução e instalação, até a entrega final do ambiente."
+
+escopo:
+  titulo: "O que você recebe"
+  descricao: "Um serviço completo, sem lacunas entre o projeto e a instalação:"
+  itens:
+    - "Projeto de layout e ambientação completo"
+    - "Especificação de mobiliário, iluminação e acabamentos"
+    - "Projeto de marcenaria sob medida"
+    - "Compatibilização com reforma, quando houver (elétrica, hidráulica, forro)"
+    - "Suporte técnico até a entrega do ambiente"
+  imagem: ""
+
+obras_secao:
+  titulo: "Acompanhamos até o último detalhe ser instalado"
+  descricao: "Um projeto de interiores não termina na entrega do desenho. Continuamos presentes durante a execução da marcenaria e a instalação de mobiliário e iluminação, esclarecendo dúvidas e acompanhando de perto, para que o ambiente entregue seja exatamente o que foi projetado."
+
+arquitetos:
+  titulo: "Os Arquitetos"
+  descricao: "Cid Clementino e Nathalia Linhares conduzem pessoalmente cada projeto de interiores, do primeiro traço à entrega do ambiente. Ambos são arquitetos e urbanistas formados pela Universidade Federal da Paraíba e coordenam o Odisse, Estúdio de Arquitetura e Design (CAU PJ 670011).
+Juntos, já assinaram mais de 50 projetos — de reformas e ambientações a residências e edifícios institucionais, como a sede administrativa da VRV. Cid é coordenador criativo do estúdio, com experiência em consultoria arquitetônica para incorporadoras; Nathalia é coordenadora executiva, com passagem pela gestão de projeto e obra em reformas de condomínios residenciais verticais.
+Em 2023, o Odisse participou da CASACOR Paraíba, onde recebeu o prêmio de Melhor Uso de Materiais Inovadores e foi finalista do Prêmio Salão Design."
+  nomes: "CID CLEMENTINO · NATHALIA LINHARES"
+  imagem: "odisse-arquitetos-003.jpg"
+
+numeros:
+  - valor: "+100.000 m²"
+    legenda: "de arquitetura projetada"
+  - valor: "+50 projetos"
+    legenda: "entregues"
+  - valor: "5 anos"
+    legenda: "de atuação contínua"
+
+cta_final:
+  titulo: "Vamos repensar seu espaço?"
+  descricao: "Preencha o formulário com informações sobre o seu ambiente e retornaremos o contato em até 1 dia útil."
+  cta_texto: "Iniciar meu projeto de interiores"
