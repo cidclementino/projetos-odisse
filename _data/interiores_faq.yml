@@ -1,0 +1,28 @@
+eyebrow: "Dúvidas frequentes"
+titulo: "Perguntas antes de começar"
+descricao: "Se ficou alguma dúvida sobre como funciona, respondemos as mais comuns abaixo. Para outras dúvidas que não tenham sido respondidas, é só chamar no WhatsApp."
+
+perguntas:
+  - pergunta: "Quanto custa um projeto de interiores?"
+    resposta: "O valor varia conforme a metragem do espaço, a quantidade de ambientes e o nível de detalhamento (só layout e especificação, ou também marcenaria sob medida). Fazemos um orçamento personalizado a partir de uma conversa inicial sobre o seu espaço e o que você tem em mente — sem custo nessa etapa."
+
+  - pergunta: "Quanto tempo leva um projeto de interiores, do diagnóstico à entrega?"
+    resposta: "Cada projeto tem um cronograma próprio, definido conforme a metragem e a complexidade. O que garantimos é um processo com etapas claras — Diagnóstico, Conceito, Projeto Executivo e Acompanhamento — sem surpresas de prazo pelo caminho. Detalhamos o cronograma específico já na proposta."
+
+  - pergunta: "O Odisse atende só em João Pessoa, ou projetos em outras cidades também?"
+    resposta: "Atendemos projetos de interiores em todo o Brasil. O processo — diagnóstico, conceito e detalhamento executivo — funciona remotamente com a mesma qualidade e proximidade, independente de onde o espaço esteja. A única etapa com abrangência específica é a visita técnica presencial."
+
+  - pergunta: "Serve pra um espaço que só precisa de mobiliário e decoração, ou também pra reforma?"
+    resposta: "Serve para os dois casos. Se o seu espaço só precisa de um novo layout, mobiliário e iluminação, entregamos o projeto de ambientação completo. Se envolve também mudanças estruturais ou de instalações, compatibilizamos o projeto de interiores com a reforma necessária."
+
+  - pergunta: "O projeto já inclui a escolha de mobiliário e iluminação?"
+    resposta: "Sim. A especificação de mobiliário, iluminação e acabamentos faz parte do escopo do Projeto Executivo — você recebe um documento pronto para orçar e comprar, não só um desenho de referência."
+
+  - pergunta: "Vocês só fazem o projeto, ou acompanham a marcenaria e a instalação também?"
+    resposta: "Acompanhamos. Depois da entrega do Projeto Executivo, seguimos com suporte técnico durante a execução da marcenaria e a instalação de mobiliário e iluminação — para garantir que o ambiente entregue seja exatamente o que foi desenhado."
+
+  - pergunta: "Quem vai conduzir o meu projeto?"
+    resposta: "Cid Clementino e Nathalia Linhares acompanham pessoalmente cada projeto de interiores, do primeiro traço à entrega do ambiente — não é repassado para uma equipe terceirizada no meio do caminho."
+
+  - pergunta: "Preencher o formulário já é um compromisso, ou posso só entender melhor como funciona?"
+    resposta: "Não. É só um primeiro contato. A partir das suas respostas, entendemos sua demanda e retornamos o contato por ligação, WhatsApp ou e-mail — você escolhe a forma que preferir no formulário — e, se fizer sentido para todos, seguimos para uma proposta."
