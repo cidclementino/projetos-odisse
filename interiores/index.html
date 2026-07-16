@@ -1,0 +1,277 @@
+---
+layout: default
+title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
+---
+<style>
+  /* CTA dos formulários desta página: laranja/gold sólido, sem gradiente */
+  .cta-form{ background:var(--gold); color:var(--escuro); }
+  .cta-form:hover{ background:#c68f52; }
+</style>
+{% assign hero_img = site.data.interiores_conteudo.hero.imagem %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg img-placeholder"{% if hero_img and hero_img != "" %} style="background-image:url('images/{{ hero_img }}'); background-size:cover; background-position:center;"{% endif %}>
+    {% unless hero_img and hero_img != "" %}
+    <div class="label">IMAGEM DE FUNDO<br>Ambiente de interiores finalizado — marcenaria e luz natural</div>
+    {% endunless %}
+  </div>
+  <div class="hero-overlay"></div>
+  <div class="frame hero-content">
+    <div class="hero-gold-rule"></div>
+    <h1 class="display">{{ site.data.interiores_conteudo.hero.titulo }}</h1>
+    <p class="sub">{{ site.data.interiores_conteudo.hero.descricao }}</p>
+    <div class="proof-line">
+      <b>{{ site.data.interiores_conteudo.hero.m2 }}</b> projetados <span class="dot">·</span> <b>{{ site.data.interiores_conteudo.hero.projetos }}</b> <span class="dot">·</span> <b>{{ site.data.interiores_conteudo.hero.anos }}</b> de atuação
+    </div>
+    <a href="/formulario-interiores/" class="cta-btn cta-form">{{ site.data.interiores_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
+    <div class="hero-form-note">Resposta em até 1 dia útil.</div>
+  </div>
+</section>
+</div><!-- fecha .viewport-hero aberto no _includes/header.html via layout -->
+
+<hr class="hairline">
+
+<!-- DIFERENCIAL -->
+<section>
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">O diferencial</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.diferencial.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.diferencial.descricao }}</p>
+
+    <div class="numbered-grid">
+      {% for item in site.data.interiores_conteudo.diferencial.itens %}
+      <div class="num-card">
+        <span class="num">{{ item.numero }}</span>
+        <h3>{{ item.titulo }}</h3>
+        <p>{{ item.texto }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="center-cta">
+      <a href="/formulario-interiores/" class="cta-btn cta-form">{{ site.data.interiores_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- PROVA VISUAL -->
+<section id="projetos">
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Projetos</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.prova_visual.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.prova_visual.descricao }}</p>
+
+    <div class="prova-grid">
+      {% for projeto in site.data.interiores_legendas.projetos %}
+      <div class="card">
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          {% if projeto.imagem and projeto.imagem != "" %}
+          <div class="photo-frame">
+            <img src="images/{{ projeto.imagem }}" alt="{{ projeto.nome }} — ambiente">
+          </div>
+          {% else %}
+          <div class="img-placeholder landscape">
+            <div class="label">IMAGEM<br>{{ projeto.nome }}</div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="caption"><b>{{ projeto.nome }}</b><span>{{ projeto.localizacao }} · {{ projeto.metragem }}</span></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="center-cta">
+      <a href="/formulario-interiores/" class="cta-btn cta-form">{{ site.data.interiores_conteudo.prova_visual.cta_texto }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- ETAPAS DO SERVIÇO -->
+<section id="processo">
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Como trabalhamos</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.etapas.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.etapas.descricao }}</p>
+
+    <div class="numbered-grid cols-4">
+      {% for item in site.data.interiores_conteudo.etapas.itens %}
+      <div class="num-card">
+        <span class="num">{{ item.numero }}</span>
+        <h3>{{ item.titulo }}</h3>
+        <p>{{ item.texto }}</p>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="center-cta">
+      <a href="/formulario-interiores/" class="cta-btn cta-form">{{ site.data.interiores_conteudo.hero.cta_texto }} <span class="arrow">→</span></a>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- O QUE ESTÁ INCLUSO -->
+{% assign escopo_img = site.data.interiores_conteudo.escopo.imagem %}
+<section id="escopo">
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Escopo</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.escopo.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.escopo.descricao }}</p>
+
+    <div class="scope-list">
+      {% for item in site.data.interiores_conteudo.escopo.itens %}
+      <div class="scope-item"><span class="mark-dot"></span>{{ item }}</div>
+      {% endfor %}
+    </div>
+
+    {% if escopo_img and escopo_img != "" %}
+    <div class="photo-frame scope-photo">
+      <img src="images/{{ escopo_img }}" alt="Especificações e documentação técnica do projeto">
+    </div>
+    {% else %}
+    <div class="img-placeholder scope-photo">
+      <div class="label">IMAGEM<br>Especificações e documentação técnica do projeto</div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- OBRAS EM EXECUÇÃO -->
+<section>
+  <div class="frame obra-layout">
+    <div>
+      <div class="eyebrow section-eyebrow">Do papel ao ambiente pronto</div>
+      <h2 class="display section-title">{{ site.data.interiores_conteudo.obras_secao.titulo }}</h2>
+      <p class="section-body">{{ site.data.interiores_conteudo.obras_secao.descricao }}</p>
+    </div>
+    <div class="obra-images">
+      {% for obra in site.data.interiores_legendas.obras %}
+      <div>
+        <div class="tape-frame">
+          <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          {% if obra.imagem and obra.imagem != "" %}
+          <div class="photo-frame">
+            <img src="images/{{ obra.imagem }}" alt="{{ obra.legenda }}">
+          </div>
+          {% else %}
+          <div class="img-placeholder"><div class="label">IMAGEM<br>{{ obra.legenda }}</div></div>
+          {% endif %}
+        </div>
+        <div class="caption">{{ obra.legenda }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- FAQ -->
+<section>
+  <div class="frame faq-frame">
+    <div class="eyebrow section-eyebrow">{{ site.data.interiores_faq.eyebrow }}</div>
+    <h2 class="display section-title">{{ site.data.interiores_faq.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_faq.descricao }}</p>
+
+    <div class="faq-list">
+      {% for item in site.data.interiores_faq.perguntas %}
+      <details class="faq-item"{% if forloop.first %} open{% endif %}>
+        <summary>
+          {{ item.pergunta }}
+          <span class="faq-icon"></span>
+        </summary>
+        <div class="faq-answer">{{ item.resposta }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for item in site.data.interiores_faq.perguntas %}
+    {
+      "@type": "Question",
+      "name": {{ item.pergunta | jsonify }},
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": {{ item.resposta | jsonify }}
+      }
+    }{% unless forloop.last %},{% endunless %}
+    {% endfor %}
+  ]
+}
+</script>
+
+<hr class="hairline">
+
+<!-- DARK BAND: OS ARQUITETOS > NÚMEROS > CTA FINAL (fundo preto sólido) -->
+<div class="dark-band">
+
+<!-- OS ARQUITETOS -->
+{% assign arq_img = site.data.interiores_conteudo.arquitetos.imagem %}
+<section id="equipe">
+  <div class="frame fundadores">
+    <div class="fund-photo">
+      <div class="tape-frame">
+        <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+        {% if arq_img and arq_img != "" %}
+        <div class="photo-frame">
+          <img src="images/{{ arq_img }}" alt="Cid Clementino e Nathalia Linhares">
+        </div>
+        {% else %}
+        <div class="img-placeholder"><div class="label">IMAGEM<br>Cid Clementino e Nathalia Linhares</div></div>
+        {% endif %}
+      </div>
+    </div>
+    <div>
+      <div class="eyebrow section-eyebrow">Autoria</div>
+      <h2 class="display section-title">{{ site.data.interiores_conteudo.arquitetos.titulo }}</h2>
+      <p class="section-body">{{ site.data.interiores_conteudo.arquitetos.descricao }}</p>
+      <div class="fund-names">{{ site.data.interiores_conteudo.arquitetos.nomes }}</div>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline-light">
+
+<!-- NÚMEROS -->
+<section>
+  <div class="frame">
+    <div class="stats-box">
+      <div class="stats-grid">
+        {% for stat in site.data.interiores_conteudo.numeros %}
+        <div class="stat">
+          <div class="figure">{{ stat.valor }}</div>
+          <div class="caption">{{ stat.legenda }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="hairline-light">
+
+<!-- CTA FINAL -->
+<section id="contato" class="final-cta">
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Comece agora</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.cta_final.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.cta_final.descricao }}</p>
+    <a href="/formulario-interiores/" class="cta-btn cta-form">{{ site.data.interiores_conteudo.cta_final.cta_texto }} <span class="arrow">→</span></a>
+  </div>
+</section>
+
+</div><!-- /dark-band -->
