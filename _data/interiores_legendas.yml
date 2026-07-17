@@ -4,10 +4,10 @@ projetos:
     metragem: "1.110 m²"
     imagem: "Residência-DCMCC-003.jpg"
 
-  - nome: "Projeto de Interiores 02"
-    localizacao: "João Pessoa, PB"
-    metragem: "-- m²"
-    imagem: ""
+  - nome: "Projeto de Interiores para Sede de Federação"
+    localizacao: "Campina Grande, PB"
+    metragem: "220 m²"
+    imagem: "escritorio-fiep-002.jpg"
 
   - nome: "Projeto de Interiores 03"
     localizacao: "João Pessoa, PB"
