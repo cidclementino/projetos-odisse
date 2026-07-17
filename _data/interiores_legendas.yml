@@ -20,16 +20,16 @@ projetos:
     imagem: ""
 
 obras:
-  - nome: "Projeto ---"
+  - nome: "Projeto DCMCC"
     status: "Em execução"
     categoria: "Marcenaria"
     endereco: "Cidade, UF"
-    legenda: "Execução de marcenaria sob medida"
-    imagem: ""
+    legenda: "Acompanhamento de instalação de esquadrias"
+    imagem: "acompanhamento-01-esquadria.jpg"
 
-  - nome: "Projeto ---"
+  - nome: "Projeto DCMCC"
     status: "Em execução"
     categoria: "Instalação"
     endereco: "Cidade, UF"
-    legenda: "Instalação de mobiliário e iluminação"
-    imagem: ""
+    legenda: "Acompanhamento de instalação de infraestrutura elétrica em cozinha"
+    imagem: "acompanhamento-02-eletrica.jpg"
