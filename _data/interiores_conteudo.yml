@@ -5,7 +5,7 @@ hero:
   projetos: "+50 projetos"
   anos: "5 anos"
   cta_texto: "Quero conversar sobre meu espaço"
-  imagem: ""
+  imagem: "hero-interiores.jpg"
 
 diferencial:
   titulo: "Cada espaço, um projeto próprio"
