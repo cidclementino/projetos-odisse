@@ -1,8 +1,8 @@
 projetos:
-  - nome: "Projeto de Interiores 01"
+  - nome: "Projeto de Interiores da Residência DCMCC"
     localizacao: "João Pessoa, PB"
-    metragem: "-- m²"
-    imagem: ""
+    metragem: "1.110 m²"
+    imagem: "Residência-DCMCC-003.jpg"
 
   - nome: "Projeto de Interiores 02"
     localizacao: "João Pessoa, PB"
