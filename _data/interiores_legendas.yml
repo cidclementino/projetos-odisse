@@ -1,23 +1,23 @@
 projetos:
-  - nome: "Projeto de Interiores da Residência DCMCC"
+  - nome: "Interiores da Residência DCMCC"
     localizacao: "João Pessoa, PB"
     metragem: "1.110 m²"
     imagem: "Residência-DCMCC-003.jpg"
 
-  - nome: "Projeto de Interiores para Sede de Federação"
+  - nome: "Renovação de Interiores para Sede de Federação na Paraíba"
     localizacao: "Campina Grande, PB"
     metragem: "220 m²"
     imagem: "escritorio-fiep-002.jpg"
 
-  - nome: "Projeto de Interiores 03"
+  - nome: "Interiores do Apartamento LVJS"
     localizacao: "João Pessoa, PB"
-    metragem: "-- m²"
+    metragem: "125 m²"
     imagem: ""
 
-  - nome: "Projeto de Interiores 04"
+  - nome: "Interiores do Apartamento LVJS"
     localizacao: "João Pessoa, PB"
-    metragem: "-- m²"
-    imagem: ""
+    metragem: "125 m²"
+    imagem: "Apartamento-LVJS-001.jpg"
 
 obras:
   - nome: "Projeto DCMCC"
