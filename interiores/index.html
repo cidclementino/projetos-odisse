@@ -131,6 +131,9 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
       <div class="card">
         <div class="tape-frame">
           <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+          {% if projeto.tipo and projeto.tipo != "" %}
+          <span class="card-type-tag">{{ projeto.tipo }}</span>
+          {% endif %}
           {% if projeto.imagem and projeto.imagem != "" %}
           <div class="photo-frame">
             <img src="images/{{ projeto.imagem }}" alt="{{ projeto.nome }} — ambiente">
