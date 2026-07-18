@@ -276,6 +276,87 @@
     max-width:100%;
   }
 
+  /* ---------- DOR (segmentada residencial/comercial) ---------- */
+  .dor-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    margin-top:48px;
+  }
+  .dor-col{
+    border-top:1px solid var(--slate);
+    padding-top:20px;
+  }
+  .dor-col h3{
+    font-family:'Archivo', sans-serif;
+    font-size:15px;
+    font-weight:700;
+    margin-bottom:10px;
+    color:var(--escuro);
+  }
+  .dor-col p{
+    font-size:15px;
+    color:var(--escuro);
+  }
+  .dor-fechamento{
+    margin-top:40px;
+    font-size:16px;
+    color:var(--escuro);
+    max-width:640px;
+    text-align:center;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  /* ---------- ANTES E DEPOIS ---------- */
+  .antes-depois-grid{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:56px;
+    margin-top:56px;
+  }
+  .ad-pair{
+    flex:1 1 0;
+    min-width:0;
+  }
+  .ad-pair-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .ad-slot{
+    position:relative;
+    flex:1;
+    min-width:0;
+  }
+  .ad-slot .photo-frame, .ad-slot .img-placeholder{ aspect-ratio:3/4; }
+  .ad-tag{
+    position:absolute;
+    top:12px;
+    left:12px;
+    background:rgba(26,26,26,0.68);
+    color:var(--claro);
+    font-family:'Archivo', sans-serif;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:5px 9px;
+  }
+  .ad-arrow{
+    flex-shrink:0;
+    font-size:22px;
+    font-weight:800;
+    color:var(--gold);
+  }
+  .ad-caption{
+    margin-top:16px;
+    font-family:'Archivo', sans-serif;
+    font-size:14px;
+    font-weight:700;
+    color:var(--escuro);
+  }
+
   /* ---------- DIFERENCIAL / ETAPAS (shared numbered-card pattern) ---------- */
   .numbered-grid{
     display:grid;
@@ -409,6 +490,7 @@
   }
   .card .caption b{ font-family:'Archivo', sans-serif; font-size:15px; font-weight:700; color:var(--escuro); }
   .card .caption span{ color:var(--copper); display:block; margin-top:2px; font-size:12.5px; }
+  .card-sintese{ margin-top:8px; font-size:13.5px; color:var(--escuro); }
 
   /* ---------- OBRAS EM EXECUÇÃO ---------- */
   .obra-layout{
@@ -560,6 +642,8 @@
     .numbered-grid, .numbered-grid.cols-4{ grid-template-columns:1fr; gap:32px; }
     .prova-grid{ grid-template-columns:1fr; }
     .obra-images{ grid-template-columns:1fr 1fr; }
+    .dor-grid{ grid-template-columns:1fr; gap:32px; }
+    .antes-depois-grid{ flex-direction:column; gap:40px; }
     .stats-grid{ grid-template-columns:1fr; gap:32px; }
     .stats-box{ padding:36px 24px; }
     .section-title, .section-body{ max-width:100%; }
