@@ -65,23 +65,29 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
       <div class="compare-pair">
         <div class="compare-row">
           <div class="compare-slot compare-slot-antes">
-            {% if par.imagem_antes and par.imagem_antes != "" %}
-            <div class="photo-frame">
-              <img src="images/{{ par.imagem_antes }}" alt="{{ par.nome }} — antes">
+            <div class="tape-frame">
+              <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+              {% if par.imagem_antes and par.imagem_antes != "" %}
+              <div class="photo-frame">
+                <img src="images/{{ par.imagem_antes }}" alt="{{ par.nome }} — antes">
+              </div>
+              {% else %}
+              <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — antes</div></div>
+              {% endif %}
             </div>
-            {% else %}
-            <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — antes</div></div>
-            {% endif %}
             <span class="compare-tag">Antes</span>
           </div>
           <div class="compare-slot compare-slot-depois">
-            {% if par.imagem_depois and par.imagem_depois != "" %}
-            <div class="photo-frame">
-              <img src="images/{{ par.imagem_depois }}" alt="{{ par.nome }} — depois">
+            <div class="tape-frame">
+              <div class="tape tape-tl"></div><div class="tape tape-tr"></div><div class="tape tape-bl"></div><div class="tape tape-br"></div>
+              {% if par.imagem_depois and par.imagem_depois != "" %}
+              <div class="photo-frame">
+                <img src="images/{{ par.imagem_depois }}" alt="{{ par.nome }} — depois">
+              </div>
+              {% else %}
+              <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — depois</div></div>
+              {% endif %}
             </div>
-            {% else %}
-            <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — depois</div></div>
-            {% endif %}
             <span class="compare-tag">Depois</span>
           </div>
         </div>
