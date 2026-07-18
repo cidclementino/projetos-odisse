@@ -31,6 +31,70 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
 
 <hr class="hairline">
 
+<!-- DOR -->
+<section>
+  <div class="frame">
+    <h2 class="display section-title" style="max-width:100%;">{{ site.data.interiores_conteudo.dor.titulo }}</h2>
+
+    <div class="dor-grid">
+      <div class="dor-col">
+        <h3>{{ site.data.interiores_conteudo.dor.residencial.label }}</h3>
+        <p>{{ site.data.interiores_conteudo.dor.residencial.texto }}</p>
+      </div>
+      <div class="dor-col">
+        <h3>{{ site.data.interiores_conteudo.dor.comercial.label }}</h3>
+        <p>{{ site.data.interiores_conteudo.dor.comercial.texto }}</p>
+      </div>
+    </div>
+
+    <p class="dor-fechamento">{{ site.data.interiores_conteudo.dor.fechamento }}</p>
+  </div>
+</section>
+
+<hr class="hairline">
+
+<!-- ANTES E DEPOIS -->
+<section>
+  <div class="frame">
+    <div class="eyebrow section-eyebrow">Transformações</div>
+    <h2 class="display section-title">{{ site.data.interiores_conteudo.antes_depois.titulo }}</h2>
+    <p class="section-body">{{ site.data.interiores_conteudo.antes_depois.descricao }}</p>
+
+    <div class="antes-depois-grid">
+      {% for par in site.data.interiores_legendas.antes_depois %}
+      <div class="ad-pair">
+        <div class="ad-pair-row">
+          <div class="ad-slot">
+            {% if par.imagem_antes and par.imagem_antes != "" %}
+            <div class="photo-frame">
+              <img src="images/{{ par.imagem_antes }}" alt="{{ par.nome }} — antes">
+            </div>
+            {% else %}
+            <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — antes</div></div>
+            {% endif %}
+            <span class="ad-tag">Antes</span>
+          </div>
+          <div class="ad-arrow">→</div>
+          <div class="ad-slot">
+            {% if par.imagem_depois and par.imagem_depois != "" %}
+            <div class="photo-frame">
+              <img src="images/{{ par.imagem_depois }}" alt="{{ par.nome }} — depois">
+            </div>
+            {% else %}
+            <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — depois</div></div>
+            {% endif %}
+            <span class="ad-tag">Depois</span>
+          </div>
+        </div>
+        <div class="ad-caption">{{ par.nome }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<hr class="hairline">
+
 <!-- DIFERENCIAL -->
 <section>
   <div class="frame">
@@ -78,7 +142,7 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
           </div>
           {% endif %}
         </div>
-        <div class="caption"><b>{{ projeto.nome }}</b><span>{{ projeto.localizacao }} · {{ projeto.metragem }}</span></div>
+        <div class="caption"><b>{{ projeto.nome }}</b><span>{{ projeto.localizacao }} · {{ projeto.metragem }}</span>{% if projeto.sintese and projeto.sintese != "" %}<p class="card-sintese">{{ projeto.sintese }}</p>{% endif %}</div>
       </div>
       {% endfor %}
     </div>
