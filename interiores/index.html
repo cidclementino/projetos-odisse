@@ -60,11 +60,11 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
     <h2 class="display section-title">{{ site.data.interiores_conteudo.antes_depois.titulo }}</h2>
     <p class="section-body">{{ site.data.interiores_conteudo.antes_depois.descricao }}</p>
 
-    <div class="antes-depois-list">
+    <div class="transformacoes-list">
       {% for par in site.data.interiores_legendas.antes_depois %}
-      <div class="ad-pair">
-        <div class="ad-row">
-          <div class="ad-slot ad-slot-antes">
+      <div class="compare-pair">
+        <div class="compare-row">
+          <div class="compare-slot compare-slot-antes">
             {% if par.imagem_antes and par.imagem_antes != "" %}
             <div class="photo-frame">
               <img src="images/{{ par.imagem_antes }}" alt="{{ par.nome }} — antes">
@@ -72,9 +72,9 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
             {% else %}
             <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — antes</div></div>
             {% endif %}
-            <span class="ad-tag">Antes</span>
+            <span class="compare-tag">Antes</span>
           </div>
-          <div class="ad-slot ad-slot-depois">
+          <div class="compare-slot compare-slot-depois">
             {% if par.imagem_depois and par.imagem_depois != "" %}
             <div class="photo-frame">
               <img src="images/{{ par.imagem_depois }}" alt="{{ par.nome }} — depois">
@@ -82,10 +82,10 @@ title: "Odisse Arquitetos — Projeto de Interiores e Ambientação"
             {% else %}
             <div class="img-placeholder"><div class="label">IMAGEM<br>{{ par.nome }} — depois</div></div>
             {% endif %}
-            <span class="ad-tag">Depois</span>
+            <span class="compare-tag">Depois</span>
           </div>
         </div>
-        <div class="ad-caption">{{ par.nome }}</div>
+        <div class="compare-caption">{{ par.nome }}</div>
       </div>
       {% endfor %}
     </div>
