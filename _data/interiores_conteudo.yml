@@ -1,11 +1,25 @@
 hero:
-  titulo: "Um espaço que já é seu, pensado como se fosse novo."
-  descricao: "Cuidamos do projeto de interiores e ambientação de espaços já construídos — layout, marcenaria, iluminação e mobiliário — com o mesmo rigor técnico e sensibilidade artística de um projeto do zero."
+  titulo: "Um projeto para revelar todo o potencial do seu espaço."
+  descricao: "Desenvolvemos ambientes residenciais e comerciais onde layout, iluminação e mobiliário são pensados como um conjunto, com rigor técnico e sensibilidade artística. Para que o espaço reflita as pessoas que o habitam ou a marca que representa."
   m2: "+100.000 m²"
   projetos: "+50 projetos"
   anos: "5 anos"
   cta_texto: "Quero conversar sobre meu espaço"
   imagem: "hero-interiores-003.jpg"
+
+dor:
+  titulo: "Um espaço que você já conhece de cor, mas que parou de fazer sentido."
+  residencial:
+    label: "Residencial"
+    texto: "Móveis que não conversam entre si. Iluminação pensada por acaso. Cômodos bem localizados, mas mal aproveitados. A sensação de estar em casa, sem sentir que a casa é sua."
+  comercial:
+    label: "Comercial"
+    texto: "Um ambiente que não comunica a marca. Um layout que atrapalha o fluxo do dia a dia. Um espaço que podia render mais — em primeira impressão, em produtividade, em experiência de quem passa por ali."
+  fechamento: "É esse o ponto de partida de um projeto de interiores: não corrigir um erro, mas dar forma a um potencial que o espaço já tem."
+
+antes_depois:
+  titulo: "Transformações recentes"
+  descricao: "Dois espaços, o mesmo processo: ler o que já existe antes de propor o que virá."
 
 diferencial:
   titulo: "Cada espaço, um projeto próprio"
