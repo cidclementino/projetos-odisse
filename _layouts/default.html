@@ -321,7 +321,37 @@
     gap:32px;
   }
   .ad-slot{ position:relative; }
-  .ad-slot .photo-frame, .ad-slot .img-placeholder{ aspect-ratio:16/9; }
+  .ad-slot .photo-frame, .ad-slot .img-placeholder{
+    aspect-ratio:auto;
+    position:relative;
+    width:100%;
+    height:0;
+    padding-top:56.25%;
+    overflow:hidden;
+  }
+  .ad-slot .photo-frame img{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .ad-slot .img-placeholder{
+    display:block;
+    border:1px dashed rgba(73,87,99,0.4);
+    background:rgba(243,223,193,0.35);
+  }
+  .ad-slot .img-placeholder .label{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    width:100%;
+    text-align:center;
+    padding:0 20px;
+  }
   .ad-slot-antes::after{
     content:"→";
     position:absolute;
