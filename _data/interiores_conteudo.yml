@@ -11,11 +11,10 @@ dor:
   titulo: "Um espaço que você já conhece de cor, mas que parou de fazer sentido."
   residencial:
     label: "Residencial"
-    texto: "Móveis que não conversam entre si. Iluminação pensada por acaso. Cômodos bem localizados, mas mal aproveitados. A sensação de estar em casa, sem sentir que a casa é sua."
+    texto: "Um apartamento recém-comprado, ainda vazio. Ou a casa onde você já mora, mas que parou de fazer sentido — móveis que não conversam entre si, cômodos bem localizados, mas mal aproveitados. De um jeito ou de outro, falta um projeto que dê forma ao que esse espaço pode ser."
   comercial:
     label: "Comercial"
-    texto: "Um ambiente que não comunica a marca. Um layout que atrapalha o fluxo do dia a dia. Um espaço que podia render mais — em primeira impressão, em produtividade, em experiência de quem passa por ali."
-  fechamento: "É esse o ponto de partida de um projeto de interiores: não corrigir um erro, mas dar forma a um potencial que o espaço já tem."
+    texto: "Um espaço comercial recém-alugado, ainda uma folha em branco. Ou um ambiente que já funciona, mas não comunica a marca — um layout que atrapalha o fluxo do dia a dia, uma experiência que podia render mais. De um jeito ou de outro, falta um projeto que traduza o negócio em espaço."
 
 antes_depois:
   titulo: "Transformações recentes"
