@@ -309,19 +309,19 @@
   }
 
   /* ---------- ANTES E DEPOIS ---------- */
-  .antes-depois-list{
+  .transformacoes-list{
     margin-top:56px;
     display:flex;
     flex-direction:column;
     gap:48px;
   }
-  .ad-row{
+  .compare-row{
     display:grid;
     grid-template-columns:1fr 1fr;
     gap:32px;
   }
-  .ad-slot{ position:relative; }
-  .ad-slot .photo-frame, .ad-slot .img-placeholder{
+  .compare-slot{ position:relative; }
+  .compare-slot .photo-frame, .compare-slot .img-placeholder{
     aspect-ratio:auto;
     box-sizing:border-box;
     position:relative;
@@ -330,9 +330,9 @@
     overflow:hidden;
   }
   @media (min-width:860px){
-    .ad-slot .photo-frame, .ad-slot .img-placeholder{ height:340px; }
+    .compare-slot .photo-frame, .compare-slot .img-placeholder{ height:340px; }
   }
-  .ad-slot .photo-frame img{
+  .compare-slot .photo-frame img{
     position:absolute;
     top:0;
     left:0;
@@ -341,12 +341,12 @@
     object-fit:cover;
     display:block;
   }
-  .ad-slot .img-placeholder{
+  .compare-slot .img-placeholder{
     display:block;
     border:1px dashed rgba(73,87,99,0.4);
     background:rgba(243,223,193,0.35);
   }
-  .ad-slot .img-placeholder .label{
+  .compare-slot .img-placeholder .label{
     position:absolute;
     top:50%;
     left:50%;
@@ -355,7 +355,7 @@
     text-align:center;
     padding:0 20px;
   }
-  .ad-slot-antes::after{
+  .compare-slot-antes::after{
     content:"→";
     position:absolute;
     top:50%;
@@ -366,7 +366,7 @@
     color:var(--gold);
     z-index:2;
   }
-  .ad-tag{
+  .compare-tag{
     position:absolute;
     top:12px;
     left:12px;
@@ -379,7 +379,7 @@
     text-transform:uppercase;
     padding:5px 9px;
   }
-  .ad-caption{
+  .compare-caption{
     margin-top:16px;
     font-family:'Archivo', sans-serif;
     font-size:14px;
@@ -673,9 +673,9 @@
     .prova-grid{ grid-template-columns:1fr; }
     .obra-images{ grid-template-columns:1fr 1fr; }
     .dor-grid{ grid-template-columns:1fr; gap:32px; }
-    .ad-row{ grid-template-columns:1fr; gap:20px; }
-    .antes-depois-list{ gap:36px; }
-    .ad-slot-antes::after{ display:none; }
+    .compare-row{ grid-template-columns:1fr; gap:20px; }
+    .transformacoes-list{ gap:36px; }
+    .compare-slot-antes::after{ display:none; }
     .stats-grid{ grid-template-columns:1fr; gap:32px; }
     .stats-box{ padding:36px 24px; }
     .section-title, .section-body{ max-width:100%; }
