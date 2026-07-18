@@ -25,8 +25,8 @@ projetos:
 
 antes_depois:
   - nome: "Projeto A"
-    imagem_antes: "antes-depois-a-antes.jpg"
-    imagem_depois: "antes-depois-a-depois.jpg"
+    imagem_antes: "Apto2503-Antes-001.jpg"
+    imagem_depois: "Apto2503-Depois-001.jpg"
 
   - nome: "Projeto B"
     imagem_antes: "antes-depois-b-antes.jpg"
