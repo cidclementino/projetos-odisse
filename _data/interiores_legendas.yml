@@ -3,28 +3,28 @@ projetos:
     localizacao: "João Pessoa, PB"
     metragem: "1.110 m²"
     imagem: "Residência-DCMCC-003.jpg"
-    sintese: "Texto síntese do projeto."
+    sintese: ""
     tipo: "Residencial"
 
   - nome: "Renovação de Interiores para Sede de Federação na Paraíba"
     localizacao: "Campina Grande, PB"
     metragem: "220 m²"
     imagem: "escritorio-fiep-002.jpg"
-    sintese: "Texto síntese do projeto."
+    sintese: ""
     tipo: "Comercial"
 
   - nome: "Interiores da Sede Administrativa da VRV"
     localizacao: "João Pessoa, PB"
     metragem: "125 m²"
     imagem: "escritório-VRV-001.jpg"
-    sintese: "Texto síntese do projeto."
+    sintese: ""
     tipo: "Comercial"
 
   - nome: "Interiores do Apartamento LVJS"
     localizacao: "João Pessoa, PB"
     metragem: "125 m²"
     imagem: "Apartamento-LVJS-001.jpg"
-    sintese: "Texto síntese do projeto."
+    sintese: ""
     tipo: "Residencial"
 
 antes_depois:
