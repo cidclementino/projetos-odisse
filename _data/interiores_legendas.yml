@@ -28,11 +28,11 @@ projetos:
     tipo: "Residencial"
 
 antes_depois:
-  - nome: "Projeto A"
+  - nome: "Reformulação de Interiores do Apartamento 2503"
     imagem_antes: "Apto2503-Antes-001.jpg"
     imagem_depois: "Apto2503-Depois-001.jpg"
 
-  - nome: "Projeto B"
+  - nome: "Reformulação de Interiores da Sede Administrativa NVG"
     imagem_antes: "navegantes-antes-001.jpg"
     imagem_depois: "navegantes-depois-001.jpg"
 
