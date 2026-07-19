@@ -6,7 +6,22 @@ title: "Odisse Arquitetos — Formulário de Projeto de Interiores"
 
 <script>
 window.addEventListener('message', function (event) {
-  if (event.data && event.data.type === 'form_submit') {
+  if (!event.data || !event.data.type) return;
+
+  if (event.data.type === 'form_init') {
+    gtag('event', 'formulario_iniciado', {
+      'form_name': 'interiores'
+    });
+  }
+
+  if (event.data.type === 'page_change') {
+    gtag('event', 'formulario_etapa', {
+      'form_name': 'interiores',
+      'step_id': event.data.stepId
+    });
+  }
+
+  if (event.data.type === 'form_submit') {
     gtag('event', 'conversion', {
       'send_to': 'AW-18312358206/hmLlCNLg29IcEL7SgZxE'
     });
