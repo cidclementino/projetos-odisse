@@ -43,10 +43,10 @@ interiores:
       pergunta: "O que você quer transformar?"
     "8pWS":
       ordem: 3
-      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 3 do residencial)"
+      pergunta: "O que você quer transformar?"
     "sA3L":
       ordem: 4
-      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 4 do residencial)"
+      pergunta: "Onde fica o imóvel ?"
     "jvns":
       ordem: 5
-      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 5 do residencial)"
+      pergunta: "Qual a melhor maneira de entrarmos em contato?"
