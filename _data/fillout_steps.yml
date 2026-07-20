@@ -1,0 +1,52 @@
+# Mapeamento de stepId (Fillout) -> etapa do formulário
+#
+# Gerado via debug manual: abrindo a LP com ?FILLOUT_EMBED_DEBUG e observando
+# o parâmetro ep.step_id nas requisições "collect" do painel Network (DevTools).
+#
+# Uso: traduzir os códigos de stepId que aparecem na dimensão personalizada
+# "Etapa do formulário" (step_id) nos relatórios do GA4.
+#
+# ATENÇÃO — Interiores, etapas 3, 4 e 5:
+# Os stepId dessas etapas foram ASSUMIDOS como idênticos aos do Residencial
+# (mesmo stepId reaproveitado pelo template do Fillout), com base no padrão
+# observado nas etapas 1 e 2, que coincidiram exatamente entre os dois forms.
+# Isso NÃO foi confirmado via debug manual. Se os números no GA4 não baterem
+# com o esperado para o form de interiores, validar essas 3 etapas primeiro.
+
+residencial:
+  form_name: residencial
+  steps:
+    "cDfu":
+      ordem: 1
+      pergunta: "Qual o seu nome?"
+    "wwKW":
+      ordem: 2
+      pergunta: "Qual tipo de projeto você está buscando?"
+    "8pWS":
+      ordem: 3
+      pergunta: "Onde construirá seu projeto?"
+    "sA3L":
+      ordem: 4
+      pergunta: "Há mais alguma informação sobre o projeto que considere importante compartilhar?"
+    "jvns":
+      ordem: 5
+      pergunta: "Qual a melhor maneira de entrarmos em contato?"
+
+interiores:
+  form_name: interiores
+  steps:
+    "cDfu":
+      ordem: 1
+      pergunta: "Qual o seu nome?"
+    "wwKW":
+      ordem: 2
+      pergunta: "O que você quer transformar?"
+    "8pWS":
+      ordem: 3
+      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 3 do residencial)"
+    "sA3L":
+      ordem: 4
+      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 4 do residencial)"
+    "jvns":
+      ordem: 5
+      pergunta: "(assumido, não confirmado via debug — provável equivalente à etapa 5 do residencial)"
