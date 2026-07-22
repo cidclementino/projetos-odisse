@@ -4,7 +4,7 @@ hero:
   m2: "+100.000 m²"
   projetos: "+50 projetos"
   anos: "5 anos"
-  cta_texto: "Quero conversar sobre meu projeto"
+  cta_texto: "Quero Solicitar um Orçamento"
   imagem: "odisse-obras-005.jpg"
 
 diferencial:
@@ -24,7 +24,7 @@ diferencial:
 prova_visual:
   titulo: "Projetos que já ganharam forma"
   descricao: "Uma seleção do que já criamos em diferentes lugares do país."
-  cta_texto: "Ver meu projeto tomar essa forma"
+  cta_texto: "Quero Solicitar um Orçamento"
 
 etapas:
   titulo: "Do conceito à obra, em quatro passos."
@@ -76,4 +76,4 @@ numeros:
 cta_final:
   titulo: "Vamos começar seu projeto?"
   descricao: "Preencha o formulário com informações sobre o projeto de sua residência e retornaremos o contato em até 1 dia útil."
-  cta_texto: "Iniciar meu projeto"
+  cta_texto: "Quero Solicitar um Orçamento"
