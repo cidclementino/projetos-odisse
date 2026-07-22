@@ -4,7 +4,7 @@ hero:
   m2: "+100.000 m²"
   projetos: "+50 projetos"
   anos: "5 anos"
-  cta_texto: "Quero conversar sobre meu espaço"
+  cta_texto: "Quero Solicitar um Orçamento"
   imagem: "hero-interiores-003.jpg"
 
 dor:
@@ -37,7 +37,7 @@ diferencial:
 prova_visual:
   titulo: "Espaços que já ganharam nova forma"
   descricao: "Uma seleção de projetos de interiores que já entregamos."
-  cta_texto: "Ver meu espaço tomar essa forma"
+  cta_texto: "Quero Solicitar um Orçamento"
 
 etapas:
   titulo: "Do diagnóstico à entrega, em quatro passos."
@@ -90,4 +90,4 @@ numeros:
 cta_final:
   titulo: "Vamos repensar seu espaço?"
   descricao: "Preencha o formulário com informações sobre o seu ambiente e retornaremos o contato em até 1 dia útil."
-  cta_texto: "Iniciar meu projeto de interiores"
+  cta_texto: "Quero Solicitar um Orçamento"
