@@ -1,0 +1,12 @@
+name = "projetos-odisse"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# A senha (PROJETOS_SENHA) é um secret do Worker, enviado pelo workflow. Nunca aqui.
+
+# Universo: banco de dados comum (D1/R2) pelo Worker do hub, ponto de entrada "Projetos".
+# Só outro Worker da mesma conta alcança esse ponto de entrada; não passa pela internet.
+[[services]]
+binding = "UNIVERSO"
+service = "universo-hub"
+entrypoint = "Projetos"

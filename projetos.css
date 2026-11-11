@@ -1,0 +1,33 @@
+/* Projetos — complementos ao styles.css (que é o mesmo do vendas.odisse) */
+.ficha { padding: 32px 32px 64px; max-width: 1200px; margin: 0 auto; }
+.ficha__cab { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; justify-content: space-between; padding-bottom: 20px; margin-bottom: 24px; border-bottom: 1px solid var(--linha-forte); }
+.ficha__cab h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; margin: 2px 0 6px; }
+.ficha__cab .small a { color: inherit; }
+.ficha__grade { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 32px; }
+.ficha section { margin-bottom: 32px; }
+.ficha h2 { font-size: 11px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2); margin: 0 0 12px; }
+.ficha .tabela input[type="date"], .ficha .tabela input[type="text"] { background: var(--elevada); color: var(--tinta); border: 1px solid var(--linha-forte); border-radius: 4px; padding: 3px 6px; font: inherit; font-size: 12.5px; width: 100%; min-width: 0; }
+.ficha .tabela td.datas { white-space: nowrap; font-size: 12.5px; }
+.linha-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.form-hora { display: grid; grid-template-columns: 1.2fr 1fr 1.4fr .8fr; gap: 8px; align-items: end; }
+.form-hora .field { margin: 0; }
+.form-hora .desc { grid-column: 1 / -1; }
+.semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 20px; }
+.semana__dia { border: 1px solid var(--linha); border-radius: var(--raio); padding: 8px 10px; background: var(--elevada); }
+.semana__dia.is-hoje { border-color: var(--tinta-2); }
+.semana__dia b { display: block; font-size: 12px; color: var(--tinta-2); font-weight: 600; }
+.semana__dia span { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.barra-horas { height: 6px; border-radius: 3px; background: var(--veu); overflow: hidden; margin-top: 4px; }
+.barra-horas i { display: block; height: 100%; background: var(--tinta-2); }
+@media (max-width: 900px) {
+  .ficha { padding: 20px 16px 48px; }
+  .ficha__grade { grid-template-columns: 1fr; }
+  .form-hora { grid-template-columns: 1fr 1fr; }
+  .semana { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.linha-acoes input, #sit-projeto { background: var(--elevada); color: var(--tinta); border: 1px solid var(--linha-forte); border-radius: var(--raio-p, 4px); padding: 7px 10px; font: inherit; font-size: 13px; }
+.linha-acoes input:focus, #sit-projeto:focus { outline: 2px solid var(--foco); outline-offset: -1px; border-color: transparent; }
+@media (max-width: 640px) {
+  .crm__barra input[type="search"] { width: 100%; order: 1; }
+  .crm__barra h1 { width: 100%; }
+}

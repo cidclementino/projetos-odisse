@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projeto — Odisse</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="https://marca.odisse.com.br/favicon/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="https://marca.odisse.com.br/favicon/favicon-32x32.png" sizes="32x32">
+<link rel="stylesheet" href="https://marca.odisse.com.br/v1/marca.css">
+<link rel="stylesheet" href="https://universo.odisse.com.br/base/v1/universo.css">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="projetos.css">
+</head>
+<body>
+
+<div id="app" class="app app--no-sidebar">
+  <header class="topo" data-pagina="projeto"></header>
+  <script src="topo.js"></script>
+  <main class="ficha" id="ficha"><p class="muted">Carregando…</p></main>
+</div>
+
+<div id="painel-raiz"></div>
+
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>exigirAutenticacao();</script>
+<script src="base.js"></script>
+<script>
+// Ficha de um projeto: projeto.html#prj_…
+let F = null; // resposta de producao/projetos/:id
+const id = () => location.hash.slice(1);
+const raiz = document.getElementById('ficha');
+
+async function carregar() {
+  if (!/^prj_/.test(id())) { raiz.innerHTML = '<p class="aviso aviso--erro">Projeto não informado. <a href="index.html">Voltar à lista</a>.</p>'; return; }
+  try {
+    F = await Universo.get('producao/projetos/' + id());
+    document.title = `${F.registro.codigo} · ${F.registro.nome} — Projetos`;
+    desenhar();
+  } catch (e) {
+    raiz.innerHTML = `<p class="aviso aviso--erro">Não consegui abrir o projeto (${escHtml(mensagemDe(e))}). <a href="index.html">Voltar à lista</a>.</p>`;
+  }
+}
+
+const etapaAtual = () => F.etapas.find(e => e.situacao === 'em_andamento') || F.etapas.find(e => e.situacao !== 'concluida');
+const ativos = () => F.equipe.filter(q => q.ativo);
+
+function desenhar() {
+  const p = F.registro;
+  const clientes = [p.cliente_nome, ...F.coclientes.map(c => c.nome)].filter(Boolean);
+  const totalMin = F.horas_por_pessoa.reduce((s, x) => s + x.minutos, 0);
+  const atual = etapaAtual();
+  const ultimo = localStorage.getItem('projetos-quem') || '';
+  raiz.innerHTML = `
+    <div class="ficha__cab">
+      <div>
+        <p class="small muted" style="margin:0"><a href="index.html">Projetos</a> · ${escHtml(nomeDe(NUCLEOS, p.nucleo_id))}${p.servico ? ' · ' + escHtml(p.servico) : ''}</p>
+        <h1>${escHtml(p.codigo)} · ${escHtml(p.nome)}</h1>
+        <p class="small" style="margin:0">${clientes.length ? escHtml(clientes.join(' + ')) : '<span class="muted">sem cliente</span>'}
+          ${F.oportunidade ? ` · <a href="${VENDAS_URL}crm.html#${F.oportunidade.id}" target="_blank" rel="noopener">oportunidade no funil</a>` : ''}</p>
+      </div>
+      <div style="text-align:right">
+        <select id="sit-projeto" aria-label="Situação do projeto">${opcoes(SITUACOES_PROJETO, p.situacao)}</select>
+        <p class="small muted" style="margin:6px 0 0">${p.inicio ? 'início ' + fmtData(p.inicio) : ''}${p.previsao_fim ? ' · previsão ' + fmtData(p.previsao_fim) : ''}${p.fim ? ' · fim ' + fmtData(p.fim) : ''}</p>
+      </div>
+    </div>
+    <div id="aviso"></div>
+
+    <div class="ficha__grade">
+      <div>
+        <section>
+          <h2>Etapas</h2>
+          ${F.etapas.length ? `<table class="tabela">
+            <thead><tr><th>Etapa</th><th>Situação</th><th>Previsto</th><th>Real</th><th style="text-align:right">Horas</th><th></th></tr></thead>
+            <tbody>${F.etapas.map(e => {
+              const atrasada = e.fim_previsto && e.fim_previsto < hoje() && e.situacao !== 'concluida';
+              return `<tr data-eta="${e.id}">
+              <td><strong>${escHtml(e.nome)}</strong>${e.fase ? `<br><span class="small muted">${escHtml(e.fase)}${e.semanas ? ` · ${String(e.semanas).replace('.', ',')} sem.` : ''}</span>` : (e.semanas ? `<br><span class="small muted">${String(e.semanas).replace('.', ',')} sem.</span>` : '')}</td>
+              <td><select data-campo="situacao">${opcoes(SITUACOES_ETAPA, e.situacao)}</select></td>
+              <td class="datas"><input type="date" data-campo="inicio_previsto" value="${e.inicio_previsto || ''}" aria-label="Início previsto"><br>
+                <input type="date" data-campo="fim_previsto" value="${e.fim_previsto || ''}" aria-label="Fim previsto" ${atrasada ? 'style="color:var(--perigo)" title="atrasada"' : ''}></td>
+              <td class="datas"><input type="date" data-campo="inicio" value="${e.inicio || ''}" aria-label="Início real"><br>
+                <input type="date" data-campo="fim" value="${e.fim || ''}" aria-label="Fim real"></td>
+              <td class="tabular" style="text-align:right">${e.minutos ? fmtMin(e.minutos) : '—'}</td>
+              <td>${e.minutos ? '' : `<button type="button" class="btn-link" data-tirar="${e.id}" title="Tirar esta etapa">tirar</button>`}</td>
+            </tr>`; }).join('')}</tbody></table>` : '<p class="small muted">Nenhuma etapa. Adicione abaixo.</p>'}
+          <form id="f-etapa" class="linha-acoes">
+            <input type="text" name="nome" placeholder="Nova etapa" required style="flex:1;min-width:160px">
+            <input type="text" name="semanas" inputmode="decimal" placeholder="semanas" style="width:90px">
+            <button class="btn btn--ghost btn--small" type="submit">Adicionar etapa</button>
+          </form>
+          <p class="field__hint">Situação "em andamento" preenche o início real com hoje; "concluída" preenche o fim. A nova etapa começa quando a última termina.</p>
+        </section>
+
+        <section>
+          <h2>Horas</h2>
+          ${F.equipe.length ? `<form id="f-hora" class="form-hora">
+            <div class="field"><label class="field__label">Quem</label><select name="equipe_id" required>${ativos().map(q => `<option value="${q.id}" ${q.id === ultimo ? 'selected' : ''}>${escHtml(q.nome)}</option>`).join('')}</select></div>
+            <div class="field"><label class="field__label">Dia</label><input type="date" name="data" value="${hoje()}" required></div>
+            <div class="field"><label class="field__label">Etapa</label><select name="etapa_id"><option value="">— sem etapa —</option>${F.etapas.map(e => `<option value="${e.id}" ${atual && e.id === atual.id ? 'selected' : ''}>${escHtml(e.nome)}</option>`).join('')}</select></div>
+            <div class="field"><label class="field__label">Duração</label><input type="text" name="duracao" placeholder="2h30" required></div>
+            <div class="field desc"><label class="field__label">O que foi feito</label><input type="text" name="descricao" placeholder="Opcional"></div>
+            <div><button class="btn btn--primary btn--small" type="submit">Lançar</button></div>
+          </form>` : '<p class="small">Para lançar horas, cadastre a equipe em <a href="equipe.html">Equipe</a>.</p>'}
+          ${F.horas.length ? `<table class="tabela" style="margin-top:16px">
+            <thead><tr><th>Dia</th><th>Quem</th><th>Etapa</th><th>O que</th><th style="text-align:right">Duração</th><th></th></tr></thead>
+            <tbody>${F.horas.map(h => `<tr>
+              <td class="tabular">${fmtDia(h.data)}</td><td>${escHtml(h.pessoa_nome)}</td>
+              <td class="small">${escHtml(h.etapa_nome || '—')}</td><td class="small">${escHtml(h.descricao || '')}</td>
+              <td class="tabular" style="text-align:right">${fmtMin(h.minutos)}</td>
+              <td><button type="button" class="btn-link" data-hora="${h.id}" data-versao="${h.versao}" title="Tirar este lançamento">tirar</button></td>
+            </tr>`).join('')}</tbody></table>` : ''}
+        </section>
+      </div>
+
+      <div>
+        ${totalMin ? `<section>
+          <h2>Horas por pessoa · ${fmtMin(totalMin)}</h2>
+          ${F.horas_por_pessoa.map(x => `<div style="margin-bottom:10px"><div class="small" style="display:flex;justify-content:space-between"><span>${escHtml(x.nome)}</span><span class="tabular">${fmtMin(x.minutos)}</span></div>
+            <div class="barra-horas"><i style="width:${Math.round(100 * x.minutos / totalMin)}%"></i></div></div>`).join('')}
+        </section>` : ''}
+
+        ${F.contratos.length ? `<section>
+          <h2>Contrato</h2>
+          <ul class="lista-int">${F.contratos.map(c => `<li><strong>${escHtml(c.codigo)}</strong> ${chipSituacaoContrato(c.situacao)}
+            <span class="small muted">${c.tipo === 'aditivo' ? 'aditivo · ' : ''}${fmtCentavos(c.valor_total)}${c.assinado_em ? ' · assinado em ' + fmtData(c.assinado_em) : ''}</span><br>
+            ${c.arquivo_assinado_id ? `<button type="button" class="btn-link" data-baixar="${c.arquivo_assinado_id}" data-nome="${escHtml(c.codigo)}">contrato assinado</button>` : ''}
+            ${c.proposta_pdf_id ? `<button type="button" class="btn-link" data-baixar="${c.proposta_pdf_id}" data-nome="${escHtml(c.proposta_codigo)}">proposta ${escHtml(c.proposta_codigo)}</button>` : ''}
+          </li>`).join('')}</ul>
+        </section>` : ''}
+
+        <section>
+          <h2>Dados do projeto</h2>
+          <form id="f-dados">
+            <div class="field"><label class="field__label">Nome</label><input type="text" name="nome" value="${escHtml(p.nome)}" required></div>
+            <div class="field"><label class="field__label">Nome público</label><input type="text" name="nome_publico" value="${escHtml(p.nome_publico || '')}" placeholder="Como aparece no site e nas redes"></div>
+            <div class="row-2">
+              <div class="field"><label class="field__label">Núcleo</label><select name="nucleo_id">${opcoes(NUCLEOS, p.nucleo_id, '—')}</select></div>
+              <div class="field"><label class="field__label">Responsável</label><select name="responsavel_id">${opcoes(F.equipe.map(q => ({ id: q.id, nome: q.nome })), p.responsavel_id, '—')}</select></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label class="field__label">Serviço</label><input type="text" name="servico" value="${escHtml(p.servico || '')}"></div>
+              <div class="field"><label class="field__label">Área (m²)</label><input type="text" inputmode="decimal" name="area_m2" value="${p.area_m2 ?? ''}"></div>
+            </div>
+            <div class="field"><label class="field__label">Tipologia</label><input type="text" name="tipologia" value="${escHtml(p.tipologia || '')}"></div>
+            <div class="row-2">
+              <div class="field"><label class="field__label">Bairro</label><input type="text" name="bairro" value="${escHtml(p.bairro || '')}"></div>
+              <div class="field"><label class="field__label">Cidade</label><input type="text" name="cidade" value="${escHtml(p.cidade || '')}"></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label class="field__label">UF</label><input type="text" name="uf" maxlength="2" value="${escHtml(p.uf || '')}"></div>
+              <div class="field"><label class="field__label">Pode ser publicado</label><select name="publicavel">${opcoes([{ id: '1', nome: 'Sim' }, { id: '0', nome: 'Não' }], p.publicavel === null ? '' : String(p.publicavel), 'Ainda não decidido')}</select></div>
+            </div>
+            <div class="row-2">
+              <div class="field"><label class="field__label">Início</label><input type="date" name="inicio" value="${p.inicio || ''}"></div>
+              <div class="field"><label class="field__label">Previsão de fim</label><input type="date" name="previsao_fim" value="${p.previsao_fim || ''}"></div>
+            </div>
+            <div class="field"><label class="field__label">Fim</label><input type="date" name="fim" value="${p.fim || ''}"></div>
+            <div class="field"><label class="field__label">Observações</label><textarea name="observacoes" rows="3">${escHtml(p.observacoes || '')}</textarea></div>
+            <div class="painel__acoes"><button class="btn btn--primary btn--small" type="submit">Salvar</button></div>
+          </form>
+        </section>
+
+        ${F.local !== undefined ? `<section>
+          <h2>Local do imóvel</h2>
+          <form id="f-local">
+            <div class="row-2">
+              <div class="field"><label class="field__label">CEP</label><input type="text" name="cep" inputmode="numeric" value="${escHtml(F.local?.cep || '')}"></div>
+              <div class="field"><label class="field__label">Número</label><input type="text" name="numero" value="${escHtml(F.local?.numero || '')}"></div>
+            </div>
+            <div class="field"><label class="field__label">Logradouro</label><input type="text" name="logradouro" value="${escHtml(F.local?.logradouro || '')}"></div>
+            <div class="field"><label class="field__label">Complemento</label><input type="text" name="complemento" value="${escHtml(F.local?.complemento || '')}"></div>
+            <div class="field"><label class="field__label">Como chegar</label><textarea name="referencias" rows="2" placeholder="Portaria, chaves, ponto de referência">${escHtml(F.local?.referencias || '')}</textarea></div>
+            <div class="painel__acoes"><button class="btn btn--ghost btn--small" type="submit">Salvar local</button></div>
+          </form>
+          <p class="field__hint">Endereço exato: só o vendas e Projetos veem. Bairro e cidade ficam nos dados do projeto.</p>
+        </section>` : ''}
+
+        <section><button type="button" class="btn btn--ghost btn--small" id="btn-arquivar">Arquivar projeto</button></section>
+      </div>
+    </div>`;
+  ligar();
+}
+
+function chipSituacaoContrato(s) { return `<span class="chip ${s === 'assinado' ? 'chip--ok' : ''}">${escHtml(s)}</span>`; }
+
+function ligar() {
+  const aviso = avisoEm(document.getElementById('aviso'));
+  const falhou = async (err) => { aviso(mensagemDe(err)); if (err.status === 409) await carregar(); };
+  const p = F.registro;
+
+  // situação do projeto (concluído: fim = hoje, se vazio)
+  document.getElementById('sit-projeto').onchange = async (ev) => {
+    const mud = { versao: p.versao, situacao: ev.target.value };
+    if (ev.target.value === 'concluido' && !p.fim) mud.fim = hoje();
+    try { await Universo.alterar('projetos', p.id, mud); await carregar(); } catch (err) { falhou(err); }
+  };
+
+  // etapas: cada mudança grava na hora
+  raiz.querySelectorAll('tr[data-eta] [data-campo]').forEach(el => el.onchange = async () => {
+    const e = F.etapas.find(x => x.id === el.closest('tr').dataset.eta);
+    const mud = { versao: e.versao, [el.dataset.campo]: el.value || null };
+    if (el.dataset.campo === 'situacao') {
+      if (['em_andamento', 'em_aprovacao', 'concluida'].includes(el.value) && !e.inicio) mud.inicio = hoje();
+      if (el.value === 'concluida' && !e.fim) mud.fim = hoje();
+    }
+    try { await Universo.alterar('etapas', e.id, mud); await carregar(); } catch (err) { falhou(err); }
+  });
+  raiz.querySelectorAll('[data-tirar]').forEach(b => b.onclick = async () => {
+    const e = F.etapas.find(x => x.id === b.dataset.tirar);
+    if (!confirm(`Tirar a etapa "${e.nome}" deste projeto? (Fica guardada como arquivada.)`)) return;
+    try { await Universo.post(`etapas/${e.id}/arquivar`, { versao: e.versao }); await carregar(); } catch (err) { falhou(err); }
+  });
+  const fe = document.getElementById('f-etapa');
+  fe.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const semanas = fe.semanas.value ? Number(fe.semanas.value.replace(',', '.')) : null;
+    const ultima = F.etapas[F.etapas.length - 1];
+    const inicio = (ultima && ultima.fim_previsto) || p.inicio || null;
+    try {
+      await Universo.criar('etapas', {
+        projeto_id: p.id, ordem: (ultima ? ultima.ordem : 0) + 1, nome: fe.nome.value, semanas,
+        inicio_previsto: inicio, fim_previsto: inicio && semanas ? somarDias(inicio, Math.round(semanas * 7)) : null
+      });
+      await carregar();
+    } catch (err) { falhou(err); }
+  };
+
+  // horas
+  const fh = document.getElementById('f-hora');
+  if (fh) fh.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const minutos = lerDuracao(fh.duracao.value);
+    if (!minutos) return aviso('Duração: use 2h30, 2:30, 1,5 ou 45min.');
+    try {
+      await Universo.criar('horas', {
+        equipe_id: fh.equipe_id.value, projeto_id: p.id, etapa_id: fh.etapa_id.value || null,
+        data: fh.data.value, minutos, descricao: fh.descricao.value || null
+      });
+      localStorage.setItem('projetos-quem', fh.equipe_id.value);
+      await carregar();
+    } catch (err) { falhou(err); }
+  };
+  raiz.querySelectorAll('[data-hora]').forEach(b => b.onclick = async () => {
+    if (!confirm('Tirar este lançamento de horas?')) return;
+    try { await Universo.post(`horas/${b.dataset.hora}/arquivar`, { versao: Number(b.dataset.versao) }); await carregar(); } catch (err) { falhou(err); }
+  });
+
+  // documentos
+  raiz.querySelectorAll('[data-baixar]').forEach(b => b.onclick = async () => {
+    try { baixarBlob(await Universo.baixarArquivo(b.dataset.baixar), `${b.dataset.nome}.pdf`); } catch (err) { falhou(err); }
+  });
+
+  // dados
+  const fd = document.getElementById('f-dados');
+  fd.onsubmit = async (ev) => {
+    ev.preventDefault();
+    const area = fd.area_m2.value.trim();
+    try {
+      await Universo.alterar('projetos', p.id, {
+        versao: p.versao, nome: fd.nome.value, nome_publico: fd.nome_publico.value || null, nucleo_id: fd.nucleo_id.value || null,
+        responsavel_id: fd.responsavel_id.value || null, servico: fd.servico.value || null,
+        area_m2: area ? Number(area.replace(',', '.')) : null, tipologia: fd.tipologia.value || null,
+        bairro: fd.bairro.value || null, cidade: fd.cidade.value || null, uf: fd.uf.value.toUpperCase() || null,
+        publicavel: fd.publicavel.value === '' ? null : Number(fd.publicavel.value),
+        inicio: fd.inicio.value || null, previsao_fim: fd.previsao_fim.value || null, fim: fd.fim.value || null,
+        observacoes: fd.observacoes.value || null
+      });
+      await carregar();
+      avisoEm(document.getElementById('aviso'))('Dados salvos.', 'ok');
+    } catch (err) { falhou(err); }
+  };
+
+  // local do imóvel (CEP preenche o logradouro e, se vazios, bairro e cidade do projeto)
+  const fl = document.getElementById('f-local');
+  if (fl) {
+    fl.cep.onchange = async () => {
+      const r = await consultarCep(fl.cep.value);
+      if (!r) return;
+      if (!fl.logradouro.value) fl.logradouro.value = r.logradouro;
+      if (!fd.bairro.value) fd.bairro.value = r.bairro;
+      if (!fd.cidade.value) fd.cidade.value = r.cidade;
+      if (!fd.uf.value) fd.uf.value = r.uf;
+    };
+    fl.onsubmit = async (ev) => {
+      ev.preventDefault();
+      const campos = { logradouro: fl.logradouro.value || null, numero: fl.numero.value || null, complemento: fl.complemento.value || null,
+        cep: fl.cep.value || null, referencias: fl.referencias.value || null };
+      try {
+        if (F.local) await Universo.alterar('projetos-local', p.id, { versao: F.local.versao, ...campos });
+        else await Universo.criar('projetos-local', { id: p.id, ...campos });
+        await carregar();
+        avisoEm(document.getElementById('aviso'))('Local salvo.', 'ok');
+      } catch (err) { falhou(err); }
+    };
+  }
+
+  document.getElementById('btn-arquivar').onclick = async () => {
+    if (!confirm('Arquivar este projeto? Ele sai das listas, mas nada é apagado (e o código continua reservado).')) return;
+    try { await Universo.post(`projetos/${p.id}/arquivar`, { versao: p.versao }); location.href = 'index.html'; } catch (err) { falhou(err); }
+  };
+}
+
+window.addEventListener('hashchange', carregar);
+carregar();
+</script>
+</body>
+</html>

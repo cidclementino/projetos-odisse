@@ -1,0 +1,53 @@
+name: Publicar API de Projetos (Cloudflare Worker)
+
+on:
+  push:
+    branches: [main]
+    paths: ['worker/**', '.github/workflows/worker.yml']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      PROJETOS_SENHA: ${{ secrets.PROJETOS_SENHA }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verificar secrets
+        run: |
+          for s in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID PROJETOS_SENHA; do
+            if [ -z "${!s}" ]; then echo "::error::Falta o secret $s (Settings → Secrets and variables → Actions)."; exit 1; fi
+          done
+
+      - name: Instalar Wrangler
+        run: npm install --no-save --prefix "$RUNNER_TEMP/wr" wrangler@4
+
+      # Primeira vez: o Worker ainda não existe e o secret só pode ser gravado depois do deploy.
+      # Sem o secret, o Worker recusa tudo (503), então não há janela aberta.
+      - name: Publicar e gravar senha
+        working-directory: worker
+        run: |
+          W="$RUNNER_TEMP/wr/node_modules/.bin/wrangler"
+          "$W" deploy
+          printf '%s' "$PROJETOS_SENHA" | "$W" secret put PROJETOS_SENHA
+
+      - name: Conferir
+        run: |
+          URL="https://projetos-odisse.reservaprojectbasework.workers.dev"
+          SENHA=$(node -e 'process.stdout.write(process.env.PROJETOS_SENHA)')
+          for i in $(seq 1 12); do
+            sem=$(curl -s -o /dev/null -w '%{http_code}' "$URL/estado")
+            u=$(curl -s -H "Authorization: Bearer $SENHA" "$URL/u/v1/estado")
+            [ "$sem" = "401" ] && case "$u" in *'"ferramenta":"projetos"'*) true ;; *) false ;; esac && break
+            sleep 5
+          done
+          echo "Sem senha: $sem (esperado 401)"
+          echo "Universo por Projetos: $u"
+          [ "$sem" = "401" ] || { echo "::error::A API respondeu sem senha."; exit 1; }
+          case "$u" in *'"ferramenta":"projetos"'*'"banco":true'*) ;; *) echo "::error::A ponte para o Universo não respondeu como esperado."; exit 1 ;; esac
