@@ -2,6 +2,8 @@
 // Peças comuns das páginas de gestão — Bases e Plano Geral de Trabalho (PGT).
 // Cadeia: Bases → PGT → Projetos. Os dados moram no Universo (migração 0005);
 // estas páginas editam o rascunho e publicam versões numeradas, que o vendas lê.
+// Aqui fica só a ESTRUTURA; o custo (preço dos serviços, pesos, parcelas, CUB vigente, BH)
+// é do vendas, na página Honorários (migração 0006).
 // ==========================================================================
 
 // rota da API de cada tipo de registro (pelo prefixo do id)
@@ -37,16 +39,6 @@ const PERTINENCIAS = [
 ];
 const proximaPert = (p) => (p === 'P' ? 'O' : p === 'O' ? '' : 'P');
 
-// Tabelas de referência do vendas (CUB vigente, fator percentual…), públicas no GitHub Pages.
-const VENDAS_DADOS = 'https://vendas.odisse.com.br/data/';
-const _dadosVendas = {};
-function dadosVendas(nome) {
-  if (!_dadosVendas[nome]) {
-    _dadosVendas[nome] = fetch(VENDAS_DADOS + nome + '.json').then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  }
-  return _dadosVendas[nome];
-}
-
 // números digitados com vírgula ou ponto; vazio = null
 const lerNum = (s) => {
   const t = String(s ?? '').trim().replace(/\s/g, '').replace(',', '.');
@@ -56,8 +48,6 @@ const lerNum = (s) => {
 };
 const fmtNum = (n, casas) => (n === null || n === undefined || n === '') ? '' :
   Number(n).toLocaleString('pt-BR', casas === undefined ? { maximumFractionDigits: 4 } : { minimumFractionDigits: casas, maximumFractionDigits: casas });
-const fmtPct = (n) => (n === null || n === undefined) ? '—' : `${fmtNum(n * 100, 0)}%`;
-const fmtReais = (n) => (n === null || n === undefined || Number.isNaN(n)) ? '—' : Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 // (i) com dica ao pousar o mouse
 const info = (texto) => texto ? `<span class="info" tabindex="0" title="${escHtml(texto)}" aria-label="${escHtml(texto)}">i</span>` : '';
@@ -98,9 +88,14 @@ function abrirPublicar(tipo, numero, aoPublicar) {
   };
 }
 
-// Célula de pertinência (P / O / ·), que alterna ao clicar.
+// Célula de pertinência, que alterna ao clicar: ✓ vem marcado (P) · caixa vazia opcional (O) · – não se aplica.
+const MARCA_PERT = {
+  P: '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.4 6.3 4.9 8.7 9.6 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  O: '',
+  '': '–'
+};
 const celulaPert = (p, titulo, extra = '') =>
-  `<button type="button" class="pert" data-p="${p || ''}" title="${escHtml(titulo)}: ${escHtml(nomeDe(PERTINENCIAS, p || ''))}" ${extra}>${p || '·'}</button>`;
+  `<button type="button" class="pert" data-p="${p || ''}" title="${escHtml(titulo)}: ${escHtml(nomeDe(PERTINENCIAS, p || ''))}" aria-label="${escHtml(titulo)}: ${escHtml(nomeDe(PERTINENCIAS, p || ''))}" ${extra}>${MARCA_PERT[p || '']}</button>`;
 
 // Arquivar / restaurar qualquer registro das Bases ou do PGT.
 async function arquivarRegistro(reg, restaurar = false) {

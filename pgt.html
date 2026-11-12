@@ -31,12 +31,6 @@
       <button type="button" data-aba="materiais">Materiais</button>
     </div>
     <div id="aviso"></div>
-    <div class="legenda-pert">
-      <span><button class="pert" data-p="P" tabindex="-1">P</button> vem marcado</span>
-      <span><button class="pert" data-p="O" tabindex="-1">O</button> opcional</span>
-      <span><button class="pert" data-p="" tabindex="-1">·</button> não se aplica</span>
-      <span>Clique numa célula para alternar.</span>
-    </div>
 
     <section data-painel="etapas" hidden><div id="etapas"><p class="muted">Carregando…</p></div></section>
 
@@ -55,8 +49,11 @@
     <section data-painel="materiais" hidden>
       <p class="gestao__intro">Modelos, formulários, checklists e referências de uso interno, ligados a uma etapa ou a um entregável.
         Por enquanto, por link (Drive, Biblioteca); o envio de arquivos e a criação de formulários vêm depois.</p>
+      <div class="gestao__filtros"><select id="f-alvo" aria-label="Ligado a"></select></div>
       <div id="materiais"></div>
     </section>
+
+    <div class="legenda-pert" id="legenda-pert" hidden></div>
 
     <div id="arquivados"></div>
   </main>
@@ -98,53 +95,160 @@ function desenhar() {
   desenharEtapas();
   montarFiltros();
   desenharEntregaveis();
+  montarFiltroAlvo();
   desenharMateriais();
   desenharArquivados(document.getElementById('arquivados'), D.arquivados, { etapa: 'Etapa', entregavel: 'Entregável', material: 'Material' }, carregar);
 }
 
+// ---------------------------------------------------------------- navegação entre as abas
+// Os números das tabelas são botões: levam à tabela da aba certa, já filtrada.
+function irPara(aba) {
+  document.querySelector(`.gestao__abas [data-aba="${aba}"]`).click();
+  window.scrollTo({ top: document.querySelector('.gestao__abas').getBoundingClientRect().top + window.scrollY - 60, behavior: 'smooth' });
+}
+function verEntregaveis(etapaId) {
+  document.getElementById('f-servico').value = '';
+  document.getElementById('f-etapa').value = etapaId;
+  document.getElementById('f-texto').value = '';
+  document.getElementById('f-todos').checked = false;
+  document.getElementById('f-todos-rot').hidden = true;
+  desenharEntregaveis();
+  irPara('entregaveis');
+}
+function verMateriais(alvoId) {
+  montarFiltroAlvo(alvoId);
+  desenharMateriais();
+  irPara('materiais');
+}
+const botaoContagem = (n, attrs, titulo) =>
+  `<button type="button" class="contagem${n ? '' : ' is-zero'}" ${attrs} title="${escHtml(titulo)}">${n}</button>`;
+
 // ---------------------------------------------------------------- fases e etapas
+// Cada etapa é um cartão: arrasta pela alça (ou Alt+↑/↓ na alça) para mudar a posição, inclusive para
+// outra fase. "+ Nova etapa" fica no fim da pilha de cada fase.
 function desenharEtapas() {
   const S = D.servicos;
-  const cab = `<thead><tr><th>Sigla</th><th>Etapa</th><th class="num">Semanas</th>
-    ${S.map((s) => `<th class="srv" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</th>`).join('')}
-    <th class="num">Entregáveis</th><th class="num">Materiais</th></tr></thead>`;
   const ncol = S.length + 5;
+  const cab = `<thead>
+    <tr><th rowspan="2" class="alca-col"></th><th rowspan="2">Sigla</th><th rowspan="2">Etapa</th><th rowspan="2" class="centro">Semanas</th>
+      <th colspan="${S.length}" class="grupo-srv">Serviços</th><th rowspan="2" class="centro">Entregáveis</th></tr>
+    <tr>${S.map((s) => `<th class="srv" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</th>`).join('')}</tr></thead>`;
   let html = '';
   for (const f of D.fases) {
     const etapas = D.etapas.filter((e) => e.fase_id === f.id);
-    html += `<tr class="grupo"><td colspan="${ncol}" class="fase-linha"><strong>Fase ${escHtml(f.nome)}</strong>
-      <span class="small muted">· ${f.ilha ? 'ilha: fora do encadeamento de prazos e das parcelas' : f.parcela !== null ? `parcela de ${fmtPct(f.parcela)} ao concluir` : 'sem parcela própria'}</span>
-      <button type="button" class="btn-link" data-fase="${f.id}">editar fase</button>
-      <button type="button" class="btn-link" data-nova-etapa="${f.id}">+ etapa</button></td></tr>`;
-    html += etapas.map((e) => `<tr data-id="${e.id}">
+    html += `<tbody data-fase="${f.id}">
+      <tr class="fase-cab"><td colspan="${ncol}"><strong>Fase ${escHtml(f.nome)}</strong>
+        ${f.ilha ? '<span class="small muted">· ilha: fora do encadeamento de prazos</span>' : ''}
+        <button type="button" class="btn-link" data-fase-ed="${f.id}">editar fase</button></td></tr>
+      ${etapas.map((e) => `<tr class="cartao" data-id="${e.id}" draggable="true">
+        <td class="alca-col"><button type="button" class="alca" data-alca="${e.id}" title="Arrastar para mudar a posição (ou Alt+↑/↓)" aria-label="Mover ${escHtml(e.sigla)}">⋮⋮</button></td>
         <td class="sigla">${escHtml(e.sigla)}</td>
-        <td><a href="#" data-abrir="${e.id}"><strong>${escHtml(e.nome)}</strong></a>${info(textoNbr(e))}
-          ${e.nbr_nome ? `<br><span class="nbr">${escHtml(e.nbr_nome)}${e.nbr_sigla ? ` (${escHtml(e.nbr_sigla)})` : ''}</span>` : ''}</td>
-        <td class="num">${e.semanas_base === null ? '—' : fmtNum(e.semanas_base)}</td>
+        <td><a href="#" data-abrir="${e.id}"><strong>${escHtml(e.nome)}</strong></a>${info(textoNbr(e))}</td>
+        <td class="centro">${e.semanas_base === null ? '—' : fmtNum(e.semanas_base)}</td>
         ${S.map((s) => {
           const x = e.servicos[s.id];
-          return `<td class="srv">${celulaPert(x ? x.pertinencia : '', `${e.sigla} em ${s.sigla}`, `data-etapa="${e.id}" data-srv="${s.id}"`)}
-            ${x && x.peso !== null ? `<span class="peso" title="peso no honorário">${fmtNum(x.peso)}</span>` : ''}</td>`;
+          return `<td class="srv">${celulaPert(x ? x.pertinencia : '', `${e.sigla} em ${s.sigla}`, `data-etapa="${e.id}" data-srv="${s.id}"`)}</td>`;
         }).join('')}
-        <td class="num">${D.entregaveis.filter((x) => x.etapa_id === e.id).length}</td>
-        <td class="num">${materiaisDe(e.id).length || '—'}</td>
-      </tr>`).join('') || `<tr><td colspan="${ncol}" class="small muted">Nenhuma etapa nesta fase.</td></tr>`;
+        <td class="centro">${botaoContagem(D.entregaveis.filter((x) => x.etapa_id === e.id).length, `data-ver-ent="${e.id}"`, `Ver os entregáveis de ${e.sigla}`)}</td>
+      </tr>`).join('')}
+      <tr class="cartao-novo"><td colspan="${ncol}"><button type="button" data-nova-etapa="${f.id}">+ Nova etapa em ${escHtml(f.nome)}</button></td></tr>
+    </tbody>`;
   }
-  // soma dos pesos por serviço com preço repartido por etapa (todas as etapas pertinentes, P ou O)
-  const somas = S.map((s) => {
-    if (!s.preco_por_etapa) return null;
-    return D.etapas.reduce((t, e) => t + ((e.servicos[s.id] && e.servicos[s.id].peso) || 0), 0);
-  });
-  html += `<tr class="somas"><td colspan="3" class="small">Soma dos pesos das etapas pertinentes<br>(serviços com preço repartido por etapa; deve dar 100)</td>
-    ${somas.map((n) => `<td class="srv ${n !== null && Math.abs(n - 100) > 0.001 ? 'ruim' : ''}">${n === null ? '' : fmtNum(n)}</td>`).join('')}
-    <td></td><td></td></tr>`;
-  html = `<div class="rolagem"><table class="tabela matriz">${cab}<tbody>${html}</tbody></table></div>`;
   const el = document.getElementById('etapas');
-  el.innerHTML = html;
+  el.innerHTML = `<div class="rolagem"><table class="tabela matriz cartoes">${cab}${html}</table></div>`;
   el.querySelectorAll('[data-abrir]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); abrirEtapa(etapaDe(a.dataset.abrir)); });
-  el.querySelectorAll('[data-fase]').forEach((b) => b.onclick = () => abrirFase(faseDe(b.dataset.fase)));
+  el.querySelectorAll('[data-fase-ed]').forEach((b) => b.onclick = () => abrirFase(faseDe(b.dataset.faseEd)));
   el.querySelectorAll('[data-nova-etapa]').forEach((b) => b.onclick = () => abrirEtapa(null, b.dataset.novaEtapa));
   el.querySelectorAll('.pert[data-etapa]').forEach((b) => b.onclick = () => alternarEtapa(b));
+  el.querySelectorAll('[data-ver-ent]').forEach((b) => b.onclick = () => verEntregaveis(b.dataset.verEnt));
+  ligarArraste(el.querySelector('table'));
+}
+
+// ---- arrastar cartões de etapa
+function ligarArraste(tabela) {
+  let arrastando = null;
+  const limpar = () => tabela.querySelectorAll('.solta-antes, .solta-depois, .solta-fim').forEach((x) => x.classList.remove('solta-antes', 'solta-depois', 'solta-fim'));
+  // só começa pela alça (para não atrapalhar cliques e seleção de texto)
+  let pelaAlca = false;
+  tabela.addEventListener('pointerdown', (ev) => { pelaAlca = !!ev.target.closest('.alca'); });
+  tabela.querySelectorAll('tr.cartao').forEach((tr) => {
+    tr.addEventListener('dragstart', (ev) => {
+      if (!pelaAlca) { ev.preventDefault(); return; }
+      arrastando = tr;
+      tr.classList.add('arrastando');
+      ev.dataTransfer.effectAllowed = 'move';
+      ev.dataTransfer.setData('text/plain', tr.dataset.id);
+    });
+    tr.addEventListener('dragend', () => { tr.classList.remove('arrastando'); arrastando = null; limpar(); });
+  });
+  // alvo: um cartão (antes/depois, pela metade) ou o fim da fase ("+ Nova etapa" e cabeçalho da fase)
+  const alvoDe = (ev) => {
+    const tr = ev.target.closest('tr');
+    if (!tr || !arrastando) return null;
+    const tb = tr.closest('tbody');
+    if (tr.classList.contains('cartao')) {
+      if (tr === arrastando) return null;
+      const r = tr.getBoundingClientRect();
+      return { tr, fase: tb.dataset.fase, lado: ev.clientY < r.top + r.height / 2 ? 'antes' : 'depois' };
+    }
+    if (tr.classList.contains('cartao-novo')) return { tr, fase: tb.dataset.fase, lado: 'fim' };
+    if (tr.classList.contains('fase-cab')) {
+      const primeiro = tb.querySelector('tr.cartao');
+      return primeiro && primeiro !== arrastando ? { tr: primeiro, fase: tb.dataset.fase, lado: 'antes' }
+        : { tr: tb.querySelector('tr.cartao-novo'), fase: tb.dataset.fase, lado: 'fim' };
+    }
+    return null;
+  };
+  tabela.addEventListener('dragover', (ev) => {
+    const a = alvoDe(ev);
+    if (!a) return;
+    ev.preventDefault();
+    ev.dataTransfer.dropEffect = 'move';
+    limpar();
+    a.tr.classList.add('solta-' + a.lado);
+  });
+  tabela.addEventListener('dragleave', (ev) => { if (!tabela.contains(ev.relatedTarget)) limpar(); });
+  tabela.addEventListener('drop', (ev) => {
+    const a = alvoDe(ev);
+    limpar();
+    if (!a) return;
+    ev.preventDefault();
+    const id = arrastando.dataset.id;
+    const ids = D.etapas.filter((e) => e.fase_id === a.fase && e.id !== id).map((e) => e.id);
+    let i = a.lado === 'fim' ? ids.length : ids.indexOf(a.tr.dataset.id) + (a.lado === 'depois' ? 1 : 0);
+    ids.splice(i, 0, id);
+    moverEtapa(id, a.fase, ids);
+  });
+  // teclado: Alt+↑/↓ na alça (passa para a fase vizinha nas pontas)
+  tabela.querySelectorAll('.alca').forEach((b) => b.addEventListener('keydown', (ev) => {
+    if (!ev.altKey || (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown')) return;
+    ev.preventDefault();
+    const e = etapaDe(b.dataset.alca);
+    const fi = D.fases.findIndex((f) => f.id === e.fase_id);
+    const ids = D.etapas.filter((x) => x.fase_id === e.fase_id).map((x) => x.id);
+    const i = ids.indexOf(e.id);
+    const sobe = ev.key === 'ArrowUp';
+    if (sobe ? i > 0 : i < ids.length - 1) {
+      ids.splice(i, 1); ids.splice(sobe ? i - 1 : i + 1, 0, e.id);
+      return moverEtapa(e.id, e.fase_id, ids, true);
+    }
+    const viz = D.fases[fi + (sobe ? -1 : 1)];
+    if (!viz) return;
+    const outros = D.etapas.filter((x) => x.fase_id === viz.id).map((x) => x.id);
+    moverEtapa(e.id, viz.id, sobe ? [...outros, e.id] : [e.id, ...outros], true);
+  }));
+}
+
+async function moverEtapa(id, faseId, ids, focar) {
+  const e = etapaDe(id);
+  const antes = D.etapas.filter((x) => x.fase_id === faseId).map((x) => x.id);
+  if (e.fase_id === faseId && JSON.stringify(antes) === JSON.stringify(ids)) return;
+  try {
+    if (e.fase_id !== faseId) await Universo.alterar('pgt-etapas', e.id, { versao: e.versao, fase_id: faseId });
+    await Universo.post('pgt/ordem', { tabela: 'pgt_etapas', ids });
+    await carregar();
+    if (focar) { const b = document.querySelector(`.alca[data-alca="${id}"]`); if (b) b.focus(); }
+  } catch (err) { aviso(mensagemDe(err)); carregar(); }
 }
 
 async function alternarEtapa(b) {
@@ -153,11 +257,13 @@ async function alternarEtapa(b) {
   const p = proximaPert(atual ? atual.pertinencia : '');
   b.disabled = true;
   try {
+    // o peso (honorários) não vai: quem cuida dele é o vendas, e o Universo o mantém
     await Universo.post('pgt/etapas-servicos', { etapa_id: e.id, servico_id: b.dataset.srv, pertinencia: p || null,
-      peso: atual ? atual.peso : null, semanas: atual ? atual.semanas : null });
-    if (p) e.servicos[b.dataset.srv] = { pertinencia: p, peso: atual ? atual.peso : null, semanas: atual ? atual.semanas : null };
+      semanas: atual ? atual.semanas : null });
+    if (p) e.servicos[b.dataset.srv] = { pertinencia: p, semanas: atual ? atual.semanas : null };
     else delete e.servicos[b.dataset.srv];
-    desenharEtapas();
+    b.outerHTML = celulaPert(p, `${e.sigla} em ${srvDe(b.dataset.srv).sigla}`, `data-etapa="${e.id}" data-srv="${b.dataset.srv}"`);
+    document.querySelector(`.pert[data-etapa="${e.id}"][data-srv="${b.dataset.srv}"]`).onclick = (ev) => alternarEtapa(ev.currentTarget);
     marcarPendente();
   } catch (err) { aviso(mensagemDe(err)); b.disabled = false; }
 }
@@ -168,23 +274,18 @@ function abrirFase(f) {
     <div id="p-aviso"></div>
     <form id="f">
       <div class="field"><label class="field__label">Nome</label><input type="text" name="nome" value="${escHtml(f.nome)}" required></div>
-      <div class="row-2">
-        <div class="field"><label class="field__label">Parcela ao concluir (%)</label><input type="text" inputmode="decimal" name="parcela" value="${f.parcela === null ? '' : fmtNum(f.parcela * 100)}" placeholder="vazio = sem parcela"></div>
-        <div class="field"><label class="field__label">Fora do fluxo (ilha)</label><select name="ilha">${opcoes([{ id: '0', nome: 'Não' }, { id: '1', nome: 'Sim' }], String(f.ilha))}</select></div>
-      </div>
+      <div class="field"><label class="field__label">Fora do fluxo (ilha)</label><select name="ilha">${opcoes([{ id: '0', nome: 'Não' }, { id: '1', nome: 'Sim' }], String(f.ilha))}</select>
+        <p class="field__hint">Etapas de uma fase-ilha não entram no encadeamento de prazos.</p></div>
       <div class="field"><label class="field__label">Descrição</label><textarea name="descricao" rows="3">${escHtml(f.descricao || '')}</textarea></div>
-      <p class="field__hint">A parcela de entrada (na assinatura) fica nas Bases, aba Referências.</p>
+      <p class="field__hint">A parcela do pagamento de cada fase fica no vendas (Honorários).</p>
       <div class="painel__acoes"><button class="btn btn--primary btn--small" type="submit">Salvar</button></div>
     </form>`);
   const av = avisoEm(painel.querySelector('#p-aviso'));
   const fm = painel.querySelector('#f');
   fm.onsubmit = async (ev) => {
     ev.preventDefault();
-    const parc = lerNum(fm.parcela.value);
-    if (Number.isNaN(parc)) return av('Parcela: número de 0 a 100.');
     try {
-      await Universo.alterar('pgt-fases', f.id, { versao: f.versao, nome: fm.nome.value, parcela: parc === null ? null : parc / 100,
-        ilha: Number(fm.ilha.value), descricao: fm.descricao.value || null });
+      await Universo.alterar('pgt-fases', f.id, { versao: f.versao, nome: fm.nome.value, ilha: Number(fm.ilha.value), descricao: fm.descricao.value || null });
       fecharPainel(); carregar();
     } catch (err) { av(mensagemDe(err)); }
   };
@@ -242,13 +343,12 @@ function abrirEtapa(e, faseId) {
       </div>
       <div class="field"><label class="field__label">Nota sobre a NBR</label><input type="text" name="nbr_nota" value="${escHtml(e.nbr_nota || '')}" placeholder="Quando não há etapa equivalente"></div>
       ${novo ? '' : `<h3 class="small" style="margin:18px 0 6px">Por serviço</h3>
-      <table class="tabela"><thead><tr><th>Serviço</th><th>Pertinência</th><th class="num">Peso</th><th class="num">Semanas</th></tr></thead>
+      <table class="tabela"><thead><tr><th>Serviço</th><th>Pertinência</th><th class="num">Semanas</th></tr></thead>
         <tbody>${S.map((s) => { const x = e.servicos[s.id] || {}; return `<tr data-srv="${s.id}">
           <td><span class="sigla">${escHtml(s.sigla)}</span> <span class="small muted">${escHtml(s.nome)}</span></td>
           <td><select data-c="pertinencia">${opcoes(PERTINENCIAS, x.pertinencia || '')}</select></td>
-          <td class="num"><input class="cel" data-c="peso" value="${fmtNum(x.peso)}" ${s.preco_por_etapa ? '' : 'placeholder="—"'}></td>
           <td class="num"><input class="cel" data-c="semanas" value="${fmtNum(x.semanas)}" placeholder="${fmtNum(e.semanas_base)}"></td></tr>`; }).join('')}</tbody></table>
-      <p class="field__hint">Peso: participação da etapa no honorário dos serviços com preço repartido por etapa. Semanas vazias = as da etapa.</p>`}
+      <p class="field__hint">Semanas vazias = as da etapa. O peso de cada etapa no honorário fica no vendas (Honorários).</p>`}
       <div class="painel__acoes">
         <button class="btn btn--primary btn--small" type="submit">${novo ? 'Criar etapa' : 'Salvar'}</button>
         ${novo ? '' : '<button class="btn btn--text btn--small" type="button" id="arquivar">Arquivar</button>'}
@@ -269,11 +369,11 @@ function abrirEtapa(e, faseId) {
       for (const tr of fm.querySelectorAll('tr[data-srv]')) {
         const v = (c) => tr.querySelector(`[data-c="${c}"]`).value;
         const p = v('pertinencia') || null;
-        const peso = lerNum(v('peso')); const semanas = lerNum(v('semanas'));
-        if (Number.isNaN(peso) || Number.isNaN(semanas)) throw new Error(`Peso e semanas de ${srvDe(tr.dataset.srv).sigla}: números`);
+        const semanas = lerNum(v('semanas'));
+        if (Number.isNaN(semanas)) throw new Error(`Semanas de ${srvDe(tr.dataset.srv).sigla}: número`);
         const x = e.servicos[tr.dataset.srv];
-        const mudou = (x ? x.pertinencia : null) !== p || (p && ((x ? x.peso : null) !== peso || (x ? x.semanas : null) !== semanas));
-        if (mudou) await Universo.post('pgt/etapas-servicos', { etapa_id: e.id, servico_id: tr.dataset.srv, pertinencia: p, peso, semanas });
+        const mudou = (x ? x.pertinencia : null) !== p || (p && (x ? x.semanas : null) !== semanas);
+        if (mudou) await Universo.post('pgt/etapas-servicos', { etapa_id: e.id, servico_id: tr.dataset.srv, pertinencia: p, semanas });
       }
       fecharPainel(); carregar();
     } catch (err) { av(mensagemDe(err)); }
@@ -316,22 +416,27 @@ function desenharEntregaveis() {
   for (const e of D.etapas) {
     const daEtapa = itens.filter((x) => x.etapa_id === e.id);
     if (!daEtapa.length) continue;
-    html += `<tr class="grupo"><td colspan="${S.length + 4}" style="background:var(--veu)"><span class="sigla">${escHtml(e.sigla)}</span> · ${escHtml(e.nome)}
-      <span class="small muted">· fase ${escHtml((faseDe(e.fase_id) || {}).nome || '')}</span>${info(textoNbr(e))}</td></tr>`;
+    const nMatEtapa = materiaisDe(e.id).length;
+    html += `<tr class="grupo"><td colspan="${S.length + 3}"><span class="sigla">${escHtml(e.sigla)}</span> · ${escHtml(e.nome)}
+      <span class="small muted">· fase ${escHtml((faseDe(e.fase_id) || {}).nome || '')}</span>${info(textoNbr(e))}</td>
+      <td class="centro" title="Materiais da etapa">${botaoContagem(nMatEtapa, `data-ver-mat="${e.id}"`, `Materiais da etapa ${e.sigla}`)}</td><td></td></tr>`;
     html += daEtapa.map((x, i) => `<tr data-id="${x.id}">
       <td class="sel"><input type="checkbox" data-sel="${x.id}" ${SEL.has(x.id) ? 'checked' : ''} aria-label="Selecionar ${escHtml(x.codigo)}"></td>
       <td class="codigo">${escHtml(x.codigo)}</td>
       <td><a href="#" data-abrir="${x.id}">${escHtml(x.texto)}</a>
-        ${x.categorias.length ? `<br><span class="small muted" title="Só para estas categorias de tipologia">só em: ${x.categorias.map((c) => escHtml(nomeCat(c))).join(', ')}</span>` : ''}
-        ${materiaisDe(x.id).length ? ` <span class="chip" title="materiais">${materiaisDe(x.id).length} mat.</span>` : ''}</td>
+        ${x.categorias.length ? `<br><span class="small muted" title="Só para estas categorias de tipologia">só em: ${x.categorias.map((c) => escHtml(nomeCat(c))).join(', ')}</span>` : ''}</td>
       ${S.map((s) => `<td class="srv">${celulaPert(x.servicos[s.id] || '', `${x.codigo} em ${s.sigla}`, `data-ent="${x.id}" data-srv="${s.id}"`)}</td>`).join('')}
+      <td class="centro">${botaoContagem(materiaisDe(x.id).length, `data-ver-mat="${x.id}"`, `Materiais de ${x.codigo}`)}</td>
       <td style="white-space:nowrap">${podeOrdenar ? `<button type="button" class="btn-link" data-subir="${x.id}" ${i === 0 ? 'disabled' : ''} title="Subir">▲</button>
         <button type="button" class="btn-link" data-descer="${x.id}" ${i === daEtapa.length - 1 ? 'disabled' : ''} title="Descer">▼</button>` : ''}</td>
     </tr>`).join('');
   }
   const el = document.getElementById('entregaveis');
-  el.innerHTML = html ? `<table class="tabela matriz"><thead><tr><th class="sel"><input type="checkbox" id="sel-todos" aria-label="Selecionar todos os visíveis"></th>
-      <th>Código</th><th>Entregável</th>${S.map((s) => `<th class="srv" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</th>`).join('')}<th></th></tr></thead>
+  el.innerHTML = html ? `<table class="tabela matriz"><thead>
+      <tr><th rowspan="2" class="sel"><input type="checkbox" id="sel-todos" aria-label="Selecionar todos os visíveis"></th>
+        <th rowspan="2">Código</th><th rowspan="2">Entregável</th><th colspan="${S.length}" class="grupo-srv">${S.length > 1 ? 'Serviços' : 'Serviço'}</th>
+        <th rowspan="2" class="centro">Materiais</th><th rowspan="2"></th></tr>
+      <tr>${S.map((s) => `<th class="srv" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</th>`).join('')}</tr></thead>
       <tbody>${html}</tbody></table>
       <p class="field__hint">${itens.length} entregáve${itens.length === 1 ? 'l' : 'is'}${srv && !document.getElementById('f-todos').checked ? ` de ${escHtml(srvDe(srv).nome)}` : ''}.
       O código (CE-03) sai da sigla da etapa e da posição; muda se o entregável mudar de lugar.</p>`
@@ -344,6 +449,7 @@ function desenharEntregaveis() {
     todos.checked = itens.length > 0 && itens.every((x) => SEL.has(x.id));
     todos.onchange = () => { itens.forEach((x) => (todos.checked ? SEL.add(x.id) : SEL.delete(x.id))); desenharEntregaveis(); };
   }
+  el.querySelectorAll('[data-ver-mat]').forEach((b) => b.onclick = () => verMateriais(b.dataset.verMat));
   el.querySelectorAll('[data-subir],[data-descer]').forEach((b) => b.onclick = () => mover(b.dataset.subir || b.dataset.descer, b.dataset.subir ? -1 : 1));
   desenharMassa();
 }
@@ -355,8 +461,9 @@ async function alternarEntregavel(b) {
   try {
     await Universo.post('pgt/entregaveis-servicos', { entregavel_ids: [x.id], servico_id: b.dataset.srv, pertinencia: p || null });
     if (p) x.servicos[b.dataset.srv] = p; else delete x.servicos[b.dataset.srv];
-    b.dataset.p = p; b.textContent = p || '·'; b.disabled = false;
-    b.title = `${x.codigo} em ${srvDe(b.dataset.srv).sigla}: ${nomeDe(PERTINENCIAS, p)}`;
+    const srv = b.dataset.srv;
+    b.outerHTML = celulaPert(p, `${x.codigo} em ${srvDe(srv).sigla}`, `data-ent="${x.id}" data-srv="${srv}"`);
+    document.querySelector(`.pert[data-ent="${x.id}"][data-srv="${srv}"]`).onclick = (ev) => alternarEntregavel(ev.currentTarget);
     marcarPendente();
   } catch (err) { aviso(mensagemDe(err)); b.disabled = false; }
 }
@@ -459,33 +566,64 @@ function abrirEntregavel(x) {
 }
 
 // ---------------------------------------------------------------- materiais (visão geral)
-function desenharMateriais() {
-  const el = document.getElementById('materiais');
-  if (!D.materiais.length) {
-    el.innerHTML = '<div class="vazio"><p>Nenhum material ainda. Acrescente pela ficha de uma etapa ou de um entregável.</p></div>';
-    return;
-  }
-  const alvoNome = (id) => {
-    const e = etapaDe(id);
-    if (e) return `${e.sigla} · ${e.nome}`;
-    const x = D.entregaveis.find((y) => y.id === id);
-    return x ? `${x.codigo} · ${x.texto}` : id;
-  };
-  el.innerHTML = `<table class="tabela"><thead><tr><th>Tipo</th><th>Material</th><th>Ligado a</th></tr></thead><tbody>
-    ${D.materiais.map((m) => `<tr><td><span class="chip">${escHtml(nomeDe(TIPOS_MAT, m.tipo))}</span></td>
-      <td>${m.link ? `<a href="${escHtml(m.link)}" target="_blank" rel="noopener">${escHtml(m.nome)}</a>` : escHtml(m.nome)}</td>
-      <td class="small"><a href="#" data-alvo="${m.alvo_id}">${escHtml(alvoNome(m.alvo_id))}</a></td></tr>`).join('')}</tbody></table>`;
-  el.querySelectorAll('[data-alvo]').forEach((a) => a.onclick = (ev) => {
-    ev.preventDefault();
-    const e = etapaDe(a.dataset.alvo);
-    if (e) abrirEtapa(e); else abrirEntregavel(D.entregaveis.find((y) => y.id === a.dataset.alvo));
-  });
+const alvoNome = (id) => {
+  const e = etapaDe(id);
+  if (e) return `${e.sigla} · ${e.nome}`;
+  const x = D.entregaveis.find((y) => y.id === id);
+  return x ? `${x.codigo} · ${x.texto}` : id;
+};
+// "Ligado a": cada etapa e, embaixo, os entregáveis dela (com a contagem de materiais)
+function montarFiltroAlvo(valor) {
+  const sel = document.getElementById('f-alvo');
+  const v = valor !== undefined ? valor : sel.value;
+  const n = (id) => materiaisDe(id).length;
+  sel.innerHTML = `<option value="">Todos os materiais (${D.materiais.length})</option>` + D.etapas.map((e) =>
+    `<optgroup label="${escHtml(e.sigla + ' · ' + e.nome)}"><option value="${e.id}">${escHtml(e.sigla)} (a etapa) · ${n(e.id)}</option>
+      ${D.entregaveis.filter((x) => x.etapa_id === e.id).map((x) => `<option value="${x.id}">${escHtml(x.codigo + ' · ' + x.texto)} · ${n(x.id)}</option>`).join('')}</optgroup>`).join('');
+  sel.value = v;
+  if (sel.value !== v) sel.value = '';
 }
 
+function desenharMateriais() {
+  const el = document.getElementById('materiais');
+  const alvo = document.getElementById('f-alvo').value;
+  const abrirAlvo = (id) => { const e = etapaDe(id); if (e) abrirEtapa(e); else abrirEntregavel(D.entregaveis.find((y) => y.id === id)); };
+  const lista = alvo ? materiaisDe(alvo) : D.materiais;
+  if (!lista.length) {
+    el.innerHTML = alvo
+      ? `<div class="vazio"><p>Nenhum material ligado a ${escHtml(alvoNome(alvo))}.</p>
+          <button type="button" class="btn btn--ghost btn--small" id="mat-acrescentar">Acrescentar material</button></div>`
+      : '<div class="vazio"><p>Nenhum material ainda. Acrescente pela ficha de uma etapa ou de um entregável.</p></div>';
+    const b = el.querySelector('#mat-acrescentar');
+    if (b) b.onclick = () => abrirAlvo(alvo);
+    return;
+  }
+  el.innerHTML = `<table class="tabela"><thead><tr><th>Tipo</th><th>Material</th><th>Ligado a</th></tr></thead><tbody>
+    ${lista.map((m) => `<tr><td><span class="chip">${escHtml(nomeDe(TIPOS_MAT, m.tipo))}</span></td>
+      <td>${m.link ? `<a href="${escHtml(m.link)}" target="_blank" rel="noopener">${escHtml(m.nome)}</a>` : escHtml(m.nome)}</td>
+      <td class="small"><a href="#" data-alvo="${m.alvo_id}">${escHtml(alvoNome(m.alvo_id))}</a></td></tr>`).join('')}</tbody></table>
+    ${alvo ? '<button type="button" class="btn btn--ghost btn--small" id="mat-acrescentar" style="margin-top:12px">Acrescentar material</button>' : ''}`;
+  el.querySelectorAll('[data-alvo]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); abrirAlvo(a.dataset.alvo); });
+  const b = el.querySelector('#mat-acrescentar');
+  if (b) b.onclick = () => abrirAlvo(alvo);
+}
+
+// legenda das células (rodapé das abas com matriz)
+function desenharLegenda(aba) {
+  const el = document.getElementById('legenda-pert');
+  el.hidden = aba === 'materiais';
+  if (el.innerHTML) return;
+  el.innerHTML = `<span>${celulaPert('P', 'exemplo', 'tabindex="-1" aria-hidden="true"')} vem marcado</span>
+    <span>${celulaPert('O', 'exemplo', 'tabindex="-1" aria-hidden="true"')} opcional (disponível, desmarcado)</span>
+    <span>${celulaPert('', 'exemplo', 'tabindex="-1" aria-hidden="true"')} não se aplica</span>
+    <span>Clique numa célula para alternar.</span>`;
+}
+
+document.getElementById('f-alvo').onchange = () => desenharMateriais();
 ['f-servico', 'f-etapa', 'f-todos'].forEach((id) => document.getElementById(id).onchange = () => { document.getElementById('f-todos-rot').hidden = !document.getElementById('f-servico').value; desenharEntregaveis(); });
 document.getElementById('f-texto').oninput = () => D && desenharEntregaveis();
 document.getElementById('novo-entregavel').onclick = () => abrirEntregavel(null);
-ligarAbas(document.querySelector('.gestao__abas'));
+ligarAbas(document.querySelector('.gestao__abas'), desenharLegenda);
 carregar();
 </script>
 </body>

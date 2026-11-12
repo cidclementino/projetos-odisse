@@ -23,13 +23,12 @@
       <h1>Bases</h1>
       <div class="gestao__pub" id="pub"></div>
     </div>
-    <p class="gestao__intro">O que forma o preço: serviços, tipologias (categoria e uso), códigos do CUB, fatores do CAU e o índice de complexidade.
-      As Bases vêm antes do <a href="pgt.html">Plano Geral de Trabalho</a>, que vem antes dos Projetos.</p>
+    <p class="gestao__intro">A estrutura de partida: serviços, tipologias (categoria e uso, com o código do CUB e o enquadramento no CAU) e o índice de complexidade.
+      As Bases vêm antes do <a href="pgt.html">Plano Geral de Trabalho</a>, que vem antes dos Projetos. Valores (preço, CUB vigente, base de honorários, pesos e parcelas) ficam no vendas, em <a href="https://vendas.odisse.com.br/honorarios.html">Honorários</a>.</p>
     <div class="abas gestao__abas" role="tablist">
       <button type="button" data-aba="servicos">Serviços</button>
       <button type="button" data-aba="tipologias">Tipologias</button>
       <button type="button" data-aba="indice">Índice de complexidade</button>
-      <button type="button" data-aba="referencias">Referências</button>
     </div>
     <div id="aviso"></div>
 
@@ -56,10 +55,6 @@
       <div class="rolagem" id="ic-servicos"></div>
     </section>
 
-    <section data-painel="referencias" hidden>
-      <div id="referencias"><p class="muted">Carregando…</p></div>
-    </section>
-
     <div id="arquivados"></div>
   </main>
 </div>
@@ -73,7 +68,6 @@
 <script src="gestao.js"></script>
 <script>
 let D = null;        // resposta de GET bases
-let CUB = null;      // tabela do CUB vigente (vendas): { regiao, competencia, tabela }
 const aviso = avisoEm(document.getElementById('aviso'));
 
 async function carregar() {
@@ -83,24 +77,17 @@ async function carregar() {
   } catch (e) { aviso(`Não consegui carregar as Bases (${mensagemDe(e)}).`); }
 }
 
-async function carregarCub() {
-  const c = await dadosVendas('cub');
-  if (!c) return;
-  const r = c.regioes[c.regiao_ativa];
-  CUB = { regiao: c.regiao_ativa, fonte: r.fonte, competencia: r.competencia_referencia, tabela: r.tabela };
-  if (D) desenhar();
-}
-
+// códigos do CUB já usados pelos usos (sugestões no campo; o valor de cada um fica no vendas)
+let CODIGOS_CUB = [];
 const grupoDe = (id) => GRUPOS.find((g) => g.id === id) || GRUPOS[3];
 const catDe = (id) => D.categorias.find((c) => c.id === id);
-const cubVigente = (cod) => (CUB && CUB.tabela[cod] ? CUB.tabela[cod].honerado : null);
 
 function desenhar() {
+  CODIGOS_CUB = [...new Set(D.usos.map((u) => u.cub_codigo).filter(Boolean))].sort();
   desenharPublicacao(document.getElementById('pub'), D, 'bases', carregar);
   desenharServicos();
   desenharTipologias();
   desenharIndice();
-  desenharReferencias();
   desenharArquivados(document.getElementById('arquivados'), D.arquivados, { servico: 'Serviço', categoria: 'Categoria', uso: 'Uso' }, carregar);
 }
 
@@ -108,18 +95,14 @@ function desenhar() {
 function desenharServicos() {
   const ajustes = (s) => Object.keys(s.ic_ajustes || {}).length;
   document.getElementById('servicos').innerHTML = `<table class="tabela">
-    <thead><tr><th>Sigla</th><th>Serviço</th><th class="num">Modificador</th><th>Tipologia</th><th>Preço</th><th>Repartido por etapa</th><th>Ajustes do índice</th></tr></thead>
+    <thead><tr><th>Sigla</th><th>Serviço</th><th>Tipologia</th><th>Ajustes do índice</th></tr></thead>
     <tbody>${D.servicos.map((s) => `<tr class="clicavel" data-id="${s.id}" tabindex="0">
       <td class="sigla">${escHtml(s.sigla)}</td>
       <td><strong>${escHtml(s.nome)}</strong>${s.descricao ? `<br><span class="small muted">${escHtml(s.descricao)}</span>` : ''}</td>
-      <td class="num">${s.modificador === null ? '—' : fmtNum(s.modificador, 2)}</td>
       <td>${s.pede_tipologia ? 'pede' : '<span class="muted">não</span>'}</td>
-      <td>${s.com_preco ? 'sim' : '<span class="muted">sem preço</span>'}</td>
-      <td>${s.preco_por_etapa ? 'sim' : '<span class="muted">não</span>'}</td>
       <td>${ajustes(s) ? `${ajustes(s)} critério${ajustes(s) > 1 ? 's' : ''}` : '<span class="muted">herda</span>'}</td>
     </tr>`).join('')}</tbody></table>
-    <p class="field__hint">Modificador: multiplica o valor do CAU (Nova Edificação = 1,00 é a referência). "Repartido por etapa": o honorário
-      se divide pelos pesos das etapas (no Plano Geral de Trabalho).</p>`;
+    <p class="field__hint">Preço de cada serviço (modificador, se tem preço, se reparte por etapa): no vendas, em Honorários.</p>`;
   document.querySelectorAll('#servicos tr[data-id]').forEach((tr) => {
     const abrir = () => abrirServico(D.servicos.find((s) => s.id === tr.dataset.id));
     tr.onclick = abrir;
@@ -129,7 +112,7 @@ function desenharServicos() {
 
 function abrirServico(s) {
   const novo = !s;
-  s = s || { sigla: '', nome: '', descricao: '', modificador: 1, pede_tipologia: 1, com_preco: 1, preco_por_etapa: 0, ic_ajustes: {}, observacoes: '' };
+  s = s || { sigla: '', nome: '', descricao: '', pede_tipologia: 1, ic_ajustes: {}, observacoes: '' };
   const sn = [{ id: '1', nome: 'Sim' }, { id: '0', nome: 'Não' }];
   const painel = abrirPainel(`
     <div class="painel__topo"><h2>${novo ? 'Novo serviço' : escHtml(s.sigla + ' · ' + s.nome)}</h2><button class="painel__fechar" aria-label="Fechar">×</button></div>
@@ -137,15 +120,10 @@ function abrirServico(s) {
     <form id="f">
       <div class="row-2">
         <div class="field"><label class="field__label">Sigla</label><input type="text" name="sigla" value="${escHtml(s.sigla)}" maxlength="4" required></div>
-        <div class="field"><label class="field__label">Modificador</label><input type="text" inputmode="decimal" name="modificador" value="${s.modificador === null ? '' : fmtNum(s.modificador)}" placeholder="vazio = sem preço"></div>
+        <div class="field"><label class="field__label">Pede tipologia</label><select name="pede_tipologia">${opcoes(sn, String(s.pede_tipologia))}</select></div>
       </div>
       <div class="field"><label class="field__label">Nome</label><input type="text" name="nome" value="${escHtml(s.nome)}" required></div>
       <div class="field"><label class="field__label">Descrição</label><textarea name="descricao" rows="2">${escHtml(s.descricao || '')}</textarea></div>
-      <div class="row-3">
-        <div class="field"><label class="field__label">Pede tipologia</label><select name="pede_tipologia">${opcoes(sn, String(s.pede_tipologia))}</select></div>
-        <div class="field"><label class="field__label">Tem preço</label><select name="com_preco">${opcoes(sn, String(s.com_preco))}</select></div>
-        <div class="field"><label class="field__label">Por etapa</label><select name="preco_por_etapa">${opcoes(sn, String(s.preco_por_etapa))}</select></div>
-      </div>
       <h3 class="small" style="margin:18px 0 8px">Ajustes do índice de complexidade</h3>
       <div class="grade-pert">${CRITERIOS_IC.map((c) => `<label title="${escHtml(c.longo)}"><span style="min-width:110px">${escHtml(c.nome)}</span>
         <select name="ic_${c.id}">${opcoes(NIVEIS, (s.ic_ajustes || {})[c.id], '— herda')}</select></label>`).join('')}</div>
@@ -159,15 +137,13 @@ function abrirServico(s) {
   const f = painel.querySelector('#f');
   f.onsubmit = async (e) => {
     e.preventDefault();
-    const mod = lerNum(f.modificador.value);
-    if (Number.isNaN(mod)) return av('Modificador: número (ex.: 1,25).');
     const ic = {};
     for (const c of CRITERIOS_IC) if (f['ic_' + c.id].value) ic[c.id] = f['ic_' + c.id].value;
-    const corpo = { sigla: f.sigla.value, nome: f.nome.value, descricao: f.descricao.value || null, modificador: mod,
-      pede_tipologia: Number(f.pede_tipologia.value), com_preco: Number(f.com_preco.value), preco_por_etapa: Number(f.preco_por_etapa.value),
-      ic_ajustes: ic, observacoes: f.observacoes.value || null };
+    const corpo = { sigla: f.sigla.value, nome: f.nome.value, descricao: f.descricao.value || null,
+      pede_tipologia: Number(f.pede_tipologia.value), ic_ajustes: ic, observacoes: f.observacoes.value || null };
     try {
-      if (novo) await Universo.criar('bases-servicos', corpo);
+      // serviço novo nasce sem preço; o vendas define em Honorários
+      if (novo) await Universo.criar('bases-servicos', { ...corpo, modificador: null, com_preco: 0 });
       else await Universo.alterar('bases-servicos', s.id, { versao: s.versao, ...corpo });
       fecharPainel(); carregar();
     } catch (err) { av(mensagemDe(err)); if (err.status === 409 && !novo) carregar(); }
@@ -195,25 +171,19 @@ function desenharTipologias() {
         <h3>${escHtml(c.nome)} <button type="button" class="btn-link" data-cat="${c.id}">editar</button>
           <button type="button" class="btn-link" data-novo-uso="${c.id}">+ uso</button></h3>
         <div class="rolagem"><table class="tabela usos">
-          <colgroup><col style="width:80px"><col><col style="width:80px"><col style="width:96px"><col style="width:124px"><col style="width:72px"><col style="width:124px"></colgroup>
-          <thead><tr><th>Item CAU</th><th>Uso</th><th title="Linha da tabela de fator percentual do CAU (1 a 4)">Cat. CAU</th><th>CUB</th>
-            <th class="num">CUB vigente</th><th class="num">Fator</th><th class="num" title="Base de honorários = CUB vigente × fator de adequação">BH (R$/m²)</th></tr></thead>
-          <tbody>${usos.map((u) => {
-            const cub = cubVigente(u.cub_codigo);
-            const usado = cub ?? u.cub_referencia;
-            return `<tr class="clicavel" data-uso="${u.id}" tabindex="0">
+          <colgroup><col style="width:80px"><col><col style="width:110px"><col style="width:96px"><col style="width:80px"></colgroup>
+          <thead><tr><th>Item CAU</th><th>Uso</th><th class="centro" title="Código do CUB a que o uso remete (o valor vigente fica no vendas)">Código do CUB</th>
+            <th class="centro" title="Linha da tabela de fator percentual do CAU (1 a 4)">Cat. CAU</th><th class="centro" title="Fator de adequação">Fator</th></tr></thead>
+          <tbody>${usos.map((u) => `<tr class="clicavel" data-uso="${u.id}" tabindex="0">
               <td class="codigo">${escHtml(u.item || '')}</td><td>${escHtml(u.descricao)}</td>
-              <td class="num">${u.categoria_cau ?? '—'}</td><td class="codigo">${escHtml(u.cub_codigo || '—')}</td>
-              <td class="num">${cub !== null ? fmtReais(cub) : `<span class="muted" title="código fora da tabela vigente: usa o CUB de referência">${fmtReais(u.cub_referencia)}*</span>`}</td>
-              <td class="num">${fmtNum(u.fator_adequacao, 2)}</td>
-              <td class="num">${usado !== null && u.fator_adequacao !== null ? fmtReais(usado * u.fator_adequacao) : '—'}</td></tr>`;
-          }).join('') || '<tr><td colspan="7" class="small muted">Nenhum uso nesta categoria.</td></tr>'}</tbody></table></div>
+              <td class="codigo centro">${escHtml(u.cub_codigo || '—')}</td>
+              <td class="centro">${u.categoria_cau ?? '—'}</td>
+              <td class="centro">${fmtNum(u.fator_adequacao, 2)}</td></tr>`).join('') || '<tr><td colspan="5" class="small muted">Nenhum uso nesta categoria.</td></tr>'}</tbody></table></div>
       </div>`;
     }
   }
   const el = document.getElementById('tipologias');
-  el.innerHTML = html + (CUB ? `<p class="field__hint">CUB vigente: ${escHtml(CUB.regiao)} · ${escHtml(CUB.competencia)} (tabela do vendas).
-    * código fora da tabela vigente: vale o CUB de referência do uso.</p>` : '<p class="field__hint">Carregando o CUB vigente do vendas…</p>');
+  el.innerHTML = html + '<p class="field__hint">O valor vigente de cada código do CUB e a base de honorários (CUB × fator) ficam no vendas, em Honorários.</p>';
   el.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => abrirCategoria(catDe(b.dataset.cat)));
   el.querySelectorAll('[data-novo-uso]').forEach((b) => b.onclick = () => abrirUso(null, b.dataset.novoUso));
   el.querySelectorAll('tr[data-uso]').forEach((tr) => {
@@ -260,7 +230,6 @@ function abrirCategoria(c) {
 function abrirUso(u, categoriaId) {
   const novo = !u;
   u = u || { categoria_id: categoriaId, item: '', descricao: '', categoria_cau: null, cub_codigo: '', cub_referencia: null, fator_adequacao: 1, observacoes: '' };
-  const cubs = CUB ? Object.entries(CUB.tabela).map(([k, v]) => ({ id: k, nome: `${k} · ${v.padrao} · ${fmtReais(v.honerado)}` })) : [];
   const painel = abrirPainel(`
     <div class="painel__topo"><h2>${novo ? 'Novo uso' : escHtml(u.descricao)}</h2><button class="painel__fechar" aria-label="Fechar">×</button></div>
     <div id="p-aviso"></div>
@@ -272,11 +241,12 @@ function abrirUso(u, categoriaId) {
         <div class="field"><label class="field__label">Categoria do fator percentual (CAU)</label><select name="categoria_cau">${opcoes([1, 2, 3, 4].map((n) => ({ id: String(n), nome: String(n) })), u.categoria_cau ? String(u.categoria_cau) : '', '—')}</select></div>
       </div>
       <div class="field"><label class="field__label">Código do CUB</label>
-        ${cubs.length ? `<select name="cub_codigo">${opcoes(cubs, u.cub_codigo, '—')}</select>` : `<input type="text" name="cub_codigo" value="${escHtml(u.cub_codigo || '')}">`}</div>
+        <input type="text" name="cub_codigo" value="${escHtml(u.cub_codigo || '')}" placeholder="R-16-A" list="codigos-cub">
+        <datalist id="codigos-cub">${CODIGOS_CUB.map((c) => `<option value="${c}">`).join('')}</datalist></div>
       <div class="row-2">
         <div class="field"><label class="field__label">Fator de adequação</label><input type="text" inputmode="decimal" name="fator_adequacao" value="${fmtNum(u.fator_adequacao)}"></div>
         <div class="field"><label class="field__label">CUB de referência (R$/m²)</label><input type="text" inputmode="decimal" name="cub_referencia" value="${fmtNum(u.cub_referencia)}">
-          <p class="field__hint">Só vale se o código não estiver na tabela vigente.</p></div>
+          <p class="field__hint">Reserva, só se o código sair da tabela do Sinduscon.</p></div>
       </div>
       <div class="field"><label class="field__label">Observações</label><textarea name="observacoes" rows="2">${escHtml(u.observacoes || '')}</textarea></div>
       <div class="painel__acoes">
@@ -336,52 +306,11 @@ function desenharIndice() {
   ligar('#ic-servicos', () => D.servicos, 'ic_ajustes', 'bases-servicos');
 }
 
-// ---------------------------------------------------------------- referências (tabelas do vendas, só leitura)
-async function desenharReferencias() {
-  const el = document.getElementById('referencias');
-  const [fp, red] = await Promise.all([dadosVendas('fator-percentual'), dadosVendas('redutor-repeticao')]);
-  const entrada = D.parametros.parcela_entrada;
-  el.innerHTML = `<div class="ref-grade">
-    <div>
-      <h3>Parâmetros</h3>
-      <form id="f-param" class="linha-acoes">
-        <label class="small" for="p-entrada">${escHtml(D.parametros_rotulos.parcela_entrada)}</label>
-        <input type="text" id="p-entrada" inputmode="decimal" value="${entrada === undefined ? '' : fmtNum(entrada * 100, 0)}" style="width:70px"> %
-        <button class="btn btn--ghost btn--small" type="submit">Salvar</button>
-      </form>
-      <p class="field__hint">As demais parcelas ficam nas fases do Plano Geral de Trabalho.</p>
-      <h3 style="margin-top:24px">CUB vigente</h3>
-      ${CUB ? `<p class="small">${escHtml(CUB.regiao)} · fonte ${escHtml(CUB.fonte)}<br>competência: ${escHtml(CUB.competencia)}</p>
-        <table class="tabela"><thead><tr><th>Código</th><th>Padrão</th><th class="num">Honerado</th></tr></thead>
-        <tbody>${Object.entries(CUB.tabela).map(([k, v]) => `<tr><td class="codigo">${escHtml(k)}</td><td class="small">${escHtml(v.padrao)}</td><td class="num">${fmtReais(v.honerado)}</td></tr>`).join('')}</tbody></table>`
-        : '<p class="small muted">Não consegui ler a tabela do CUB do vendas.</p>'}
-      <p class="field__hint">O CUB é atualizado no vendas (robô mensal do Sinduscon); aqui é só leitura.</p>
-    </div>
-    <div>
-      <h3>Fator percentual (CAU) por faixa de área</h3>
-      ${fp ? `<table class="tabela"><thead><tr><th>Área (m²)</th><th class="num">Cat. 1</th><th class="num">Cat. 2</th><th class="num">Cat. 3</th><th class="num">Cat. 4</th></tr></thead>
-        <tbody>${fp.map((l) => `<tr><td>${escHtml(l.area_limite)}</td>${['baixo', 'medio', 'alto', 'especial'].map((k) => `<td class="num">${fmtNum(l[k] * 100, 2)}%</td>`).join('')}</tr>`).join('')}</tbody></table>
-        <p class="field__hint">A coluna é a "categoria do fator percentual" de cada uso (1 a 4).</p>` : '<p class="small muted">Não consegui ler a tabela.</p>'}
-      <h3 style="margin-top:24px">Redutor por repetição</h3>
-      ${red ? `<table class="tabela"><thead><tr><th>Repetições</th><th class="num">Redutor</th></tr></thead>
-        <tbody>${red.map((l) => `<tr><td>${escHtml(l.q)}</td><td class="num">${fmtNum(l.r, 2)}</td></tr>`).join('')}</tbody></table>` : ''}
-    </div>
-  </div>`;
-  el.querySelector('#f-param').onsubmit = async (e) => {
-    e.preventDefault();
-    const n = lerNum(el.querySelector('#p-entrada').value);
-    if (n === null || Number.isNaN(n)) return aviso('Parcela de entrada: número de 0 a 100.');
-    try { await Universo.post('bases/parametros', { chave: 'parcela_entrada', valor: n / 100 }); carregar(); }
-    catch (err) { aviso(mensagemDe(err)); }
-  };
-}
-
 document.getElementById('novo-servico').onclick = () => abrirServico(null);
 document.getElementById('nova-categoria').onclick = () => abrirCategoria(null);
 document.getElementById('filtro-uso').oninput = () => D && desenharTipologias();
 ligarAbas(document.querySelector('.gestao__abas'));
 carregar();
-carregarCub();
 </script>
 </body>
 </html>
