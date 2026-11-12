@@ -5,13 +5,18 @@ Uma das ferramentas do [Universo](https://universo.odisse.com.br); os dados mora
 Universo (D1), não aqui. Repositório público: nenhum dado de cliente entra no git.
 
 ## Como funciona
-- Páginas estáticas (GitHub Pages): `index.html` (lista), `projeto.html#prj_…` (ficha: etapas, horas,
-  dados, local do imóvel, contrato), `horas.html` (semana de cada pessoa), `equipe.html`, `login.html`.
+- Páginas estáticas (GitHub Pages), na ordem da cadeia **Bases → Plano Geral de Trabalho → Projetos**:
+  - `bases.html`: serviços, tipologias (grupo › categoria › uso), CUB e fatores do CAU, índice de complexidade;
+  - `pgt.html`: Plano Geral de Trabalho — fases, etapas (com a correspondência na NBR 16636), entregáveis com
+    pertinência por serviço (edição em massa), materiais; rascunho → "Publicar versão" (o vendas lê a versão publicada);
+  - `index.html` (lista de projetos), `projeto.html#prj_…` (ficha: etapas, horas, dados, local do imóvel, contrato),
+    `horas.html` (semana de cada pessoa), `equipe.html`, `login.html`.
+  `gestao.js` reúne as peças comuns de Bases e PGT.
 - `worker/`: Worker `projetos-odisse` (Cloudflare). Confere a senha (`PROJETOS_SENHA`) e repassa
   `/u/v1/…` à API do Universo pelo service binding `UNIVERSO` (ponto de entrada `Projetos`).
   Publicado pelo GitHub Actions a cada mudança em `worker/` (`.github/workflows/worker.yml`).
 - Projetos nascem no vendas.odisse, quando o contrato principal é registrado como assinado no Funil
-  (código AAAA-NNN, etapas e prazos da proposta, endereço do imóvel, co-clientes). Os que já existiam
+  (código OA-AAAA-NNN, etapas e prazos da proposta, endereço do imóvel, co-clientes). Os que já existiam
   antes do Universo são cadastrados à mão aqui, com o código que já tinham.
 - Visual: `styles.css` e `auth.js` são os mesmos do vendas.odisse; `base.js` adapta o cliente da API
   e as peças de tela de lá. `projetos.css` acrescenta o que é só daqui.

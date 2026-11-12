@@ -5,7 +5,10 @@
 //   <header class="topo" data-pagina="projetos"></header><script src="topo.js"></script>
 // ==========================================================================
 (() => {
+  // Cadeia progressiva: Bases → Plano Geral de Trabalho → Projetos; depois, o dia a dia (horas, equipe).
   const SECOES = [
+    { id: 'bases', nome: 'Bases', href: 'bases.html', dica: 'Serviços, tipologias, CUB, fatores do CAU e índice de complexidade' },
+    { id: 'pgt', nome: 'PGT', href: 'pgt.html', dica: 'Plano Geral de Trabalho: fases, etapas, entregáveis e materiais por serviço' },
     { id: 'projetos', nome: 'Projetos', href: 'index.html', dica: 'Projetos em andamento, etapas e prazos' },
     { id: 'horas', nome: 'Horas', href: 'horas.html', dica: 'Apontamento de horas da semana' },
     { id: 'equipe', nome: 'Equipe', href: 'equipe.html', dica: 'Quem aponta horas' }

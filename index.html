@@ -130,7 +130,7 @@ function abrirNovo() {
     <p class="small muted">Para projetos que já existiam antes do Universo. Os novos nascem no Funil do vendas, ao registrar o contrato assinado.</p>
     <form id="f-novo">
       <div class="row-2">
-        <div class="field"><label class="field__label">Código (se já tiver)</label><input type="text" name="codigo" placeholder="2026-031" pattern="\\d{4}-\\d{3,4}">
+        <div class="field"><label class="field__label">Código (se já tiver)</label><input type="text" name="codigo" placeholder="OA-2026-031" pattern="(OA-|oa-)?\\d{4}-\\d{3,4}">
           <p class="field__hint">Vazio = próximo código do ano.</p></div>
         <div class="field"><label class="field__label">Núcleo</label><select name="nucleo_id">${opcoes(NUCLEOS, 'arquitetos')}</select></div>
       </div>
