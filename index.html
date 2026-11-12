@@ -58,9 +58,8 @@ async function carregar() {
   const sit = document.getElementById('filtro-situacao').value;
   const precisaTodos = sit !== 'andamento';
   try {
-    PAINEL = await Universo.get('producao/painel', precisaTodos ? { todos: 1 } : null);
-    TODOS = precisaTodos;
-    desenhar();
+    // abre com o que está guardado neste computador e atualiza quando o Universo responde
+    await Universo.lerComCache(precisaTodos ? 'producao/painel?todos=1' : 'producao/painel', (d) => { PAINEL = d; TODOS = precisaTodos; desenhar(); });
   } catch (e) { aviso(`Não consegui carregar os projetos (${mensagemDe(e)}).`); }
 }
 

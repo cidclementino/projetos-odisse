@@ -48,6 +48,24 @@ const Universo = (() => {
       try { return (await chamar('GET', `${rota}/${encodeURIComponent(id)}`)).registro; }
       catch (e) { if (e.status === 404) return null; throw e; }
     },
+    // Leitura com cache neste computador: chama aoChegar já com o que estava guardado (se houver) e de novo
+    // quando a resposta do Universo chega, se ela mudou. soNovo: ignora o guardado (depois de gravar algo).
+    async lerComCache(caminho, aoChegar, { soNovo = false } = {}) {
+      const chave = 'cache:' + caminho;
+      let guardado = null;
+      if (!soNovo) { try { guardado = localStorage.getItem(chave); } catch (_) { /* sem armazenamento */ } }
+      if (guardado) { try { aoChegar(JSON.parse(guardado)); } catch (_) { guardado = null; } }
+      try {
+        const novo = await chamar('GET', caminho);
+        const texto = JSON.stringify(novo);
+        try { localStorage.setItem(chave, texto); } catch (_) { /* cheio: segue sem cache */ }
+        if (texto !== guardado) aoChegar(novo);
+        return novo;
+      } catch (e) {
+        if (guardado) return JSON.parse(guardado);   // sem rede: fica o guardado
+        throw e;
+      }
+    },
     criar: async (rota, corpo) => (await chamar('POST', rota, corpo)).registro,
     alterar: async (rota, id, corpo) => (await chamar('PATCH', `${rota}/${encodeURIComponent(id)}`, corpo)).registro,
     buscar: (q, tabela) => chamar('GET', `busca?${qs({ q, tabela })}`),

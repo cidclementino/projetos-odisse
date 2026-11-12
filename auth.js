@@ -59,6 +59,8 @@ function logout() {
   localStorage.removeItem(AUTH_FLAG_KEY);
   localStorage.removeItem(AUTH_NAME_KEY);
   localStorage.removeItem(AUTH_SENHA_KEY);
+  // dados guardados para abrir as páginas mais rápido (Universo.lerComCache)
+  try { Object.keys(localStorage).filter((k) => k.startsWith('cache:')).forEach((k) => localStorage.removeItem(k)); } catch (_) { /* sem armazenamento */ }
 }
 
 // A API recusou a senha (trocada no servidor, por exemplo): sai e volta ao login.

@@ -53,7 +53,8 @@ const fmtNum = (n, casas) => (n === null || n === undefined || n === '') ? '' :
 const info = (texto) => texto ? `<span class="info" tabindex="0" title="${escHtml(texto)}" aria-label="${escHtml(texto)}">i</span>` : '';
 
 // Cabeçalho de publicação: versão publicada, pendência e botão Publicar.
-function desenharPublicacao(el, dados, tipo, aoPublicar) {
+// antes(): opcional; roda antes de abrir a publicação (ex.: salvar o que está na fila) e devolve false para não seguir.
+function desenharPublicacao(el, dados, tipo, aoPublicar, antes) {
   const p = dados.publicacao;
   const quando = p ? new Date(p.publicado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
   el.innerHTML = `
@@ -62,7 +63,10 @@ function desenharPublicacao(el, dados, tipo, aoPublicar) {
       ${dados.pendente ? '<span class="chip chip--pendente">mudanças não publicadas</span>' : '<span class="chip chip--ok">em dia</span>'}
     </span>
     <button class="btn btn--primary btn--small" type="button" ${dados.pendente ? '' : 'disabled'}>Publicar versão</button>`;
-  el.querySelector('button').onclick = () => abrirPublicar(tipo, p ? p.numero + 1 : 1, aoPublicar);
+  el.querySelector('button').onclick = async () => {
+    if (antes && (await antes()) === false) return;
+    abrirPublicar(tipo, p ? p.numero + 1 : 1, aoPublicar);
+  };
 }
 
 function abrirPublicar(tipo, numero, aoPublicar) {

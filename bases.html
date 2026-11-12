@@ -70,10 +70,11 @@
 let D = null;        // resposta de GET bases
 const aviso = avisoEm(document.getElementById('aviso'));
 
-async function carregar() {
+// Abre com o que está guardado neste computador e atualiza quando o Universo responde.
+// Depois de gravar algo, recarrega sem o guardado.
+async function carregar({ soNovo = true } = {}) {
   try {
-    D = await Universo.get('bases');
-    desenhar();
+    await Universo.lerComCache('bases', (d) => { D = d; desenhar(); }, { soNovo });
   } catch (e) { aviso(`Não consegui carregar as Bases (${mensagemDe(e)}).`); }
 }
 
@@ -310,7 +311,7 @@ document.getElementById('novo-servico').onclick = () => abrirServico(null);
 document.getElementById('nova-categoria').onclick = () => abrirCategoria(null);
 document.getElementById('filtro-uso').oninput = () => D && desenharTipologias();
 ligarAbas(document.querySelector('.gestao__abas'));
-carregar();
+carregar({ soNovo: false });
 </script>
 </body>
 </html>
