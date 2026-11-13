@@ -60,7 +60,8 @@
 .pert:hover { border-color: var(--tinta-2); color: var(--tinta-2); }
 .pert:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
 .pert[data-p="P"] { background: var(--tinta); border-color: var(--tinta); color: var(--superficie); }
-.pert[data-p="O"] { background: var(--elevada); border: 1.5px solid var(--tinta-2); }
+.pert[data-p="O"] { background: var(--opcional, #F3D9B8); border-color: var(--opcional-borda, #E2B47F); color: var(--destaque-texto, #8A5A2B); font-weight: 700; }
+.pert[data-p="S"] { background: var(--perpetuo-fundo, #E4E7EA); border-color: var(--perpetuo-borda, #C9CED3); color: var(--perpetuo, #7F878F); cursor: default; }
 .pert:disabled { cursor: progress; opacity: .6; }
 .legenda-pert { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; font-size: 12px; color: var(--tinta-2); margin: 22px 0 0; padding-top: 14px; border-top: 1px solid var(--linha); }
 .legenda-pert .pert { cursor: default; pointer-events: none; }
@@ -175,10 +176,14 @@
 .legenda-icone { display: inline-flex; align-items: center; gap: 4px; }
 .legenda-icone svg { width: 14px; height: 14px; }
 /* ✓ calculado na etapa: mesmo desenho, sem clique */
+/* nas etapas (soma das entregas) e no Encerramento: sem clique; nas etapas, tom mais claro */
 .pert--calc { cursor: default; }
 .pert--calc:hover { border-color: transparent; color: var(--linha-forte); }
-.pert--calc[data-p="P"]:hover { border-color: var(--tinta); color: var(--superficie); }
-.pert--calc[data-p="O"]:hover { border-color: var(--tinta-2); }
+.pert--calc[data-p="P"] { background: color-mix(in srgb, var(--tinta) 58%, var(--elevada)); border-color: transparent; }
+.pert--calc[data-p="P"]:hover { border-color: transparent; color: var(--superficie); }
+.pert--calc[data-p="O"] { background: color-mix(in srgb, var(--opcional, #F3D9B8) 55%, var(--elevada)); border-color: color-mix(in srgb, var(--opcional-borda, #E2B47F) 55%, var(--elevada)); color: color-mix(in srgb, var(--destaque-texto, #8A5A2B) 70%, var(--elevada)); }
+.pert--calc[data-p="O"]:hover { border-color: color-mix(in srgb, var(--opcional-borda, #E2B47F) 55%, var(--elevada)); color: color-mix(in srgb, var(--destaque-texto, #8A5A2B) 70%, var(--elevada)); }
+.pert--calc[data-p="S"], .pert--calc[data-p="S"]:hover { background: var(--perpetuo-fundo, #E4E7EA); border-color: var(--perpetuo-borda, #C9CED3); color: var(--perpetuo, #7F878F); }
 .pert:disabled { cursor: default; opacity: .75; }
 .contagem { min-width: 30px; padding: 2px 8px; border-radius: 12px; border: 1px solid var(--linha-forte); background: var(--elevada); color: var(--tinta); font: inherit; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
 .contagem.is-aberto { display: inline-flex; align-items: center; justify-content: center; background: var(--tinta); border-color: var(--tinta); color: var(--superficie); }
@@ -251,3 +256,43 @@
 .matriz .btn-link[disabled] { opacity: .25; cursor: default; }
 .legenda-pert span { display: inline-flex; align-items: center; gap: 6px; }
 .matriz td { vertical-align: middle; }
+
+/* ---------------------------------------------------------------- eventos, Encerramento, clusters (0008) */
+:root { --evento: #5B7A99; --evento-fundo: color-mix(in srgb, #5B7A99 9%, var(--elevada, #fff));
+  --encerramento: #4F7A57; --encerramento-fundo: color-mix(in srgb, #4F7A57 11%, var(--elevada, #fff));
+  --opcional: #F3D9B8; --opcional-borda: #E2B47F; --perpetuo: #7F878F; --perpetuo-fundo: #E4E7EA; --perpetuo-borda: #C9CED3; }
+.plano .card--evt { background: var(--evento-fundo); border-color: color-mix(in srgb, var(--evento) 30%, var(--linha)); box-shadow: inset 3px 0 0 var(--evento); }
+.card--evt { font-size: 13px; }
+.card--evt > .linha { min-height: 38px; cursor: pointer; }
+.card--evt .codigo { color: var(--evento); }
+.evt__nome { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chip--evt { background: color-mix(in srgb, var(--evento) 16%, var(--elevada)); color: color-mix(in srgb, var(--evento) 80%, #000); font-weight: 600; }
+.selo-cliente { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border-radius: 50%; background: var(--elevada); color: var(--tinta); border: 1px solid var(--linha-forte); }
+.selo-cliente svg { width: 12px; height: 12px; }
+.selo-clausula { font-weight: 700; color: var(--destaque-texto, #8A5A2B); cursor: help; }
+.plano .card--enc { background: var(--encerramento-fundo); border-color: color-mix(in srgb, var(--encerramento) 35%, var(--linha)); box-shadow: inset 3px 0 0 var(--encerramento); margin-top: 6px; font-size: 13px; }
+.card--enc .codigo { color: var(--encerramento); font-weight: 700; }
+.card--enc > .linha { min-height: 38px; cursor: pointer; }
+.card--enc .chip--evt { background: color-mix(in srgb, var(--encerramento) 18%, var(--elevada)); color: color-mix(in srgb, var(--encerramento) 80%, #000); }
+.card--enc.is-suspenso { opacity: .55; background: transparent; box-shadow: inset 3px 0 0 color-mix(in srgb, var(--encerramento) 45%, transparent); border-style: dashed; }
+.card--enc.is-suspenso:hover { opacity: .85; }
+.chip--estado { background: var(--encerramento); color: #fff; }
+.chip--estado.is-suspenso { background: transparent; color: var(--encerramento); border: 1px solid var(--encerramento); }
+.chip--enc { background: color-mix(in srgb, var(--encerramento) 16%, var(--elevada)); color: var(--encerramento); margin-left: 6px; }
+/* correr junto (cluster): faixa ocre à esquerda unindo as entregas concomitantes */
+.plano .card--ent.is-cluster { box-shadow: inset 3px 0 0 var(--destaque, #BB8248); }
+.plano .card--ent.is-junto { margin-top: -4px; border-top-left-radius: 0; border-top-right-radius: 0; }
+.junto { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--linha-forte); border-radius: 4px; background: var(--elevada); color: var(--linha-forte); cursor: pointer; padding: 0; }
+.junto svg { width: 14px; height: 14px; }
+.junto.is-on { background: var(--destaque, #BB8248); border-color: var(--destaque, #BB8248); color: var(--superficie); }
+.junto:disabled { cursor: default; opacity: .35; }
+.prazo-ctl select[data-prazo] { width: 84px; }
+.novos { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.novos .novo-inline.is-aberto { grid-column: 1 / -1; }
+.novos .novo-inline[data-novo="evento"] .novo-inline__btn { border-color: color-mix(in srgb, var(--evento) 45%, var(--linha-forte)); color: var(--evento); }
+.novo-tipo { font: inherit; font-size: 12.5px; border: 1px solid var(--linha-forte); border-radius: 4px; padding: 4px 6px; background: var(--elevada); }
+.card__form select { font: inherit; font-size: 13px; font-weight: 400; color: var(--tinta); background: var(--elevada); border: 1px solid var(--linha-forte); border-radius: 4px; padding: 5px 8px; }
+.check-linha span:last-child { display: flex; gap: 6px; align-items: center; font-weight: 400; font-size: 13px; color: var(--tinta); padding-top: 6px; }
+.legenda-amostra { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; }
+.legenda-amostra--evt { background: var(--evento-fundo); box-shadow: inset 3px 0 0 var(--evento); }
+.legenda-amostra--enc { background: var(--encerramento-fundo); box-shadow: inset 3px 0 0 var(--encerramento); }

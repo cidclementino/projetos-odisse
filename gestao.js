@@ -35,7 +35,8 @@ const CRITERIOS_IC = [
 const NIVEIS = [{ id: 'baixo', nome: 'Baixo' }, { id: 'medio', nome: 'Médio' }, { id: 'alto', nome: 'Alto' }];
 
 const PERTINENCIAS = [
-  { id: 'P', nome: 'Vem marcado' }, { id: 'O', nome: 'Opcional' }, { id: '', nome: 'Não se aplica' }
+  { id: 'P', nome: 'Vem marcado' }, { id: 'O', nome: 'Opcional' }, { id: '', nome: 'Não se aplica' },
+  { id: 'S', nome: 'Perpétuo (vale sempre)' }
 ];
 const proximaPert = (p) => (p === 'P' ? 'O' : p === 'O' ? '' : 'P');
 
@@ -92,12 +93,10 @@ function abrirPublicar(tipo, numero, aoPublicar) {
   };
 }
 
-// Célula de pertinência, que alterna ao clicar: ✓ vem marcado (P) · caixa vazia opcional (O) · – não se aplica.
-const MARCA_PERT = {
-  P: '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.4 6.3 4.9 8.7 9.6 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  O: '',
-  '': '–'
-};
+// Célula de pertinência, que alterna ao clicar: ✓ vem marcado (P) · caixa laranja com – opcional (O) ·
+// – sem caixa não se aplica · ✓ cinza perpétuo (S: vale sempre, não se desmarca).
+const CHECK_PERT = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.4 6.3 4.9 8.7 9.6 3.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const MARCA_PERT = { P: CHECK_PERT, O: '–', '': '–', S: CHECK_PERT };
 const celulaPert = (p, titulo, extra = '') =>
   `<button type="button" class="pert" data-p="${p || ''}" title="${escHtml(titulo)}: ${escHtml(nomeDe(PERTINENCIAS, p || ''))}" aria-label="${escHtml(titulo)}: ${escHtml(nomeDe(PERTINENCIAS, p || ''))}" ${extra}>${MARCA_PERT[p || '']}</button>`;
 

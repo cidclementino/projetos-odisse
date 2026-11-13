@@ -29,6 +29,7 @@
       <button type="button" data-aba="servicos">Serviços</button>
       <button type="button" data-aba="tipologias">Tipologias</button>
       <button type="button" data-aba="indice">Índice de complexidade</button>
+      <button type="button" data-aba="prazos">Faixas de prazo</button>
     </div>
     <div id="aviso"></div>
 
@@ -53,6 +54,13 @@
       <div class="rolagem" id="ic-categorias"></div>
       <div class="bloco-cab"><h2>Ajustes por serviço</h2></div>
       <div class="rolagem" id="ic-servicos"></div>
+    </section>
+
+    <section data-painel="prazos" hidden>
+      <p class="gestao__intro">O prazo de cada entrega, no Plano Geral de Trabalho, é o de referência. Na proposta, quando a área do projeto
+        é conhecida, o vendas multiplica esse prazo pelo da faixa. Entregas de prazo fixo e eventos não mudam. No Escopo do Projeto,
+        o prazo continua ajustável à mão. Valores provisórios, a calibrar.</p>
+      <div id="faixas"></div>
     </section>
 
     <div id="arquivados"></div>
@@ -89,7 +97,50 @@ function desenhar() {
   desenharServicos();
   desenharTipologias();
   desenharIndice();
+  desenharFaixas();
   desenharArquivados(document.getElementById('arquivados'), D.arquivados, { servico: 'Serviço', categoria: 'Categoria', uso: 'Uso' }, carregar);
+}
+
+// ---------------------------------------------------------------- faixas de prazo por área
+const fmtArea = (n) => Number(n).toLocaleString('pt-BR');
+function desenharFaixas(lista) {
+  const el = document.getElementById('faixas');
+  const fx = (lista || D.faixas_prazo || []).map((f) => ({ ...f }));
+  const linha = (f, i) => {
+    const de = i === 0 ? 0 : fx[i - 1].ate;
+    const ult = i === fx.length - 1;
+    return `<tr data-i="${i}"><td class="tabular">${i + 1}</td>
+      <td class="tabular">${i === 0 ? 'até' : `de ${fmtArea(de ?? 0)} até`}</td>
+      <td>${ult ? '<span class="muted">sem teto</span>' : `<input type="number" min="1" step="1" data-ate value="${f.ate ?? ''}" style="width:96px"> m²`}</td>
+      <td><input type="number" min="0.1" max="10" step="0.05" data-mult value="${f.mult}" style="width:80px"> ×</td>
+      <td>${fx.length > 1 ? '<button type="button" class="btn-link" data-tirar>tirar</button>' : ''}</td></tr>`;
+  };
+  el.innerHTML = `<table class="tabela" style="max-width:640px"><thead><tr><th>Faixa</th><th></th><th>Área máxima</th><th>Multiplicador</th><th></th></tr></thead>
+    <tbody>${fx.map(linha).join('')}</tbody></table>
+    <div class="gestao__filtros" style="margin-top:10px">
+      <button type="button" class="btn btn--ghost btn--small" id="fx-mais">+ faixa</button>
+      <button type="button" class="btn btn--small" id="fx-salvar">Salvar faixas</button>
+      <span class="small muted">Gravar deixa as Bases com mudanças a publicar.</span></div>`;
+  const ler = () => [...el.querySelectorAll('tbody tr')].map((tr, i, todas) => ({
+    ate: i === todas.length - 1 ? null : lerNum(tr.querySelector('[data-ate]').value),
+    mult: lerNum(tr.querySelector('[data-mult]').value) }));
+  el.querySelectorAll('[data-tirar]').forEach((b) => b.onclick = () => {
+    const l = ler(); l.splice(Number(b.closest('tr').dataset.i), 1);
+    if (l.length) l[l.length - 1].ate = null;
+    desenharFaixas(l);
+  });
+  el.querySelector('#fx-mais').onclick = () => {
+    const l = ler();
+    const ant = l.length > 1 ? l[l.length - 2].ate || 0 : 0;
+    l.splice(l.length - 1, 0, { ate: ant ? ant * 2 : 150, mult: l[l.length - 1]?.mult || 1 });
+    desenharFaixas(l);
+  };
+  el.querySelectorAll('[data-ate]').forEach((i) => i.onchange = () => desenharFaixas(ler()));
+  el.querySelector('#fx-salvar').onclick = async (ev) => {
+    ev.target.disabled = true;
+    try { await Universo.post('bases/faixas-prazo', { faixas: ler() }); aviso('Faixas gravadas.', 'ok'); await carregar(); }
+    catch (err) { aviso(mensagemDe(err)); ev.target.disabled = false; }
+  };
 }
 
 // ---------------------------------------------------------------- serviços
