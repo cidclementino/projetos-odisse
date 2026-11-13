@@ -59,37 +59,64 @@ const aviso = avisoEm(document.getElementById('aviso'));
 const f = document.getElementById('f-hora');
 const DIAS = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
 
+// Abre com o que ficou guardado neste computador e se atualiza quando o Universo responde (Universo.lerComCache).
 async function iniciar() {
-  try { PAINEL = await Universo.get('producao/painel'); } catch (e) { return aviso(`Não consegui carregar (${mensagemDe(e)}).`); }
+  try { await Universo.lerComCache('producao/painel', (d) => { PAINEL = d; montar(); }); }
+  catch (e) { return aviso(`Não consegui carregar (${mensagemDe(e)}).`); }
+}
+
+let montado = false;
+function montar() {
   const ativos = PAINEL.equipe.filter(q => q.ativo);
   if (!ativos.length) { document.querySelector('main').innerHTML = '<p>Cadastre a equipe em <a href="equipe.html">Equipe</a> para lançar horas.</p>'; return; }
   const quem = document.getElementById('quem');
-  const ultimo = localStorage.getItem('projetos-quem');
+  const ultimo = quem.value || localStorage.getItem('projetos-quem');
   quem.innerHTML = ativos.map(q => `<option value="${q.id}" ${q.id === ultimo ? 'selected' : ''}>${escHtml(q.nome)}</option>`).join('');
   quem.onchange = () => { localStorage.setItem('projetos-quem', quem.value); carregar(); };
   const projs = PAINEL.itens.filter(p => p.situacao === 'ativo');
-  f.projeto_id.innerHTML = projs.map(p => `<option value="${p.id}">${escHtml(p.codigo)} · ${escHtml(p.nome)}</option>`).join('');
+  const projAtual = f.projeto_id.value;
+  f.projeto_id.innerHTML = projs.map(p => `<option value="${p.id}" ${p.id === projAtual ? 'selected' : ''}>${escHtml(p.codigo)} · ${escHtml(p.nome)}</option>`).join('');
   f.projeto_id.onchange = carregarEtapas;
+  if (montado) return;          // a segunda chegada (resposta nova) só atualiza as listas
+  montado = true;
   f.data.value = hoje();
-  await carregarEtapas();
+  carregarEtapas();
   carregar();
 }
 
 async function carregarEtapas() {
   const pid = f.projeto_id.value;
   if (!pid) return;
-  if (!etapasCache[pid]) etapasCache[pid] = (await Universo.listar('etapas', { projeto_id: pid, limite: 100 })).itens;
-  const es = etapasCache[pid];
-  const atual = es.find(e => e.situacao === 'em_andamento') || es.find(e => e.situacao !== 'concluida');
-  f.etapa_id.innerHTML = '<option value="">— sem etapa —</option>' + es.map(e => `<option value="${e.id}" ${atual && atual.id === e.id ? 'selected' : ''}>${escHtml(e.nome)}</option>`).join('');
+  const pintar = (es) => {
+    if (f.projeto_id.value !== pid) return;   // trocou de projeto enquanto esperava
+    const escolhida = f.etapa_id.dataset.projeto === pid ? f.etapa_id.value : null;
+    const atual = es.find(e => e.id === escolhida) || es.find(e => e.situacao === 'em_andamento') || es.find(e => e.situacao !== 'concluida');
+    f.etapa_id.dataset.projeto = pid;
+    f.etapa_id.innerHTML = '<option value="">— sem etapa —</option>' + es.map(e => `<option value="${e.id}" ${atual && atual.id === e.id ? 'selected' : ''}>${escHtml(e.nome)}</option>`).join('');
+  };
+  if (etapasCache[pid]) return pintar(etapasCache[pid]);
+  try {
+    await Universo.lerComCache(`etapas?projeto_id=${encodeURIComponent(pid)}&limite=100`, (d) => { etapasCache[pid] = d.itens; pintar(d.itens); });
+  } catch (e) { aviso(mensagemDe(e)); }
 }
 
-async function carregar() {
+// soNovo: depois de lançar ou tirar horas, ignora o guardado.
+async function carregar({ soNovo = false } = {}) {
   const ate = somarDias(SEG, 6);
   document.getElementById('rotulo-semana').textContent = `${fmtDia(SEG)} – ${fmtDia(ate)}`;
+  const caminho = `producao/horas?de=${SEG}&ate=${ate}&equipe_id=${encodeURIComponent(document.getElementById('quem').value)}`;
+  carregar.atual = caminho;
   try {
-    ITENS = (await Universo.get('producao/horas', { de: SEG, ate, equipe_id: document.getElementById('quem').value })).itens;
-  } catch (e) { return aviso(mensagemDe(e)); }
+    await Universo.lerComCache(caminho, (d) => {
+      if (carregar.atual !== caminho) return;   // mudou de semana ou de pessoa enquanto esperava
+      ITENS = d.itens;
+      desenharSemana();
+    }, { soNovo });
+  } catch (e) { aviso(mensagemDe(e)); }
+}
+
+function desenharSemana() {
+  const ate = somarDias(SEG, 6);
   const porDia = {};
   for (const h of ITENS) porDia[h.data] = (porDia[h.data] || 0) + h.minutos;
   document.getElementById('semana').innerHTML = DIAS.map((d, i) => {
@@ -108,7 +135,7 @@ async function carregar() {
     </tbody></table>` : '<p class="small muted">Nada lançado nesta semana.</p>';
   document.querySelectorAll('[data-hora]').forEach(b => b.onclick = async () => {
     if (!confirm('Tirar este lançamento de horas?')) return;
-    try { await Universo.post(`horas/${b.dataset.hora}/arquivar`, { versao: Number(b.dataset.versao) }); carregar(); } catch (e) { aviso(mensagemDe(e)); }
+    try { await Universo.post(`horas/${b.dataset.hora}/arquivar`, { versao: Number(b.dataset.versao) }); carregar({ soNovo: true }); } catch (e) { aviso(mensagemDe(e)); }
   });
 }
 
@@ -122,7 +149,7 @@ f.onsubmit = async (ev) => {
     f.duracao.value = ''; f.descricao.value = '';
     aviso('');
     SEG = segundaDe(f.data.value);
-    carregar();
+    carregar({ soNovo: true });
   } catch (e) { aviso(mensagemDe(e)); }
 };
 document.getElementById('ant').onclick = () => { SEG = somarDias(SEG, -7); carregar(); };

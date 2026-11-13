@@ -46,12 +46,24 @@ const f = document.getElementById('f-nova');
 f.papel.innerHTML = opcoes(PAPEIS_EQUIPE, 'arquiteto');
 let EQ = [];
 
-async function carregar() {
+// Abre com o que ficou guardado neste computador e se atualiza quando o Universo responde (Universo.lerComCache).
+// soNovo: depois de gravar, ignora o guardado.
+let EQ_BRUTO = null, NOMES = null;
+async function carregar({ soNovo = false } = {}) {
+  const juntar = () => {
+    if (!EQ_BRUTO || !NOMES) return;
+    EQ = EQ_BRUTO.map(q => ({ ...q, nome: NOMES[q.id] || q.pessoa_id }));
+    desenhar();
+  };
   try {
-    const [eq, pessoas] = await Promise.all([Universo.listar('equipe', { limite: 100 }), Universo.get('producao/painel')]);
-    const nomes = Object.fromEntries(pessoas.equipe.map(q => [q.id, q.nome]));
-    EQ = eq.itens.map(q => ({ ...q, nome: nomes[q.id] || q.pessoa_id }));
-  } catch (e) { return aviso(mensagemDe(e)); }
+    await Promise.all([
+      Universo.lerComCache('equipe?limite=100', (d) => { EQ_BRUTO = d.itens; juntar(); }, { soNovo }),
+      Universo.lerComCache('producao/painel', (d) => { NOMES = Object.fromEntries(d.equipe.map(q => [q.id, q.nome])); juntar(); }, { soNovo })
+    ]);
+  } catch (e) { aviso(mensagemDe(e)); }
+}
+
+function desenhar() {
   document.getElementById('lista').innerHTML = EQ.length ? `<table class="tabela">
     <thead><tr><th>Nome</th><th>Papel</th><th>Ativo</th></tr></thead>
     <tbody>${EQ.map(q => `<tr data-id="${q.id}"><td><strong>${escHtml(q.nome)}</strong></td>
@@ -61,7 +73,7 @@ async function carregar() {
   document.querySelectorAll('tr[data-id] select').forEach(s => s.onchange = async () => {
     const q = EQ.find(x => x.id === s.closest('tr').dataset.id);
     const v = s.dataset.campo === 'ativo' ? Number(s.value) : s.value;
-    try { await Universo.alterar('equipe', q.id, { versao: q.versao, [s.dataset.campo]: v }); carregar(); } catch (e) { aviso(mensagemDe(e)); carregar(); }
+    try { await Universo.alterar('equipe', q.id, { versao: q.versao, [s.dataset.campo]: v }); carregar({ soNovo: true }); } catch (e) { aviso(mensagemDe(e)); carregar({ soNovo: true }); }
   });
 }
 
@@ -71,7 +83,7 @@ f.onsubmit = async (ev) => {
     const r = await Universo.post('producao/equipe', { nome: f.nome.value, email: f.email.value || null, papel: f.papel.value });
     aviso(r.ja_estava ? 'Essa pessoa já está na equipe.' : '', 'ok');
     f.reset(); f.papel.value = 'arquiteto';
-    carregar();
+    carregar({ soNovo: true });
   } catch (e) { aviso(mensagemDe(e)); }
 };
 carregar();

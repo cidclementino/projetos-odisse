@@ -8,7 +8,8 @@
   // Cadeia progressiva: Bases → Plano Geral de Trabalho → Projetos; depois, o dia a dia (horas, equipe).
   const SECOES = [
     { id: 'bases', nome: 'Bases', href: 'bases.html', dica: 'Serviços, tipologias, CUB, fatores do CAU e índice de complexidade' },
-    { id: 'pgt', nome: 'PGT', href: 'pgt.html', dica: 'Plano Geral de Trabalho: fases, etapas, entregáveis e materiais por serviço' },
+    { id: 'pgt', nome: 'Plano Geral de Trabalho', href: 'pgt.html', dica: 'Plano Geral de Trabalho: fases, etapas, entregáveis e materiais por serviço' },
+    { sep: true },   // | separa a estrutura (Bases, PGT) do dia a dia (Projetos, Horas, Equipe)
     { id: 'projetos', nome: 'Projetos', href: 'index.html', dica: 'Projetos em andamento, etapas e prazos' },
     { id: 'horas', nome: 'Horas', href: 'horas.html', dica: 'Apontamento de horas da semana' },
     { id: 'equipe', nome: 'Equipe', href: 'equipe.html', dica: 'Quem aponta horas' }
@@ -25,7 +26,7 @@
       <span class="topo__sub">Projetos</span>
     </a>
     <nav class="topo__secoes" aria-label="Seções de Projetos">
-      ${SECOES.map((s) => `<a href="${s.href}" title="${esc(s.dica)}"${s.id === pagina ? ' class="is-current" aria-current="page"' : ''}>${esc(s.nome)}</a>`).join('')}
+      ${SECOES.map((s) => s.sep ? '<span class="topo__sep" aria-hidden="true"></span>' : `<a href="${s.href}" title="${esc(s.dica)}"${s.id === pagina ? ' class="is-current" aria-current="page"' : ''}>${esc(s.nome)}</a>`).join('')}
     </nav>
     <div class="topo__direita">
       <span data-universo-menu></span>

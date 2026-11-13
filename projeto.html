@@ -32,12 +32,18 @@ let F = null; // resposta de producao/projetos/:id
 const id = () => location.hash.slice(1);
 const raiz = document.getElementById('ficha');
 
-async function carregar() {
+// Abre com o que ficou guardado neste computador e se atualiza quando o Universo responde (Universo.lerComCache).
+// soNovo: depois de gravar algo, ignora o guardado.
+async function carregar({ soNovo = false } = {}) {
   if (!/^prj_/.test(id())) { raiz.innerHTML = '<p class="aviso aviso--erro">Projeto não informado. <a href="index.html">Voltar à lista</a>.</p>'; return; }
+  const pedido = id();
   try {
-    F = await Universo.get('producao/projetos/' + id());
-    document.title = `${F.registro.codigo} · ${F.registro.nome} — Projetos`;
-    desenhar();
+    await Universo.lerComCache('producao/projetos/' + pedido, (d) => {
+      if (id() !== pedido) return;   // trocou de projeto enquanto esperava
+      F = d;
+      document.title = `${F.registro.codigo} · ${F.registro.nome} — Projetos`;
+      desenhar();
+    }, { soNovo });
   } catch (e) {
     raiz.innerHTML = `<p class="aviso aviso--erro">Não consegui abrir o projeto (${escHtml(mensagemDe(e))}). <a href="index.html">Voltar à lista</a>.</p>`;
   }
@@ -187,14 +193,14 @@ function chipSituacaoContrato(s) { return `<span class="chip ${s === 'assinado' 
 
 function ligar() {
   const aviso = avisoEm(document.getElementById('aviso'));
-  const falhou = async (err) => { aviso(mensagemDe(err)); if (err.status === 409) await carregar(); };
+  const falhou = async (err) => { aviso(mensagemDe(err)); if (err.status === 409) await carregar({ soNovo: true }); };
   const p = F.registro;
 
   // situação do projeto (concluído: fim = hoje, se vazio)
   document.getElementById('sit-projeto').onchange = async (ev) => {
     const mud = { versao: p.versao, situacao: ev.target.value };
     if (ev.target.value === 'concluido' && !p.fim) mud.fim = hoje();
-    try { await Universo.alterar('projetos', p.id, mud); await carregar(); } catch (err) { falhou(err); }
+    try { await Universo.alterar('projetos', p.id, mud); await carregar({ soNovo: true }); } catch (err) { falhou(err); }
   };
 
   // etapas: cada mudança grava na hora
@@ -205,12 +211,12 @@ function ligar() {
       if (['em_andamento', 'em_aprovacao', 'concluida'].includes(el.value) && !e.inicio) mud.inicio = hoje();
       if (el.value === 'concluida' && !e.fim) mud.fim = hoje();
     }
-    try { await Universo.alterar('etapas', e.id, mud); await carregar(); } catch (err) { falhou(err); }
+    try { await Universo.alterar('etapas', e.id, mud); await carregar({ soNovo: true }); } catch (err) { falhou(err); }
   });
   raiz.querySelectorAll('[data-tirar]').forEach(b => b.onclick = async () => {
     const e = F.etapas.find(x => x.id === b.dataset.tirar);
     if (!confirm(`Tirar a etapa "${e.nome}" deste projeto? (Fica guardada como arquivada.)`)) return;
-    try { await Universo.post(`etapas/${e.id}/arquivar`, { versao: e.versao }); await carregar(); } catch (err) { falhou(err); }
+    try { await Universo.post(`etapas/${e.id}/arquivar`, { versao: e.versao }); await carregar({ soNovo: true }); } catch (err) { falhou(err); }
   });
   const fe = document.getElementById('f-etapa');
   fe.onsubmit = async (ev) => {
@@ -223,7 +229,7 @@ function ligar() {
         projeto_id: p.id, ordem: (ultima ? ultima.ordem : 0) + 1, nome: fe.nome.value, semanas,
         inicio_previsto: inicio, fim_previsto: inicio && semanas ? somarDias(inicio, Math.round(semanas * 7)) : null
       });
-      await carregar();
+      await carregar({ soNovo: true });
     } catch (err) { falhou(err); }
   };
 
@@ -239,12 +245,12 @@ function ligar() {
         data: fh.data.value, minutos, descricao: fh.descricao.value || null
       });
       localStorage.setItem('projetos-quem', fh.equipe_id.value);
-      await carregar();
+      await carregar({ soNovo: true });
     } catch (err) { falhou(err); }
   };
   raiz.querySelectorAll('[data-hora]').forEach(b => b.onclick = async () => {
     if (!confirm('Tirar este lançamento de horas?')) return;
-    try { await Universo.post(`horas/${b.dataset.hora}/arquivar`, { versao: Number(b.dataset.versao) }); await carregar(); } catch (err) { falhou(err); }
+    try { await Universo.post(`horas/${b.dataset.hora}/arquivar`, { versao: Number(b.dataset.versao) }); await carregar({ soNovo: true }); } catch (err) { falhou(err); }
   });
 
   // documentos
@@ -267,7 +273,7 @@ function ligar() {
         inicio: fd.inicio.value || null, previsao_fim: fd.previsao_fim.value || null, fim: fd.fim.value || null,
         observacoes: fd.observacoes.value || null
       });
-      await carregar();
+      await carregar({ soNovo: true });
       avisoEm(document.getElementById('aviso'))('Dados salvos.', 'ok');
     } catch (err) { falhou(err); }
   };
@@ -290,7 +296,7 @@ function ligar() {
       try {
         if (F.local) await Universo.alterar('projetos-local', p.id, { versao: F.local.versao, ...campos });
         else await Universo.criar('projetos-local', { id: p.id, ...campos });
-        await carregar();
+        await carregar({ soNovo: true });
         avisoEm(document.getElementById('aviso'))('Local salvo.', 'ok');
       } catch (err) { falhou(err); }
     };
@@ -302,7 +308,7 @@ function ligar() {
   };
 }
 
-window.addEventListener('hashchange', carregar);
+window.addEventListener('hashchange', () => carregar());
 carregar();
 </script>
 </body>
