@@ -471,6 +471,7 @@ function desenharPlano() {
     ${filtrando() && !htmlFluxo && !htmlIlhas ? '<div class="vazio"><p>Nada com esses filtros.</p></div>' : ''}
   </div>`;
   ligarPlano(el);
+  lnDesenharModal();     // o cartão aberto em popup na aba Linha acompanha as mudanças
 }
 
 function cartaoEtapa(e, f, arrasta) {

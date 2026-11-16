@@ -301,7 +301,7 @@ function lnFios(V, G) {
   return { fios, svg: `<svg class="ln-fios" width="${G.largura}" height="${G.altura}" aria-hidden="true">
     <defs><marker id="ln-seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#888780"/></marker>
       <marker id="ln-seta-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2F6FD0"/></marker></defs>
-    ${fios.map((f, i) => `<path class="ln-fio${f.gatilho ? ' ln-fio--gatilho' : ''}" data-fio="${i}" d="${caminho(f)}" marker-end="url(#${f.gatilho ? 'ln-seta-g' : 'ln-seta'})"/>
+    ${fios.map((f, i) => `${f.gatilho ? '' : `<path class="ln-fio-toque" data-toque="${i}" d="${caminho(f)}"/>`}<path class="ln-fio${f.gatilho ? ' ln-fio--gatilho' : ''}" data-fio="${i}" d="${caminho(f)}" marker-end="url(#${f.gatilho ? 'ln-seta-g' : 'ln-seta'})"/>
       ${f.gatilho ? `<text class="ln-fio__rot" x="${(f.A.x + f.B.x) / 2}" y="${Math.max(f.A.y, f.B.y) + 20}">${escHtml(f.rotulo)}</text>` : ''}`).join('')}
   </svg>` };
 }
@@ -461,7 +461,7 @@ function ligarLinha(el, M, V, G, F) {
   };
   tela.addEventListener('click', (ev) => {
     const c = ev.target.closest('.ln-no, .ln-grupo');
-    if (ev.target.closest('button')) return;
+    if (ev.target.closest('button, input, select, .ln-novo')) return;
     LN.sel = c && LN.sel !== c.dataset.no ? c.dataset.no : null;
     marcar();
   });
@@ -470,7 +470,7 @@ function ligarLinha(el, M, V, G, F) {
     if (!c || ev.target.closest('button')) return;
     const id = c.dataset.no;
     if (id.startsWith('sum:')) { const k = id.slice(4); LN.recolhidas.delete(k.slice(2)); LN.recolhidas.delete(k); redesenhar(); return; }
-    irAoCartao(id);
+    lnAbrirModal(id);
   });
   if (LN.sel && !tela.querySelector(`[data-no="${CSS.escape(LN.sel)}"]`)) LN.sel = null;
   marcar();
@@ -487,4 +487,167 @@ function ligarLinha(el, M, V, G, F) {
     rolo.scrollTo({ left: ((ev.clientX - r.left) / r.width) * G.largura - rolo.clientWidth / 2, behavior: 'smooth' });
   };
   atualizarJanela();
+  // roda do mouse rola a linha na horizontal (enquanto houver para onde rolar; depois, a página)
+  rolo.addEventListener('wheel', (ev) => {
+    if (ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY) || ev.target.closest('.ln-novo')) return;
+    const max = rolo.scrollWidth - rolo.clientWidth;
+    if ((ev.deltaY > 0 && rolo.scrollLeft < max - 1) || (ev.deltaY < 0 && rolo.scrollLeft > 0)) {
+      rolo.scrollLeft += ev.deltaY * (ev.deltaMode === 1 ? 32 : 1);
+      ev.preventDefault();
+    }
+  }, { passive: false });
+  lnLigarNovoNoFio(tela, M, V, F);
 }
+
+// ---------------------------------------------------------------- criar cartão sobre o fio
+// Pousar o mouse num fio da sequência mostra um "+" no meio dele; o cartão novo entra logo depois do
+// cartão de onde o fio sai (na etapa dele) e empurra os seguintes. Vale para o serviço da Linha (P).
+function lnLigarNovoNoFio(tela, M, V, F) {
+  const mais = document.createElement('button');
+  mais.type = 'button'; mais.className = 'ln-mais'; mais.textContent = '+'; mais.hidden = true;
+  tela.appendChild(mais);
+  let atual = null; let saida = null;
+  const depoisDe = (f) => {           // id do passo de onde o fio sai (último de um grupo); null se não dá
+    const a = f.a;
+    if (a.startsWith('sum:')) return null;
+    const g = V.grupos.find((x) => x.id === a);
+    const id = g ? g.ids[g.ids.length - 1] : a;
+    const no = V.porId[id];
+    return no && !no.resumo && !no.x.encerramento ? id : null;
+  };
+  const esconder = () => { saida = setTimeout(() => { if (!tela.querySelector('.ln-novo')) mais.hidden = true; }, 250); };
+  tela.querySelectorAll('[data-toque]').forEach((p) => {
+    p.addEventListener('mouseenter', () => {
+      const f = F.fios[Number(p.dataset.toque)];
+      if (!depoisDe(f) || tela.querySelector('.ln-novo')) return;
+      clearTimeout(saida);
+      const pt = p.getPointAtLength(p.getTotalLength() / 2);
+      atual = f; mais.style.left = `${pt.x}px`; mais.style.top = `${pt.y}px`; mais.hidden = false;
+      mais.title = `Novo cartão depois de ${V.porId[depoisDe(f)].x.codigo}`;
+    });
+    p.addEventListener('mouseleave', esconder);
+  });
+  mais.addEventListener('mouseenter', () => clearTimeout(saida));
+  mais.addEventListener('mouseleave', esconder);
+  mais.onclick = (ev) => {
+    ev.stopPropagation();
+    const apos = depoisDe(atual); if (!apos) return;
+    const no = V.porId[apos];
+    const box = document.createElement('div');
+    box.className = 'ln-novo';
+    box.style.left = mais.style.left; box.style.top = mais.style.top;
+    box.innerHTML = `<div class="small muted">Depois de <b>${escHtml(no.x.codigo)}</b>, em ${escHtml(no.etapa.sigla)} · vale (P) em ${escHtml(D.servicos.find((s) => s.id === M.srv)?.sigla || '')}</div>
+      <select class="ln-novo__tipo" aria-label="Tipo"><option value="entrega">Entrega</option>${TIPOS_EVT.map((t) => `<option value="${t.id}">Evento · ${escHtml(t.nome)}</option>`).join('')}</select>
+      <input class="ln-novo__nome" placeholder="Texto da entrega ou nome do evento" aria-label="Nome">
+      <div><button type="button" class="btn btn--small">Criar</button> <button type="button" class="btn-link">cancelar</button></div>`;
+    tela.appendChild(box); mais.hidden = true;
+    const nome = box.querySelector('.ln-novo__nome'); const tipo = box.querySelector('.ln-novo__tipo');
+    const [criar, cancelar] = box.querySelectorAll('button');
+    nome.focus();
+    const fechar = () => { box.remove(); };
+    cancelar.onclick = fechar;
+    const enviar = async () => {
+      const t = nome.value.trim();
+      if (!t) { nome.focus(); return; }
+      criar.disabled = true;
+      try {
+        const servicos = { [M.srv]: 'P' };
+        const etapa = no.etapa.id;
+        const tp = tipo.value;
+        const r = tp === 'entrega'
+          ? await Universo.criar('pgt-entregaveis', { etapa_id: etapa, texto: t, servicos })
+          : await Universo.criar('pgt-eventos', { etapa_id: etapa, nome: t, tipo: tp, servicos,
+            cliente: ['reuniao', 'apresentacao', 'aprovacao', 'visita'].includes(tp) ? 1 : 0,
+            tempo: tp === 'aprovacao' ? 'cliente' : ['ajuste', 'revisao'].includes(tp) ? 'estudio' : 'pontual' });
+        const ids = D.seq[etapa].map((x) => x.id);
+        ids.splice(ids.indexOf(apos) + 1, 0, r.id);
+        await Universo.post('pgt/sequencia', { etapa_id: etapa, ids });
+        esquecerDaFila((op) => op.tipo === 'sq' && op.grupo === etapa);
+        LN.sel = r.id;
+        aviso(''); await recarregar();
+      } catch (err) { aviso(mensagemDe(err)); criar.disabled = false; }
+    };
+    criar.onclick = enviar;
+    box.addEventListener('keydown', (e) => { if (e.key === 'Enter') enviar(); if (e.key === 'Escape') fechar(); });
+  };
+}
+
+// ---------------------------------------------------------------- popup do cartão (duplo clique)
+// O cartão inteiro, em edição, à esquerda (o mesmo da aba de edição, só com a coluna do serviço da Linha);
+// à direita, os materiais com link abertos para leitura (Drive e Google Docs em modo de visualização).
+// Grande o bastante para ler documentos sem redimensionar.
+function lnAbrirModal(id) {
+  if (!(entDe(id) || evtDe(id))) return;
+  LN.modal = id; LN.mat = null;
+  EDITANDO.add(id);
+  lnDesenharModal();
+}
+function lnFecharModal() {
+  if (!LN.modal) return;
+  EDITANDO.delete(LN.modal);
+  LN.modal = null;
+  document.getElementById('ln-modal')?.remove();
+  document.body.classList.remove('ln-modal-aberto');
+  desenharPlano();
+}
+// link de leitura: Drive e Google Docs em /preview; o resto como veio
+function lnPrevia(url) {
+  try {
+    const u = new URL(url);
+    let m = u.pathname.match(/\/file\/d\/([^/]+)/);
+    if (u.hostname === 'drive.google.com' && m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    if (u.hostname === 'drive.google.com' && u.searchParams.get('id')) return `https://drive.google.com/file/d/${u.searchParams.get('id')}/preview`;
+    m = u.pathname.match(/^\/(document|spreadsheets|presentation|forms)\/d\/([^/]+)/);
+    if (u.hostname === 'docs.google.com' && m) return `https://docs.google.com/${m[1]}/d/${m[2]}/${m[1] === 'forms' ? 'viewform?embedded=true' : 'preview'}`;
+    return url;
+  } catch (_) { return url; }
+}
+function lnDesenharModal() {
+  if (!LN.modal) return;
+  const x = entDe(LN.modal) || evtDe(LN.modal);
+  if (!x) { LN.modal = null; document.getElementById('ln-modal')?.remove(); document.body.classList.remove('ln-modal-aberto'); return; }
+  let raiz = document.getElementById('ln-modal');
+  const rolagem = raiz?.querySelector('.lnm-esq')?.scrollTop || 0;
+  if (!raiz) {
+    raiz = document.createElement('div'); raiz.id = 'ln-modal';
+    document.body.appendChild(raiz);
+    raiz.addEventListener('mousedown', (ev) => { if (ev.target === raiz.firstElementChild) lnFecharModal(); });
+  }
+  document.body.classList.add('ln-modal-aberto');
+  const e = etapaDe(x.etapa_id); const fa = e ? faseDe(e.fase_id) : null;
+  const srv = D.servicos.find((s) => s.id === LN.srv) || D.servicos[0];
+  // o cartão com uma coluna de serviço só (a da Linha); S é a lista de serviços visíveis do plano
+  const S0 = S; S = [srv];
+  const cartao = x.encerramento ? cartaoEncerramento(x, e) : ehEnt(x) ? cartaoEnt(x, false) : cartaoEvento(x, false);
+  S = S0;
+  const mats = materiaisDe(x.id);
+  const comLink = mats.filter((m) => m.link);
+  if (!LN.mat || !comLink.some((m) => m.id === LN.mat)) LN.mat = comLink[0]?.id || null;
+  const sel = comLink.find((m) => m.id === LN.mat);
+  raiz.innerHTML = `<div class="lnm-fundo"><div class="lnm" role="dialog" aria-modal="true" aria-label="${escHtml(x.codigo)}" style="--fase:${fa ? lnCorFase(fa) : 'var(--linha-forte)'}">
+    <header class="lnm-cab"><div><span class="lnm-cod">${escHtml(x.codigo)}</span> ${escHtml(x.texto || x.nome)}
+      <span class="small muted">· ${escHtml(fa?.nome || '')} › ${escHtml(e ? e.sigla + ' · ' + e.nome : '')} · coluna: ${escHtml(srv.sigla)}</span></div>
+      <button type="button" class="lnm-fechar" aria-label="Fechar" title="Fechar (Esc)">×</button></header>
+    <div class="lnm-corpo">
+      <section class="lnm-esq"><div class="plano" style="--cols:52px 64px minmax(0,1fr) 196px 36px 40px">${cartao}</div>
+        <p class="small muted lnm-nota">As mudanças vão para a barra de "não salvas", como na aba de edição (Ctrl+S salva).</p></section>
+      <section class="lnm-dir">
+        <div class="lnm-abas">${comLink.length ? comLink.map((m) => `<button type="button" class="lnm-aba${m.id === LN.mat ? ' is-on' : ''}" data-ver="${m.id}">${escHtml(nomeDe(TIPOS_MAT, m.tipo))} · ${escHtml(m.nome)}</button>`).join('') : ''}
+          ${sel ? `<a class="btn-link lnm-fora" href="${escHtml(sel.link)}" target="_blank" rel="noopener">abrir em nova aba ↗</a>` : ''}</div>
+        ${sel ? `<iframe class="lnm-leitor" src="${escHtml(lnPrevia(sel.link))}" title="${escHtml(sel.nome)}" referrerpolicy="no-referrer"></iframe>`
+          : `<div class="lnm-vazio"><p>${mats.length ? 'Os materiais deste cartão ainda não têm link.' : 'Este cartão ainda não tem materiais.'}</p>
+            <p class="small muted">Acrescente um material com link (Drive, Google Docs, Biblioteca) no cartão, à esquerda, para lê-lo aqui. O envio de arquivos vem depois.</p></div>`}
+      </section>
+    </div></div></div>`;
+  const esq = raiz.querySelector('.lnm-esq');
+  esq.scrollTop = rolagem;
+  ligarPlano(esq);
+  raiz.querySelector('.lnm-fechar').onclick = lnFecharModal;
+  raiz.querySelectorAll('[data-ver]').forEach((b) => b.onclick = () => { LN.mat = b.dataset.ver; lnDesenharModal(); });
+  // o link de um material, dentro do popup, abre no leitor ao lado
+  esq.querySelectorAll('.card--mat').forEach((c) => {
+    const a = c.querySelector('.mat__nome a'); if (!a) return;
+    a.onclick = (ev) => { ev.preventDefault(); LN.mat = c.dataset.card; lnDesenharModal(); };
+  });
+}
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && LN.modal && !ev.target.closest?.('input, textarea, select')) lnFecharModal(); });
