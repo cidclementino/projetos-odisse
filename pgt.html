@@ -55,6 +55,7 @@
     <div class="legenda-pert" id="legenda-pert"></div>
     <div id="arquivados"></div>
     <div class="rodape-fixo">
+      <div class="massa ln-selbar" id="ln-selbar" hidden></div>
       <div class="massa fila" id="fila" hidden></div>
     </div>
   </main>
@@ -1084,6 +1085,7 @@ ligarAbas(document.querySelector('.gestao__abas'), (aba) => {
   document.getElementById('legenda-pert').hidden = aba !== 'plano';
   document.querySelector('main > .gestao__filtros').hidden = aba === 'linha';   // a Linha tem os próprios controles
   if (aba === 'linha') desenharLinha();
+  lnDesenharBarraSelecao();
 });
 carregar();
 </script>

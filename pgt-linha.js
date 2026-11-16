@@ -25,7 +25,7 @@ const LN_CHAVE = 'pgt:linha';
 const LN = (() => {
   let g = {};
   try { g = JSON.parse(sessionStorage.getItem(LN_CHAVE) || '{}'); } catch (_) { /* sem armazenamento */ }
-  return { srv: g.srv || '', opcionais: !!g.opcionais, cliente: !!g.cliente, recolhidas: new Set(g.recolhidas || []), decisoes: g.decisoes || {}, sel: null, rolagem: 0 };
+  return { srv: g.srv || '', opcionais: !!g.opcionais, cliente: !!g.cliente, recolhidas: new Set(g.recolhidas || []), decisoes: g.decisoes || {}, sel: null, rolagem: 0, selecao: new Set(), selSrv: new Set() };
 })();
 function lnGuardar() {
   try {
@@ -401,6 +401,7 @@ function desenharLinha() {
       <span><i class="ln-am ln-am--trac"></i> opcional ou suspenso</span><span>${ICONE.decisao} decisão (os botões simulam o resultado)</span>
       <span><i class="ln-am ln-am--grupo"></i> correm juntas</span><span><i class="ln-am ln-am--gat"></i> gatilho</span>
       <span>borda = fase: ${M.fases.map((fa) => `<b style="color:${lnCorFase(fa)}">${escHtml(fa.nome)}</b>`).join(' · ')}</span>
+      <span>vários: Ctrl+clique ou arraste no vazio · Esc limpa</span>
       <span>* sem prazo no PGT (1 dia) · ~ estimado (cliente ${LN_DIAS_CLIENTE}, terceiros ${LN_DIAS_TERCEIROS} dias úteis)</span>
     </div></div>`;
   ligarLinha(el, M, V, G, F);
@@ -462,9 +463,17 @@ function ligarLinha(el, M, V, G, F) {
   tela.addEventListener('click', (ev) => {
     const c = ev.target.closest('.ln-no, .ln-grupo');
     if (ev.target.closest('button, input, select, .ln-novo')) return;
+    if (lnLaco.arrastou) { lnLaco.arrastou = false; return; }
+    if (ev.ctrlKey || ev.metaKey || ev.shiftKey) {               // seleção múltipla
+      if (c) { lnAlternarSelecao(lnIdsDoNo(c.dataset.no, V)); lnMarcarSelecao(tela); }
+      return;
+    }
+    if (!c && LN.selecao.size) { LN.selecao.clear(); lnMarcarSelecao(tela); }
     LN.sel = c && LN.sel !== c.dataset.no ? c.dataset.no : null;
     marcar();
   });
+  lnLigarLaco(tela, V, G);
+  lnMarcarSelecao(tela);
   tela.addEventListener('dblclick', (ev) => {
     const c = ev.target.closest('.ln-no');
     if (!c || ev.target.closest('button')) return;
@@ -651,3 +660,153 @@ function lnDesenharModal() {
   });
 }
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && LN.modal && !ev.target.closest?.('input, textarea, select')) lnFecharModal(); });
+
+
+// ---------------------------------------------------------------- seleção de vários cartões
+// Ctrl/⌘/Shift + clique alterna um cartão; arrastar no vazio desenha uma caixa (com Ctrl/Shift, soma
+// à seleção). A barra de baixo aplica a todos: pertinência nos serviços marcados, prazo, correr juntas,
+// cadeado e arquivar. As mudanças vão para a fila de "não salvas" (menos arquivar, que grava na hora).
+const lnLaco = { arrastou: false };
+function lnIdsDoNo(id, V) {
+  if (id.startsWith('grp:')) return V.grupos.find((g) => g.id === id)?.ids || [];
+  if (id.startsWith('sum:')) return [];
+  return [id];
+}
+function lnAlternarSelecao(ids) {
+  const todos = ids.every((id) => LN.selecao.has(id));
+  ids.forEach((id) => (todos ? LN.selecao.delete(id) : LN.selecao.add(id)));
+}
+function lnMarcarSelecao(tela) {
+  for (const id of [...LN.selecao]) if (!(entDe(id) || evtDe(id))) LN.selecao.delete(id);
+  tela?.querySelectorAll('.ln-no').forEach((c) => c.classList.toggle('is-multi', LN.selecao.has(c.dataset.no)));
+  lnDesenharBarraSelecao();
+}
+function lnLigarLaco(tela, V, G) {
+  tela.addEventListener('mousedown', (ev) => {
+    if (ev.button !== 0 || ev.target.closest('.ln-no, .ln-grupo, button, input, select, .ln-faixa, .ln-novo, .ln-mais, [data-toque]')) return;
+    const r0 = tela.getBoundingClientRect();
+    const x0 = ev.clientX - r0.left; const y0 = ev.clientY - r0.top;
+    const somar = ev.ctrlKey || ev.metaKey || ev.shiftKey;
+    const laco = document.createElement('div'); laco.className = 'ln-laco'; tela.appendChild(laco);
+    let caixa = null;
+    const mover = (e) => {
+      const r = tela.getBoundingClientRect();
+      const x1 = e.clientX - r.left; const y1 = e.clientY - r.top;
+      caixa = { l: Math.min(x0, x1), t: Math.min(y0, y1), r: Math.max(x0, x1), b: Math.max(y0, y1) };
+      Object.assign(laco.style, { left: `${caixa.l}px`, top: `${caixa.t}px`, width: `${caixa.r - caixa.l}px`, height: `${caixa.b - caixa.t}px` });
+      const rolo = tela.parentElement; const rr = rolo.getBoundingClientRect();     // rola nas bordas
+      if (e.clientX > rr.right - 30) rolo.scrollLeft += 20; else if (e.clientX < rr.left + 30) rolo.scrollLeft -= 20;
+    };
+    const soltar = () => {
+      window.removeEventListener('mousemove', mover); window.removeEventListener('mouseup', soltar);
+      laco.remove();
+      if (!caixa || (caixa.r - caixa.l < 6 && caixa.b - caixa.t < 6)) return;
+      lnLaco.arrastou = true;
+      if (!somar) LN.selecao.clear();
+      for (const n of V.nos) {
+        if (n.resumo) continue;
+        const c = G.caixa[n.id];
+        if (c.l < caixa.r && c.l + c.w > caixa.l && c.t < caixa.b && c.t + c.h > caixa.t) LN.selecao.add(n.id);
+      }
+      lnMarcarSelecao(tela);
+    };
+    window.addEventListener('mousemove', mover); window.addEventListener('mouseup', soltar);
+    ev.preventDefault();
+  });
+}
+function lnDesenharBarraSelecao() {
+  const el = document.getElementById('ln-selbar');
+  if (!el) return;
+  const linhaVisivel = !document.getElementById('linha')?.closest('[data-painel]')?.hidden;
+  const ids = [...LN.selecao];
+  el.hidden = !ids.length || !linhaVisivel;
+  if (el.hidden) return;
+  if (!LN.selSrv.size || ![...LN.selSrv].every((s) => D.servicos.some((x) => x.id === s))) LN.selSrv = new Set([LN.srv || D.servicos[0].id]);
+  const ents = ids.filter((id) => entDe(id)); const evs = ids.filter((id) => evtDe(id));
+  const pertDe = (id, srv) => (entDe(id) || evtDe(id)).servicos[srv] || '';
+  const resumoPert = (srv) => {          // como está hoje no serviço: tudo P, tudo O, misto…
+    const ps = new Set(ids.filter((id) => !evtDe(id)?.encerramento).map((id) => pertDe(id, srv)));
+    return ps.size === 1 ? ({ P: 'P', O: 'O', '': '—', S: '∞' })[[...ps][0]] : 'misto';
+  };
+  el.innerHTML = `<strong>${ids.length} selecionado${ids.length > 1 ? 's' : ''}</strong>
+    <span class="small" style="opacity:.8">${ents.length} entrega${ents.length === 1 ? '' : 's'} · ${evs.length} evento${evs.length === 1 ? '' : 's'}</span>
+    <span class="ln-sel__grupo">Serviços ${D.servicos.map((s) => `<button type="button" class="ln-sel__srv${LN.selSrv.has(s.id) ? ' is-on' : ''}" data-sel-srv="${s.id}" title="${escHtml(s.nome)} · hoje: ${resumoPert(s.id)}">${escHtml(s.sigla)}</button>`).join('')}</span>
+    <span class="ln-sel__grupo">Pertinência
+      <button type="button" class="btn btn--small" data-sel-pert="P" title="Vem marcado nos serviços escolhidos">P</button>
+      <button type="button" class="btn btn--small" data-sel-pert="O" title="Opcional nos serviços escolhidos">O</button>
+      <button type="button" class="btn btn--small" data-sel-pert="" title="Não se aplica nos serviços escolhidos">—</button></span>
+    <span class="ln-sel__grupo"><select id="ln-sel-prazo" aria-label="Prazo"><option value="">prazo…</option>${PRAZOS.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}<option value="0">sem prazo</option></select></span>
+    <span class="ln-sel__grupo">${ents.length > 1 ? '<button type="button" class="btn-link" data-sel="juntas">correr juntas</button><button type="button" class="btn-link" data-sel="separar">separar</button>' : ''}
+      <button type="button" class="btn-link" data-sel="travar">travar</button><button type="button" class="btn-link" data-sel="destravar">destravar</button>
+      <button type="button" class="btn-link" data-sel="arquivar">arquivar</button>
+      <button type="button" class="btn-link" data-sel="todos">selecionar todos da linha</button>
+      <button type="button" class="btn-link" data-sel="limpar">limpar (Esc)</button></span>`;
+  el.querySelectorAll('[data-sel-srv]').forEach((b) => b.onclick = () => {
+    const s = b.dataset.selSrv;
+    LN.selSrv.has(s) ? LN.selSrv.delete(s) : LN.selSrv.add(s);
+    lnDesenharBarraSelecao();
+  });
+  el.querySelectorAll('[data-sel-pert]').forEach((b) => b.onclick = () => lnSelAplicar('pert', b.dataset.selPert));
+  el.querySelector('#ln-sel-prazo').onchange = (ev) => { if (ev.target.value !== '') lnSelAplicar('prazo', Number(ev.target.value)); };
+  el.querySelectorAll('[data-sel]').forEach((b) => b.onclick = () => lnSelAplicar(b.dataset.sel));
+}
+async function lnSelAplicar(acao, valor) {
+  const ids = [...LN.selecao];
+  const livres = ids.filter((id) => !travado(id));
+  const pulados = ids.length - livres.length;
+  const fim = (msg) => { ordenar(D); derivar(D); desenhar(); if (msg) aviso(msg, 'ok'); };
+  if (acao === 'limpar') { LN.selecao.clear(); lnMarcarSelecao(document.querySelector('.ln-tela')); return; }
+  if (acao === 'todos') {
+    document.querySelectorAll('.ln-tela .ln-no').forEach((c) => { if (!c.dataset.no.startsWith('sum:')) LN.selecao.add(c.dataset.no); });
+    lnMarcarSelecao(document.querySelector('.ln-tela')); return;
+  }
+  const aviso2 = pulados ? ` ${pulados} travado${pulados > 1 ? 's' : ''} ficou de fora.` : '';
+  if (acao === 'pert') {
+    if (!LN.selSrv.size) { aviso('Escolha ao menos um serviço na barra.'); return; }
+    let n = 0;
+    for (const id of livres) {
+      const ent = entDe(id); const ev = evtDe(id);
+      if (ev?.encerramento) continue;
+      for (const srv of LN.selSrv) { mudar(ent ? { tipo: 'pn', ent: id, srv, p: valor } : { tipo: 'pe', ev: id, srv, p: valor }); n++; }
+    }
+    return fim(`Pertinência ${valor || '—'} em ${livres.length} cartão(ões) × ${LN.selSrv.size} serviço(s). Falta salvar.${aviso2}`);
+  }
+  if (acao === 'prazo') {
+    const alvo = livres.filter((id) => entDe(id) || evtDe(id)?.tempo === 'estudio');
+    alvo.forEach((id) => mudar({ tipo: 'ed', id, campos: { prazo_turnos: valor || null } }));
+    const fora = livres.length - alvo.length;
+    return fim(`Prazo em ${alvo.length} cartão(ões).${fora ? ` ${fora} evento(s) sem tempo do estúdio ficaram de fora.` : ''} Falta salvar.${aviso2}`);
+  }
+  if (acao === 'juntas' || acao === 'separar') {
+    let n = 0;
+    for (const id of livres.filter((x) => entDe(x))) {
+      const x = entDe(id); const seq = D.seq[x.etapa_id]; const i = seq.findIndex((y) => y.id === id);
+      const antes = seq[i - 1];
+      const junto = acao === 'juntas' ? (antes && ehEnt(antes) && LN.selecao.has(antes.id) ? 1 : 0) : 0;
+      if ((x.junto_anterior || 0) !== junto && (acao === 'separar' || junto)) { mudar({ tipo: 'ed', id, campos: { junto_anterior: junto } }); n++; }
+    }
+    return fim(n ? `${n} entrega(s) ${acao === 'juntas' ? 'passam a correr junto com a anterior' : 'separadas'}. Falta salvar.${aviso2}`
+      : acao === 'juntas' ? 'Só correm juntas entregas seguidas na mesma etapa, todas selecionadas.' : 'Nada a separar.');
+  }
+  if (acao === 'travar' || acao === 'destravar') {
+    ids.forEach((id) => mudar({ tipo: 'ed', id, campos: { travado: acao === 'travar' ? 1 : 0 } }));
+    return fim(`${ids.length} cartão(ões) ${acao === 'travar' ? 'travado(s)' : 'destravado(s)'}. Falta salvar.`);
+  }
+  if (acao === 'arquivar') {
+    const alvo = livres.filter((id) => !evtDe(id)?.encerramento);
+    if (!alvo.length) return;
+    if (!confirm(`Arquivar ${alvo.length} cartão(ões)? Ficam em "Arquivados", no fim da página, e podem ser restaurados.`)) return;
+    let ok = 0;
+    for (const id of alvo) {
+      try { await arquivarRegistro(registroEm(D0, id)); ok++; LN.selecao.delete(id); } catch (e) { aviso(`${codigoDe(id)}: ${mensagemDe(e)}`); }
+    }
+    esquecerDaFila((op) => alvo.includes(op.ent || op.ev || op.id));
+    await recarregar();
+    aviso(`${ok} cartão(ões) arquivado(s).${aviso2}`, 'ok');
+  }
+}
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && LN.selecao.size && !LN.modal && !ev.target.closest?.('input, textarea, select, .ln-novo')) {
+    LN.selecao.clear(); lnMarcarSelecao(document.querySelector('.ln-tela'));
+  }
+});

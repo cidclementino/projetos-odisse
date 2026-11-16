@@ -130,3 +130,13 @@ body.ln-modal-aberto { overflow: hidden; }
 .lnm-fora { margin-left: auto; font-size: 12.5px; }
 .lnm-leitor { width: 100%; height: 100%; border: 0; background: #fff; }
 .lnm-vazio { display: grid; place-content: center; text-align: center; padding: 40px; color: var(--tinta-2); max-width: 520px; margin: 0 auto; }
+
+/* seleção de vários cartões */
+.ln-no.is-multi { box-shadow: 0 0 0 2.5px var(--gatilho), 0 0 0 5px color-mix(in srgb, var(--gatilho) 22%, transparent); }
+.ln-no.is-multi::after { content: "✓"; position: absolute; right: 4px; bottom: 3px; width: 15px; height: 15px; border-radius: 50%; background: var(--gatilho); color: #fff; font-size: 10px; line-height: 15px; text-align: center; }
+.ln-laco { position: absolute; z-index: 8; border: 1.5px dashed var(--gatilho); background: color-mix(in srgb, var(--gatilho) 8%, transparent); border-radius: 3px; pointer-events: none; }
+.ln-tela { user-select: none; }
+.ln-selbar[hidden] { display: none; }
+.ln-sel__grupo { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding-left: 10px; border-left: 1px solid rgba(255, 255, 255, .2); }
+.ln-sel__srv { border: 1px solid rgba(255, 255, 255, .35); background: none; color: var(--barra-texto); border-radius: 4px; padding: 2px 6px; font: inherit; font-size: 12px; cursor: pointer; }
+.ln-sel__srv.is-on { background: var(--barra-texto); color: var(--barra); font-weight: 600; }
