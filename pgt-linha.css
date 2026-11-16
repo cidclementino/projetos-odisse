@@ -1,0 +1,102 @@
+/* ==========================================================================
+   Plano Geral de Trabalho — aba "Linha" (pgt-linha.js): nós sobre a régua de datas.
+   Borda = fase (--fase); preenchimento = situação (no PGT, previsto = branco).
+   ========================================================================== */
+.ln { --gatilho: #2F6FD0; --susp: #9A6B12; }
+.ln-barra { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-bottom: 10px; }
+.ln-barra select { background: var(--elevada); color: var(--tinta); border: 1px solid var(--linha-forte); border-radius: var(--raio-p); padding: 7px 10px; font: inherit; font-size: 13px; }
+.ln-barra label { display: inline-flex; gap: 6px; align-items: center; }
+.ln-resumo { margin-left: auto; }
+
+.ln-corpo { display: grid; grid-template-columns: 128px minmax(0, 1fr); border: 1px solid var(--linha); border-radius: var(--raio); background: var(--superficie); overflow: hidden; }
+.ln-lateral { position: relative; border-right: 1px solid var(--linha); background: var(--elevada); }
+.ln-rot { position: absolute; left: 10px; right: 8px; font-size: 11px; color: var(--tinta-2); line-height: 1.2; }
+.ln-rot--cam { font-size: 12.5px; font-weight: 600; color: var(--tinta); }
+.ln-rot--linha { font-size: 11.5px; font-weight: 600; color: var(--gatilho); }
+.ln-rot--linha small { display: block; font-weight: 400; font-size: 10.5px; color: var(--tinta-2); }
+
+.ln-rolo { overflow-x: auto; overflow-y: hidden; }
+.ln-tela { position: relative; }
+.ln-camada { position: absolute; left: 0; }
+.ln-camada--cli { background: color-mix(in srgb, var(--gatilho) 3.5%, transparent); }
+.ln-linha { position: absolute; left: 0; height: 0; border-top: 1.5px dashed color-mix(in srgb, var(--gatilho) 55%, var(--linha-forte)); }
+
+/* faixas de fase e etapa (recolher / expandir) */
+.ln-faixa { position: absolute; height: 20px; padding: 0 8px; border: 0; border-radius: 4px; font: inherit; font-size: 11.5px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; z-index: 3; }
+.ln-faixa--fase { background: var(--fase); color: #fff; font-weight: 600; }
+.ln-faixa--etapa { background: color-mix(in srgb, var(--fase) 14%, var(--elevada)); color: color-mix(in srgb, var(--fase) 75%, #000); border: 1px solid color-mix(in srgb, var(--fase) 40%, transparent); font-weight: 600; }
+.ln-faixa:hover { filter: brightness(.95); }
+.ln-faixa.is-recolhida { opacity: .85; }
+
+/* régua e compressão */
+.ln-data { position: absolute; transform: translateX(-50%); text-align: center; font-size: 11px; line-height: 1.15; color: var(--tinta-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ln-data b { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--tinta); }
+.ln-data.is-mes { color: var(--tinta); font-weight: 600; }
+.ln-data span { display: block; font-size: 10px; opacity: .8; }
+.ln-data.is-fds { color: var(--susp); }
+.ln-marca { position: absolute; width: 0; border-left: 1px solid color-mix(in srgb, var(--linha) 70%, transparent); z-index: 0; }
+.ln-comp { position: absolute; height: 14px; font-size: 10px; line-height: 14px; text-align: center; color: #fff; font-weight: 600; opacity: .85; }
+
+/* fios */
+.ln-fios { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; overflow: visible; }
+.ln-fio { fill: none; stroke: #888780; stroke-width: 1; }
+.ln-fio--gatilho { stroke: var(--gatilho); stroke-width: 1.4; stroke-dasharray: 5 4; }
+.ln-fio__rot { font-size: 10.5px; fill: var(--gatilho); text-anchor: middle; }
+.tem-sel .ln-fio { opacity: .18; }
+.tem-sel .ln-fio.is-lig { opacity: 1; stroke-width: 2; stroke: var(--gatilho); }
+
+/* cartões */
+.ln-no, .ln-grupo { position: absolute; box-sizing: border-box; z-index: 2; }
+.ln-no { padding: 5px 8px; background: var(--elevada); border: 1.5px solid var(--fase); border-radius: 3px; color: var(--tinta); font-size: 12px; overflow: hidden; cursor: pointer;
+  display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(46, 48, 54, .06); }
+.ln-no--evt { border-radius: 14px; padding: 5px 10px; }
+.ln-no--linha { z-index: 4; }
+.ln-no--tres { justify-content: center; }
+.ln-no--enc { background: color-mix(in srgb, var(--encerramento, #3E6B48) 8%, var(--elevada)); }
+.ln-no--dec { border-width: 2px; }
+.ln-no.is-tracejado { border-style: dashed; }
+.ln-no.is-suspenso { opacity: .5; background: var(--superficie); }
+.ln-no__cab { display: flex; justify-content: space-between; gap: 6px; font-size: 10.5px; color: var(--tinta-2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ln-no__cod { display: inline-flex; gap: 4px; align-items: center; font-weight: 600; color: color-mix(in srgb, var(--fase) 70%, var(--tinta)); }
+.ln-no__cod svg { width: 11px; height: 11px; }
+.ln-no__nome { font-weight: 500; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ln-no--linha .ln-no__nome, .ln-no--membro .ln-no__nome { -webkit-line-clamp: 1; }
+.ln-no__pe { display: flex; gap: 3px; flex-wrap: nowrap; overflow: hidden; margin-top: auto; }
+.ln-no__pe span { font-size: 10px; background: var(--veu); border-radius: 4px; padding: 0 5px; white-space: nowrap; color: var(--tinta-2); display: inline-flex; gap: 3px; align-items: center; }
+.ln-no__pe svg { width: 10px; height: 10px; }
+.ln-no__pe .ln-tag--susp { color: var(--susp); background: color-mix(in srgb, var(--susp) 10%, transparent); }
+.ln-no__pe .ln-tag--lib { color: var(--gatilho); background: color-mix(in srgb, var(--gatilho) 10%, transparent); }
+.ln-no--resumo { background: color-mix(in srgb, var(--fase) 8%, var(--elevada)); border-style: double; border-width: 3px; }
+.ln-grupo { border-radius: 8px; border: 1px solid color-mix(in srgb, var(--fase) 30%, var(--linha)); background: color-mix(in srgb, var(--fase) 5%, var(--superficie)); z-index: 1; cursor: pointer; }
+
+/* decisão: botões de resultado */
+.ln-dec { display: flex; gap: 3px; margin-top: auto; flex-wrap: nowrap; overflow: hidden; }
+.ln-dec__b { border: 1px solid color-mix(in srgb, var(--gatilho) 40%, var(--linha-forte)); background: var(--elevada); color: var(--gatilho); border-radius: 10px; padding: 0 7px; font: inherit; font-size: 10.5px; line-height: 16px; cursor: pointer; white-space: nowrap; }
+.ln-dec__b.is-esperado { font-weight: 600; }
+.ln-dec__b.is-on { background: var(--gatilho); color: #fff; border-color: var(--gatilho); }
+.ln-dec__desfaz { color: var(--tinta-2); border-color: var(--linha-forte); }
+
+/* seleção */
+.tem-sel .ln-no:not(.is-lig), .tem-sel .ln-grupo:not(.is-lig) { opacity: .28; }
+.ln-no.is-sel { box-shadow: 0 0 0 2px var(--gatilho); }
+
+/* minimapa */
+.ln-mini { margin-top: 8px; height: 58px; border: 1px solid var(--linha); border-radius: var(--raio); background: var(--superficie); overflow: hidden; cursor: pointer; }
+.ln-mini__tela { position: relative; height: 56px; }
+.ln-mini__tela i { position: absolute; border-radius: 1px; }
+.ln-mini__linha { position: absolute; left: 0; right: 0; border-top: 1px dashed color-mix(in srgb, var(--gatilho) 50%, transparent); }
+.ln-mini__janela { position: absolute; top: 0; bottom: 0; border: 1.5px solid var(--gatilho); background: color-mix(in srgb, var(--gatilho) 7%, transparent); border-radius: 3px; pointer-events: none; }
+
+/* legenda */
+.ln-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; color: var(--tinta-2); align-items: center; }
+.ln-legenda span { display: inline-flex; gap: 5px; align-items: center; }
+.ln-legenda svg { width: 12px; height: 12px; color: var(--gatilho); }
+.ln-am { display: inline-block; width: 18px; height: 11px; border: 1.5px solid #1D9E75; background: var(--elevada); }
+.ln-am--ent { border-radius: 2px; }
+.ln-am--evt { border-radius: 6px; }
+.ln-am--trac { border-style: dashed; border-radius: 6px; opacity: .7; }
+.ln-am--grupo { border: 1px solid var(--linha-forte); border-radius: 4px; background: var(--superficie); }
+.ln-am--gat { border: 0; border-top: 1.5px dashed var(--gatilho); height: 0; }
+.ln-no--dec .ln-no__nome { -webkit-line-clamp: 1; }
+.ln-dec__b { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ln-dec__desfaz { flex: 0 0 auto; }

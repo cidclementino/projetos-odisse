@@ -296,3 +296,26 @@
 .legenda-amostra { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; }
 .legenda-amostra--evt { background: var(--evento-fundo); box-shadow: inset 3px 0 0 var(--evento); }
 .legenda-amostra--enc { background: var(--encerramento-fundo); box-shadow: inset 3px 0 0 var(--encerramento); }
+
+/* ---------------------------------------------------------------- decisões (0009) */
+:root { --decisao: #2F6FD0; --suspenso: #9A6B12; }
+.chip--dec { display: inline-flex; align-items: center; gap: 4px; background: color-mix(in srgb, var(--decisao) 12%, var(--elevada)); color: color-mix(in srgb, var(--decisao) 85%, #000); font-weight: 600; }
+.chip--dec svg, .legenda-icone svg { width: 12px; height: 12px; }
+.chip--susp { background: none; border: 1px dashed color-mix(in srgb, var(--suspenso) 60%, var(--linha-forte)); color: var(--suspenso); font-size: 11.5px; }
+.selo-terceiros svg { width: 13px; height: 13px; }
+.dec-form { display: grid; gap: 6px; }
+.dec-form legend label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.dec-res { display: grid; grid-template-columns: 180px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.dec-res input { background: var(--elevada); color: var(--tinta); border: 1px solid var(--linha-forte); border-radius: var(--raio-p); padding: 5px 8px; font: inherit; font-size: 13px; }
+.dec-res:first-of-type input { font-weight: 600; }
+.dec-rel { display: flex; flex-wrap: wrap; gap: 4px; }
+.marcando { position: sticky; top: 8px; z-index: 5; display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 10px;
+  background: color-mix(in srgb, var(--decisao) 10%, var(--elevada)); border: 1px solid color-mix(in srgb, var(--decisao) 40%, var(--linha)); border-radius: var(--raio); font-size: 13px; }
+.marcando svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--decisao); }
+.card--marca { font-size: 13px; cursor: pointer; }
+.card--marca .linha { min-height: 34px; }
+.card--marca.is-fora { opacity: .45; cursor: default; }
+.card--marca.is-marcado { border-color: var(--decisao); background: color-mix(in srgb, var(--decisao) 7%, var(--elevada)); }
+.marca-caixa { display: inline-flex; width: 18px; height: 18px; align-items: center; justify-content: center; border: 1.5px solid var(--linha-forte); border-radius: 4px; font-size: 12px; font-weight: 700; color: #fff; }
+.card--marca.is-marcado .marca-caixa { background: var(--decisao); border-color: var(--decisao); }
+.gestao__filtros[hidden] { display: none; }
