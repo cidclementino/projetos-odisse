@@ -135,7 +135,7 @@ function lnModelo() {
 }
 
 // ---------------------------------------------------------------- vista: recolhidos, como cliente, geometria
-const LN_W = 132;          // espaço entre datas
+const LN_W = 184;          // espaço entre datas
 const LN_X0 = 44;
 const LN_H = 62;           // altura do cartão
 const LN_HM = 44;          // altura de cada entrega num grupo
@@ -180,38 +180,60 @@ function lnVista(M) {
   return { nos, passos, grupos, noGrupo, marcos, col, porId };
 }
 
+// altura do cartão: cabeçalho + nome inteiro (estimado pela largura) + etiquetas + botões
+const LN_PX_LETRA = 6.9;     // largura média de uma letra do nome (12,5 px)
+function lnAltura(n, w) {
+  if (n.resumo) return 78;
+  const nome = n.x.texto || n.x.nome || '';
+  const linhas = Math.max(1, Math.ceil((nome.length * LN_PX_LETRA) / Math.max(40, w - 22)));
+  const tags = n.susp || n.opcional;
+  return 10 + 15 + linhas * 16 + (tags ? 19 : 0) + (n.x.decisao ? 22 : 0) + 26;
+}
 function lnGeometria(M, V) {
   const x = (t) => LN_X0 + V.col.get(t) * LN_W;
-  const altGrupo = (g) => 8 + g.ids.length * (LN_HM + 4);
-  const alturaEst = Math.max(LN_H, ...V.grupos.map(altGrupo));
-  const temCli = V.nos.some((n) => n.ator === 'cli');
-  const temOut = V.nos.some((n) => n.ator === 'out');
-  const cam = {};
-  let y = LN_Y_CAM;
-  if (!LN.cliente) { cam.est = { y, h: 16 + alturaEst + LN_LINHA / 2 + 10 }; y += cam.est.h; } else y += LN_LINHA / 2 + 12;   // sem o estúdio, a 1ª linha desce
-  const l1 = y;
-  cam.cli = { y, h: LN_LINHA / 2 + 14 + (temCli ? LN_H : 30) + LN_LINHA / 2 + 14 }; y += cam.cli.h;
-  const l2 = y;
-  cam.out = { y, h: LN_LINHA / 2 + 14 + (temOut ? LN_H : 30) + 16 }; y += cam.out.h;
-  const largura = LN_X0 * 2 + Math.max(1, V.marcos.length - 1) * LN_W + 40;
   const caixa = {};
+  // larguras e alturas primeiro (dependem das datas); as posições verticais depois
   for (const n of V.nos) {
-    const l = x(n.ini) + 6; const w = Math.max(40, x(n.fim) - x(n.ini) - 12);
-    let t; let h = LN_H;
-    if (n.ator === 'est') t = cam.est.y + 16;
-    else if (n.ator === 'cli') t = l1 + LN_LINHA / 2 + 14;
-    else if (n.ator === 'out') t = l2 + LN_LINHA / 2 + 14;
-    else if (n.ator === 'l1') { t = l1 - LN_LINHA / 2; h = LN_LINHA; }
-    else if (n.ator === 'l2') { t = l2 - LN_LINHA / 2; h = LN_LINHA; }
-    else { t = l1 - LN_LINHA / 2; h = l2 - l1 + LN_LINHA; }       // os três atores
-    caixa[n.id] = { l, t, w, h };
+    const w = Math.max(60, x(n.fim) - x(n.ini) - 12);
+    caixa[n.id] = { l: x(n.ini) + 6, w, h: lnAltura(n, w) };
   }
   for (const g of V.grupos) {
-    const a = caixa[g.ids[0]];
+    let h = 4;
+    for (const id of g.ids) { const c = caixa[id]; c.w = Math.max(56, c.w - 8); c.h = lnAltura(V.porId[id], c.w); h += c.h + 4; }
     const fim = Math.max(...g.ids.map((id) => V.porId[id].fim));
-    const w = Math.max(40, x(fim) - x(V.porId[g.ids[0]].ini) - 12);
-    caixa[g.id] = { l: a.l, t: a.t, w, h: altGrupo(g) };
-    g.ids.forEach((id, i) => { caixa[id] = { l: a.l + 4, t: a.t + 4 + i * (LN_HM + 4), w: Math.max(32, x(V.porId[id].fim) - x(V.porId[id].ini) - 20), h: LN_HM }; });
+    caixa[g.id] = { l: caixa[g.ids[0]].l - 4, w: Math.max(60, x(fim) - x(V.porId[g.ids[0]].ini) - 12), h };
+  }
+  const daCamada = (ator) => V.nos.filter((n) => n.ator === ator && !V.noGrupo[n.id]).map((n) => caixa[n.id].h);
+  const altEst = Math.max(60, ...daCamada('est'), ...V.grupos.map((g) => caixa[g.id].h));
+  const meia1 = Math.max(26, ...daCamada('l1').map((h) => h / 2));
+  const meia2 = Math.max(26, ...daCamada('l2').map((h) => h / 2));
+  let altCli = Math.max(30, ...daCamada('cli'));
+  const altOut = Math.max(30, ...daCamada('out'));
+  // os três atores: o cartão vai da 1ª à 2ª linha; a faixa do cliente cresce se ele não couber
+  const tres = Math.max(0, ...daCamada('tres'));
+  altCli = Math.max(altCli, tres - meia1 - meia2 - 24);
+  const cam = {};
+  let y = LN_Y_CAM;
+  if (!LN.cliente) { cam.est = { y, h: 14 + altEst + meia1 + 12 }; y += cam.est.h; } else y += meia1 + 12;   // sem o estúdio, a 1ª linha desce
+  const l1 = y;
+  cam.cli = { y, h: meia1 + 12 + altCli + meia2 + 12 }; y += cam.cli.h;
+  const l2 = y;
+  cam.out = { y, h: meia2 + 12 + altOut + 16 }; y += cam.out.h;
+  const largura = LN_X0 * 2 + Math.max(1, V.marcos.length - 1) * LN_W + 40;
+  for (const n of V.nos) {
+    if (V.noGrupo[n.id]) continue;
+    const c = caixa[n.id];
+    if (n.ator === 'est') c.t = cam.est.y + 14;
+    else if (n.ator === 'cli') c.t = l1 + meia1 + 12;
+    else if (n.ator === 'out') c.t = l2 + meia2 + 12;
+    else if (n.ator === 'l1') c.t = l1 - c.h / 2;
+    else if (n.ator === 'l2') c.t = l2 - c.h / 2;
+    else { c.t = l1 - meia1; c.h = l2 - l1 + meia1 + meia2; }       // os três atores
+  }
+  for (const g of V.grupos) {
+    const cg = caixa[g.id]; cg.t = cam.est.y + 14;
+    let t = cg.t + 4;
+    for (const id of g.ids) { const c = caixa[id]; c.l = cg.l + 4; c.t = t; t += c.h + 4; }
   }
   return { x, cam, l1, l2, altura: y + 8, largura, caixa };
 }
@@ -235,6 +257,30 @@ function lnTitulo(n) {
     n.opcional ? 'Opcional neste serviço' : '', n.susp === 'pendente' ? `Suspenso até ${n.lib.ev.codigo}: entra com «${n.lib.res.nome}»` : '',
     n.susp === 'liberado' ? `Liberado por ${n.lib.ev.codigo} («${n.lib.res.nome}»)` : '', 'Duplo clique: abrir na edição'].filter(Boolean).join('\n');
 }
+// botões do cartão na visão geral: pertinência no serviço da Linha, prazo (− +), materiais, abrir, cadeado
+const LN_PERT_PROX = { P: 'O', O: '', '': 'P' };
+function lnPrazoCurto(t) {
+  if (!t) return 'sem prazo';
+  return fmtPrazo(t);
+}
+function lnAcoes(n) {
+  const x = n.x;
+  const trv = travado(x.id);
+  const dis = trv ? 'disabled' : '';
+  const p = x.servicos[LN.srv] || '';
+  const temPrazo = n.ent || x.tempo === 'estudio';
+  const mats = materiaisDe(x.id).length;
+  return `<div class="ln-acoes">
+    ${x.encerramento ? '<span class="ln-ac ln-ac--pert" data-p="S" title="Perpétuo: vale sempre">∞</span>'
+      : `<button type="button" class="ln-ac ln-ac--pert" data-p="${p}" data-ac="pert|${x.id}" ${dis} title="Pertinência em ${escHtml(D.servicos.find((s) => s.id === LN.srv)?.sigla || '')}: ${escHtml(nomeDe(PERTINENCIAS, p))} (clique: P → O → —)">${p || '—'}</button>`}
+    ${temPrazo ? `<span class="ln-ac--prazo"><button type="button" class="ln-ac" data-ac="menos|${x.id}" ${dis} title="Encurtar">−</button><span title="Prazo no PGT">${lnPrazoCurto(x.prazo_turnos)}</span><button type="button" class="ln-ac" data-ac="mais|${x.id}" ${dis} title="Alongar">+</button></span>`
+      : `<span class="ln-ac--info">${n.pontual ? 'pontual' : `${n.dias} dias ~`}</span>`}
+    <span class="ln-acoes__dir">
+      <button type="button" class="ln-ac" data-ac="mat|${x.id}" title="${mats ? `${mats} material(is): abrir para ler` : 'Sem materiais: abrir para acrescentar'}">${ICONE.clipe}${mats || ''}</button>
+      <button type="button" class="ln-ac" data-ac="abrir|${x.id}" title="Abrir (ou duplo clique)">${ICONE.lapis}</button>
+      <button type="button" class="ln-ac ln-ac--trava${trv ? ' is-on' : ''}" data-ac="trava|${x.id}" ${!x.travado && trv ? 'disabled' : ''} title="${trv ? (x.travado ? 'Destravar' : 'Travado pela etapa ou fase') : 'Travar'}">${trv ? ICONE.cadeado : ICONE.aberto}</button>
+    </span></div>`;
+}
 function lnCartao(n, c, V) {
   const st = `left:${c.l}px;top:${c.t}px;width:${c.w}px;height:${c.h}px;--fase:${lnCorFase(n.fase)}`;
   if (n.resumo) {
@@ -247,30 +293,26 @@ function lnCartao(n, c, V) {
   const cls = ['ln-no', n.ent ? 'ln-no--ent' : 'ln-no--evt', x.encerramento ? 'ln-no--enc' : '', x.decisao ? 'ln-no--dec' : '',
     n.opcional || n.susp === 'pendente' ? 'is-tracejado' : '', n.susp === 'pendente' ? 'is-suspenso' : '',
     ['l1', 'l2', 'tres'].includes(n.ator) ? 'ln-no--linha' : '', n.ator === 'tres' ? 'ln-no--tres' : '', V.noGrupo[n.id] ? 'ln-no--membro' : ''].filter(Boolean).join(' ');
-  const mats = materiaisDe(x.id);
   const dur = n.pontual ? '' : `${n.dias}d${n.semPrazo ? '*' : n.estimado ? '~' : ''}`;
-  let pe = '';
+  const tags = [n.susp === 'pendente' ? `<span class="ln-tag--susp">suspenso · ${escHtml(n.lib.ev.codigo)} → ${escHtml(n.lib.res.nome)}</span>` : '',
+    n.susp === 'liberado' ? `<span class="ln-tag--lib">liberado · ${escHtml(n.lib.res.nome)}</span>` : '',
+    n.opcional && !n.susp ? '<span>opcional</span>' : ''].filter(Boolean);
+  let dec = '';
   if (x.decisao) {
     const r = LN.decisoes[x.id];
-    pe = `<div class="ln-dec">${x.decisao.map((res, i) => `<button type="button" class="ln-dec__b${r === res.id ? ' is-on' : ''}${i === 0 ? ' is-esperado' : ''}" data-dec="${x.id}|${res.id}" title="${i === 0 ? 'Caminho esperado' : res.libera.length ? `Libera ${res.libera.map(codigoDe).join(', ')}` : 'Sem cartões relacionados'}">${escHtml(res.nome)}</button>`).join('')}
+    dec = `<div class="ln-dec">${x.decisao.map((res, i) => `<button type="button" class="ln-dec__b${r === res.id ? ' is-on' : ''}${i === 0 ? ' is-esperado' : ''}" data-dec="${x.id}|${res.id}" title="${escHtml(res.nome)} · ${i === 0 ? 'caminho esperado' : res.libera.length ? `libera ${res.libera.map(codigoDe).join(', ')}` : 'sem cartões relacionados'}">${escHtml(res.nome)}</button>`).join('')}
       ${r ? `<button type="button" class="ln-dec__b ln-dec__desfaz" data-dec="${x.id}|" title="Desfazer a decisão">↺</button>` : ''}</div>`;
-  } else if (!V.noGrupo[n.id]) {
-    const tags = [n.susp === 'pendente' ? `<span class="ln-tag--susp">suspenso · ${escHtml(n.lib.ev.codigo)}</span>` : '',
-      n.susp === 'liberado' ? `<span class="ln-tag--lib">liberado · ${escHtml(n.lib.res.nome)}</span>` : '',
-      n.opcional && !n.susp ? '<span>opcional</span>' : '',
-      ...mats.slice(0, 2).map((m) => `<span title="${escHtml(m.nome)}">${escHtml(m.nome.length > 14 ? m.nome.slice(0, 13) + '…' : m.nome)}</span>`),
-      mats.length > 2 ? `<span>+${mats.length - 2}</span>` : ''].filter(Boolean);
-    pe = tags.length ? `<div class="ln-no__pe">${tags.join('')}</div>` : '';
   }
   return `<div class="${cls}" data-no="${n.id}" style="${st}" title="${escHtml(lnTitulo(n))}">
     <div class="ln-no__cab"><span class="ln-no__cod">${lnIconeTipo(x)}${escHtml(x.codigo)}</span><span>${dur}</span></div>
-    <div class="ln-no__nome">${escHtml(x.texto || x.nome)}</div>${pe}</div>`;
+    <div class="ln-no__nome">${escHtml(x.texto || x.nome)}</div>
+    ${tags.length ? `<div class="ln-no__pe">${tags.join('')}</div>` : ''}${dec}${lnAcoes(n)}</div>`;
 }
 
 function lnFios(V, G) {
   const ancora = (id, lado) => {
     const g = V.noGrupo[id]; const c = G.caixa[g ? g.id : id];
-    return { x: lado === 'saida' ? c.l + c.w : c.l, y: c.t + Math.min(c.h, LN_H) / 2, id: g ? g.id : id };
+    return { x: lado === 'saida' ? c.l + c.w : c.l, y: c.t + Math.min(c.h / 2, 26), id: g ? g.id : id };
   };
   const fios = []; const visto = new Set();
   for (let i = 1; i < V.passos.length; i++) {
@@ -436,6 +478,7 @@ function ligarLinha(el, M, V, G, F) {
     LN.recolhidas.has(k) ? LN.recolhidas.delete(k) : LN.recolhidas.add(k);
     redesenhar();
   });
+  el.querySelectorAll('[data-ac]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); lnAcao(...b.dataset.ac.split('|')); });
   el.querySelectorAll('[data-dec]').forEach((b) => b.onclick = (ev) => {
     ev.stopPropagation();
     const [id, r] = b.dataset.dec.split('|');
@@ -810,3 +853,26 @@ document.addEventListener('keydown', (ev) => {
     LN.selecao.clear(); lnMarcarSelecao(document.querySelector('.ln-tela'));
   }
 });
+
+function lnAcao(acao, id) {
+  const x = entDe(id) || evtDe(id);
+  if (!x) return;
+  if (acao === 'abrir') return lnAbrirModal(id);
+  if (acao === 'mat') { lnAbrirModal(id); return; }
+  if (acao === 'trava') return mudar({ tipo: 'ed', id, campos: { travado: x.travado ? 0 : 1 } }, { redesenhar: true });
+  if (travado(id)) return;
+  if (acao === 'pert') {
+    const p = LN_PERT_PROX[x.servicos[LN.srv] || ''];
+    mudar(ehEnt(x) ? { tipo: 'pn', ent: id, srv: LN.srv, p } : { tipo: 'pe', ev: id, srv: LN.srv, p }, { redesenhar: true });
+    if (p !== 'P' && !LN.opcionais) aviso(`${x.codigo} ficou ${p ? 'opcional' : 'fora'} em ${D.servicos.find((s) => s.id === LN.srv).sigla} e saiu da linha${p ? ' (ligue "mostrar opcionais" para vê-lo)' : ''}. Falta salvar.`, 'ok');
+    return;
+  }
+  if (acao === 'menos' || acao === 'mais') {
+    const vs = PRAZOS.map(([v]) => v);
+    const t = x.prazo_turnos;
+    let i = t ? vs.findIndex((v) => v >= t) : -1;
+    if (acao === 'mais') i = t ? Math.min(vs.length - 1, (vs[i] === t ? i + 1 : i)) : vs.indexOf(2);
+    else i = t ? (vs[i] === t ? i - 1 : i - 1) : -1;
+    mudar({ tipo: 'ed', id, campos: { prazo_turnos: i >= 0 ? vs[i] : null } }, { redesenhar: true });
+  }
+}
