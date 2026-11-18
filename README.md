@@ -10,7 +10,7 @@ Universo (D1), não aqui. Repositório público: nenhum dado de cliente entra no
   - `pgt.html`: Plano Geral de Trabalho — fases, etapas (com a correspondência na NBR 16636), entregáveis com
     pertinência por serviço (edição em massa), materiais; rascunho → "Publicar versão" (o vendas lê a versão publicada);
   - `index.html` (lista de projetos), `projeto.html#prj_…` (ficha: etapas, horas, dados, local do imóvel, contrato),
-    `horas.html` (semana de cada pessoa), `equipe.html`, `login.html`.
+    `horas.html` (semana de cada pessoa), `login.html`. A equipe é editada no Universo (universo.odisse.com.br/#/equipe); `equipe.html` só leva para lá.
   `gestao.js` reúne as peças comuns de Bases e PGT.
 - `worker/`: Worker `projetos-odisse` (Cloudflare). Confere a senha (`PROJETOS_SENHA`) e repassa
   `/u/v1/…` à API do Universo pelo service binding `UNIVERSO` (ponto de entrada `Projetos`).

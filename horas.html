@@ -68,7 +68,7 @@ async function iniciar() {
 let montado = false;
 function montar() {
   const ativos = PAINEL.equipe.filter(q => q.ativo);
-  if (!ativos.length) { document.querySelector('main').innerHTML = '<p>Cadastre a equipe em <a href="equipe.html">Equipe</a> para lançar horas.</p>'; return; }
+  if (!ativos.length) { document.querySelector('main').innerHTML = '<p>Cadastre a equipe em <a href="https://universo.odisse.com.br/#/equipe">Equipe (no Universo)</a> para lançar horas.</p>'; return; }
   const quem = document.getElementById('quem');
   const ultimo = quem.value || localStorage.getItem('projetos-quem');
   quem.innerHTML = ativos.map(q => `<option value="${q.id}" ${q.id === ultimo ? 'selected' : ''}>${escHtml(q.nome)}</option>`).join('');

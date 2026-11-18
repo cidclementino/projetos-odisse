@@ -108,7 +108,7 @@ function desenhar() {
             <div class="field"><label class="field__label">Duração</label><input type="text" name="duracao" placeholder="2h30" required></div>
             <div class="field desc"><label class="field__label">O que foi feito</label><input type="text" name="descricao" placeholder="Opcional"></div>
             <div><button class="btn btn--primary btn--small" type="submit">Lançar</button></div>
-          </form>` : '<p class="small">Para lançar horas, cadastre a equipe em <a href="equipe.html">Equipe</a>.</p>'}
+          </form>` : '<p class="small">Para lançar horas, cadastre a equipe em <a href="https://universo.odisse.com.br/#/equipe">Equipe (no Universo)</a>.</p>'}
           ${F.horas.length ? `<table class="tabela" style="margin-top:16px">
             <thead><tr><th>Dia</th><th>Quem</th><th>Etapa</th><th>O que</th><th style="text-align:right">Duração</th><th></th></tr></thead>
             <tbody>${F.horas.map(h => `<tr>

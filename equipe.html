@@ -5,88 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Equipe · Projetos — Odisse</title>
 <meta name="robots" content="noindex, nofollow">
+<!-- A equipe virou cadastro comum do Universo (migração 0011): esta página só leva para lá. -->
+<meta http-equiv="refresh" content="0; url=https://universo.odisse.com.br/#/equipe">
 <link rel="icon" href="https://marca.odisse.com.br/favicon/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="https://marca.odisse.com.br/favicon/favicon-32x32.png" sizes="32x32">
 <link rel="stylesheet" href="https://marca.odisse.com.br/v1/marca.css">
 <link rel="stylesheet" href="https://universo.odisse.com.br/base/v1/universo.css">
-<link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="projetos.css">
 </head>
-<body>
-
-<div id="app" class="app app--no-sidebar">
-  <header class="topo" data-pagina="equipe"></header>
-  <script src="topo.js"></script>
-  <main class="ficha" style="max-width:860px">
-    <div class="crm__barra"><h1>Equipe</h1></div>
-    <div id="aviso"></div>
-    <div id="lista"><p class="muted">Carregando…</p></div>
-    <section style="margin-top:28px">
-      <h2>Acrescentar alguém</h2>
-      <form id="f-nova" class="form-hora">
-        <div class="field"><label class="field__label">Nome</label><input type="text" name="nome" required></div>
-        <div class="field"><label class="field__label">E-mail</label><input type="email" name="email"></div>
-        <div class="field"><label class="field__label">Papel</label><select name="papel"></select></div>
-        <div><button class="btn btn--primary btn--small" type="submit">Acrescentar</button></div>
-      </form>
-      <p class="field__hint">Se a pessoa já estiver nos Contatos (mesmo nome ou e-mail), o cadastro dela é aproveitado.</p>
-    </section>
-  </main>
-</div>
-
-<div id="painel-raiz"></div>
-
-<script src="config.js"></script>
-<script src="auth.js"></script>
-<script>exigirAutenticacao();</script>
-<script src="base.js"></script>
-<script>
-const aviso = avisoEm(document.getElementById('aviso'));
-const f = document.getElementById('f-nova');
-f.papel.innerHTML = opcoes(PAPEIS_EQUIPE, 'arquiteto');
-let EQ = [];
-
-// Abre com o que ficou guardado neste computador e se atualiza quando o Universo responde (Universo.lerComCache).
-// soNovo: depois de gravar, ignora o guardado.
-let EQ_BRUTO = null, NOMES = null;
-async function carregar({ soNovo = false } = {}) {
-  const juntar = () => {
-    if (!EQ_BRUTO || !NOMES) return;
-    EQ = EQ_BRUTO.map(q => ({ ...q, nome: NOMES[q.id] || q.pessoa_id }));
-    desenhar();
-  };
-  try {
-    await Promise.all([
-      Universo.lerComCache('equipe?limite=100', (d) => { EQ_BRUTO = d.itens; juntar(); }, { soNovo }),
-      Universo.lerComCache('producao/painel', (d) => { NOMES = Object.fromEntries(d.equipe.map(q => [q.id, q.nome])); juntar(); }, { soNovo })
-    ]);
-  } catch (e) { aviso(mensagemDe(e)); }
-}
-
-function desenhar() {
-  document.getElementById('lista').innerHTML = EQ.length ? `<table class="tabela">
-    <thead><tr><th>Nome</th><th>Papel</th><th>Ativo</th></tr></thead>
-    <tbody>${EQ.map(q => `<tr data-id="${q.id}"><td><strong>${escHtml(q.nome)}</strong></td>
-      <td><select data-campo="papel">${opcoes(PAPEIS_EQUIPE, q.papel)}</select></td>
-      <td><select data-campo="ativo">${opcoes([{ id: '1', nome: 'Sim' }, { id: '0', nome: 'Não (não aparece para lançar horas)' }], String(q.ativo))}</select></td></tr>`).join('')}</tbody></table>`
-    : '<p class="small muted">Ninguém ainda. Comece pelos sócios.</p>';
-  document.querySelectorAll('tr[data-id] select').forEach(s => s.onchange = async () => {
-    const q = EQ.find(x => x.id === s.closest('tr').dataset.id);
-    const v = s.dataset.campo === 'ativo' ? Number(s.value) : s.value;
-    try { await Universo.alterar('equipe', q.id, { versao: q.versao, [s.dataset.campo]: v }); carregar({ soNovo: true }); } catch (e) { aviso(mensagemDe(e)); carregar({ soNovo: true }); }
-  });
-}
-
-f.onsubmit = async (ev) => {
-  ev.preventDefault();
-  try {
-    const r = await Universo.post('producao/equipe', { nome: f.nome.value, email: f.email.value || null, papel: f.papel.value });
-    aviso(r.ja_estava ? 'Essa pessoa já está na equipe.' : '', 'ok');
-    f.reset(); f.papel.value = 'arquiteto';
-    carregar({ soNovo: true });
-  } catch (e) { aviso(mensagemDe(e)); }
-};
-carregar();
-</script>
+<body class="u-pagina" style="padding:48px">
+  <p>A equipe agora é editada no Universo: <a href="https://universo.odisse.com.br/#/equipe">universo.odisse.com.br/#/equipe</a>.</p>
 </body>
 </html>

@@ -12,7 +12,8 @@
     { sep: true },   // | separa a estrutura (Bases, PGT) do dia a dia (Projetos, Horas, Equipe)
     { id: 'projetos', nome: 'Projetos', href: 'index.html', dica: 'Projetos em andamento, etapas e prazos' },
     { id: 'horas', nome: 'Horas', href: 'horas.html', dica: 'Apontamento de horas da semana' },
-    { id: 'equipe', nome: 'Equipe', href: 'equipe.html', dica: 'Quem aponta horas' }
+    // a equipe é cadastro comum: mora no Universo (cargos, registro, assinaturas, site)
+    { id: 'equipe', nome: 'Equipe ↗', href: 'https://universo.odisse.com.br/#/equipe', dica: 'No Universo: quem faz, cargos, registro e assinaturas' }
   ];
   const PERTENCE = { projeto: 'projetos' };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
