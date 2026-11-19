@@ -665,7 +665,7 @@ function selosEvento(v) {
     ${v.terceiros ? `<span class="selo-cliente selo-terceiros" title="Com participação de terceiros (fornecedores, complementares, órgãos)">${ICONE.terceiros}</span>` : ''}
     ${TEMPO_CURTO[v.tempo] ? `<span class="small muted">· ${TEMPO_CURTO[v.tempo]}</span>` : ''}
     ${v.quantidade > 1 ? `<span class="small muted" title="Quantidade incluída">· ${v.quantidade}×</span>` : ''}
-    ${v.clausula ? `<span class="selo-clausula" title="Cláusula: ${escHtml(v.clausula)}">§</span>` : ''}`;
+    ${v.clausula_marcada ? '<span class="selo-clausula" title="É cláusula (o texto se redige no vendas › Contratos › Gestor de cláusulas)">§</span>' : ''}`;
 }
 function formEvento(v) {
   return `<div class="card__form">
@@ -677,7 +677,8 @@ function formEvento(v) {
       <label class="check-linha"><span>&nbsp;</span><span><input type="checkbox" data-campo-sn="${v.id}" data-campo="cliente" ${v.cliente ? 'checked' : ''}> com participação do cliente</span>
         <span><input type="checkbox" data-campo-sn="${v.id}" data-campo="terceiros" ${v.terceiros ? 'checked' : ''}> com participação de terceiros</span></label></div>
     ${v.encerramento ? '' : formDecisao(v)}
-    ${v.encerramento ? '' : `<label>Cláusula (texto que o evento torna disponível na proposta)<textarea data-campo-de="${v.id}" data-campo="clausula" rows="2" placeholder="Ex.: Dupla rodada de ajuste">${escHtml(v.clausula || '')}</textarea></label>`}
+    ${v.encerramento ? '' : `<label class="check-linha"><span><input type="checkbox" data-campo-sn="${v.id}" data-campo="clausula_marcada" ${v.clausula_marcada ? 'checked' : ''}> é cláusula</span>
+      <span class="small muted">O texto se redige no vendas, em <a href="https://vendas.odisse.com.br/contratos.html#clausulas" target="_blank" rel="noopener">Contratos › Gestor de cláusulas</a>.</span></label>`}
     <label>Observações (uso interno)<textarea data-campo-de="${v.id}" data-campo="observacoes" rows="2">${escHtml(v.observacoes || '')}</textarea></label>
     ${v.encerramento ? `<fieldset class="card__cats"><legend>Etapas onde o serviço pode terminar (instâncias)</legend>
       ${D.etapas.map((e) => `<label class="small"><input type="checkbox" data-inst="${e.id}" ${(v.instancias || []).includes(e.id) ? 'checked' : ''} ${e.id === v.etapa_id ? 'disabled title="Instância ativa"' : ''}> ${escHtml(e.sigla)}</label>`).join('')}</fieldset>` : ''}
@@ -687,7 +688,7 @@ function formEvento(v) {
 }
 function infoEvento(v) {
   return `<div class="card__info">
-    ${v.clausula ? `<p><strong>Cláusula:</strong> ${escHtml(v.clausula)}</p>` : ''}
+    ${v.clausula_marcada ? '<p><strong>É cláusula.</strong> <span class="small muted">Texto no vendas › Contratos › Gestor de cláusulas.</span></p>' : ''}
     ${v.decisao ? `<p><strong>Decisão:</strong> ${v.decisao.map((r, i) => `${escHtml(r.nome)}${i === 0 ? ' <span class="muted">(caminho esperado)</span>' : ''}${r.libera.length
       ? ` → libera ${r.libera.map((id) => `<a href="#" data-ir="${id}">${escHtml(codigoDe(id))}</a>`).join(', ')}` : ''}`).join(' · ')}</p>` : ''}
     ${suspensoPor(v.id) ? `<p class="small">${seloSuspenso(v.id)}</p>` : ''}
