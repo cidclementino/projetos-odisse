@@ -1,0 +1,117 @@
+/* Escopo do Projeto — Ficha (Hoje, Suspensão), PGT (Linha e Cartões) e Alterações de escopo (Cid, 20/11/2026).
+   Sem barras coloridas à esquerda: a fase vem na borda inteira do cartão (como na Linha do PGT). */
+
+.esc-cab { margin-top: 4px; border-bottom: 0 !important; padding-bottom: 0 !important; margin-bottom: 16px !important; }
+.esc-cab h1 { margin: 0 0 4px; }
+.esc-n { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 4px; background: var(--u-destaque, #BB8248); color: #fff;
+  font-size: 11px; font-weight: 650; text-align: center; line-height: 17px; }
+.esc-cod { font-size: 11.5px; font-weight: 700; letter-spacing: .02em; color: var(--u-tinta-2, #5B6773); white-space: nowrap; }
+.esc-dt { font-size: 12px; color: var(--u-tinta-2, #5B6773); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.esc-etq { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 600; background: var(--odisse-nevoa, #E6E8EB); color: var(--u-tinta, #3F4B57); white-space: nowrap; }
+.esc-etq.hoje { background: #3C82DC; color: #fff; }
+.esc-etq.tracejada { background: transparent; border: 1px dashed var(--u-linha-forte, #C3C8CD); color: var(--u-tinta-2, #5B6773); }
+.esc-ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.esc-ctl input[type="date"] { padding: 6px 8px; border: 1px solid var(--u-linha-forte, #C3C8CD); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; }
+
+/* ---------------------------------------------------------------- Ficha: Hoje e Suspensão */
+.esc-hoje-blocos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 16px; margin: 8px 0 24px; align-items: start; }
+.esc-resumo .pg-bloco-cab { justify-content: space-between; }
+.esc-resumo .pg-bloco-corpo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 24px; }
+.esc-res-col .u-rotulo { display: block; margin-bottom: 6px; }
+.esc-res { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.esc-res li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 13px; }
+.esc-res .esc-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.esc-res-pe { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.esc-sem { margin: 8px 0 24px; }
+
+/* ---------------------------------------------------------------- PGT do projeto: barra de cima */
+.esc-filtros { margin: 0 0 12px; }
+.esc-inicio { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--u-tinta-2, #5B6773); }
+.esc-inicio input { padding: 5px 8px; border: 1px solid var(--u-linha-forte, #C3C8CD); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; color: var(--u-tinta, #3F4B57); }
+
+/* ---------------------------------------------------------------- Linha */
+.esc-tela { overflow-x: auto; overflow-y: hidden; background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 8px; padding: 8px 0 12px; }
+.esc-mapa { position: relative; }
+.esc-fase, .esc-etapa { position: absolute; height: 20px; padding: 0 8px; border-radius: 4px; font-size: 11px; line-height: 20px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  background: color-mix(in srgb, var(--cor) 16%, #fff); color: color-mix(in srgb, var(--cor) 70%, #2E3036); }
+.esc-fase { top: 0; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; background: color-mix(in srgb, var(--cor) 30%, #fff); }
+.esc-etapa { top: 24px; font-weight: 500; }
+.esc-etapa b { font-weight: 700; margin-right: 4px; }
+.esc-regua { position: absolute; top: 50px; left: 0; right: 0; height: 36px; }
+.esc-marco { position: absolute; top: 0; transform: translateX(-50%); text-align: center; font-size: 10.5px; color: var(--u-tinta-2, #5B6773); line-height: 1.25; }
+.esc-marco b { display: block; font-size: 12px; color: var(--u-tinta, #3F4B57); font-variant-numeric: tabular-nums; }
+.esc-marco.hoje b, .esc-marco.hoje span { color: #3C82DC; }
+.esc-salto { position: absolute; top: 9px; transform: translateX(-50%); font-size: 10px; color: var(--u-tinta-2, #5B6773); background: var(--odisse-nevoa, #E6E8EB); padding: 0 5px; border-radius: 4px; }
+.esc-camada { position: absolute; left: 0; height: 18px; border-top: 1px dashed var(--u-linha, #D7DADD); }
+.esc-camada span { position: sticky; left: 8px; display: inline-block; margin-top: 2px; font-size: 10.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--u-tinta-2, #5B6773); }
+.esc-hojelinha { position: absolute; top: 46px; width: 0; border-left: 2px solid #3C82DC; opacity: .7; pointer-events: none; z-index: 1; }
+
+.esc-no { position: absolute; height: 90px; padding: 6px 8px; box-sizing: border-box; display: flex; flex-direction: column; gap: 2px;
+  background: #fff; border: 1.5px solid var(--cor); border-radius: 6px; cursor: pointer; z-index: 2;
+  transition: box-shadow .15s, transform .15s, background-color .15s; }
+.esc-no.evento { border-radius: 14px; }
+.esc-no:hover { box-shadow: 0 3px 10px rgba(46, 48, 54, .12); transform: translateY(-1px); }
+.esc-no:focus-visible { outline: 2px solid var(--u-foco, #3C82DC); outline-offset: 2px; }
+.esc-no.feito { background: color-mix(in srgb, var(--odisse-nevoa, #E6E8EB) 55%, #fff); border-color: color-mix(in srgb, var(--cor) 45%, #fff); }
+.esc-no.feito .esc-no__txt { color: var(--u-tinta-2, #5B6773); }
+.esc-no.hoje { border-width: 2.5px; box-shadow: 0 0 0 3px rgba(60, 130, 220, .18); }
+.esc-no.adicionado { border-style: dashed; }
+.esc-no.enc { background: color-mix(in srgb, #3E6B48 8%, #fff); }
+.esc-no__cab { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 22px; }
+.esc-no__txt { font-size: 12.5px; font-weight: 600; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.esc-no__pe { margin-top: auto; display: flex; align-items: center; gap: 6px; overflow: hidden; }
+.esc-dur { display: inline-flex; align-items: center; gap: 4px; }
+.esc-dur b { min-width: 26px; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; }
+.esc-dur .pg-caixa { width: 22px; height: 22px; }
+.esc-no .pg-caixa svg, .esc-linha .pg-caixa svg { width: 12px; height: 12px; }
+
+/* hiato: tempo parado — caixa vazia tracejada, do mesmo tamanho que se dure 10 ou 20 dias */
+.esc-hiato { position: absolute; height: 90px; box-sizing: border-box; border: 1.5px dashed var(--u-linha-forte, #C3C8CD); border-radius: 6px;
+  background: repeating-linear-gradient(135deg, transparent 0 8px, rgba(63, 75, 87, .04) 8px 16px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: var(--u-tinta-2, #5B6773); z-index: 1; }
+.esc-hiato span { font-size: 10.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+.esc-hiato b { font-size: 12px; font-weight: 600; }
+
+/* ---------------------------------------------------------------- Cartões */
+.esc-grupo { background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 8px; margin-bottom: 12px; }
+.esc-grupo.suprimido { border-style: dashed; opacity: .7; }
+.esc-grupo__cab { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--pgt-veu, rgba(63, 75, 87, .05)); border-radius: 8px 8px 0 0; }
+.esc-grupo__cab b { font-size: 14px; }
+.esc-lista { display: flex; flex-direction: column; }
+.esc-linha { display: grid; grid-template-columns: 64px minmax(0, 1fr) 110px 110px; align-items: center; gap: 12px; padding: 8px 14px; border-top: 1px solid var(--u-linha, #D7DADD);
+  cursor: pointer; font-size: 13px; transition: background-color .15s; }
+.esc-linha:hover { background: rgba(63, 75, 87, .03); }
+.esc-linha.feito .esc-txt { color: var(--u-tinta-2, #5B6773); }
+.esc-linha.hoje { background: rgba(60, 130, 220, .07); }
+.esc-linha.suprimido .esc-txt { text-decoration: line-through; color: var(--u-tinta-2, #5B6773); }
+.esc-linha .esc-dur { justify-content: flex-end; }
+
+/* ---------------------------------------------------------------- Gaveta do cartão e Gerar escopo */
+.esc-acoes { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.esc-etapas { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.esc-etapa-op { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 10px; background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 6px; font-size: 13px; }
+
+/* ---------------------------------------------------------------- Alterações de escopo */
+.esc-placar { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 4px 0 8px; }
+.esc-placar > div { background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 8px; padding: 14px 18px; }
+.esc-placar .u-rotulo { display: block; }
+.esc-placar b { display: block; font-size: 26px; font-weight: 650; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.esc-placar small { font-size: 12px; color: var(--u-tinta-2, #5B6773); }
+.esc-grade-alt { display: grid; grid-template-columns: 100px minmax(0, 1.3fr) minmax(0, 1.4fr) 140px minmax(0, 1fr); gap: 12px; align-items: center; }
+.esc-alt { font-size: 13px; cursor: default; }
+.esc-alt:hover { transform: none; box-shadow: none; }
+.esc-alt small { display: block; font-size: 11px; }
+.esc-motivo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+@media (max-width: 1100px) {
+  .esc-hoje-blocos { grid-template-columns: 1fr; }
+  .esc-grade-alt { grid-template-columns: 90px minmax(0, 1fr) 130px; }
+  .esc-grade-alt > :nth-child(3) { grid-column: 2 / -1; grid-row: 2; }
+  .esc-grade-alt > :nth-child(5) { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .esc-linha { grid-template-columns: 52px minmax(0, 1fr); }
+  .esc-linha .esc-dt { grid-column: 2; }
+  .esc-linha .esc-dur { grid-column: 2; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .esc-no { transition: none; } .esc-no:hover { transform: none; } }
