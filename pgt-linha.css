@@ -47,7 +47,7 @@
 
 /* cartões */
 .ln-no, .ln-grupo { position: absolute; box-sizing: border-box; z-index: 2; }
-.ln-no { padding: 5px 8px; background: var(--elevada); border: 1.5px solid var(--fase); border-radius: 3px; color: var(--tinta); font-size: 12px; overflow: hidden; cursor: pointer;
+.ln-no { min-width: 0; padding: 5px 8px; background: var(--elevada); border: 1.5px solid var(--fase); border-radius: 3px; color: var(--tinta); font-size: 12px; overflow: hidden; cursor: pointer;
   display: flex; flex-direction: column; gap: 2px; box-shadow: 0 1px 2px rgba(46, 48, 54, .06); }
 .ln-no--evt { border-radius: 14px; padding: 5px 10px; }
 .ln-no--linha { z-index: 4; }
@@ -70,7 +70,7 @@
 
 /* decisão: botões de resultado */
 .ln-dec { display: flex; gap: 3px; flex-wrap: nowrap; overflow: hidden; }
-.ln-dec__b { border: 1px solid color-mix(in srgb, var(--gatilho) 40%, var(--linha-forte)); background: var(--elevada); color: var(--gatilho); border-radius: 10px; padding: 0 7px; font: inherit; font-size: 10.5px; line-height: 16px; cursor: pointer; white-space: nowrap; }
+.ln-dec__b { border: 1px solid color-mix(in srgb, var(--gatilho) 40%, var(--linha-forte)); background: var(--elevada); color: var(--gatilho); border-radius: 4px; padding: 0 7px; font: inherit; font-size: 10.5px; line-height: 16px; cursor: pointer; white-space: nowrap; }
 .ln-dec__b.is-esperado { font-weight: 600; }
 .ln-dec__b.is-on { background: var(--gatilho); color: #fff; border-color: var(--gatilho); }
 .ln-dec__desfaz { color: var(--tinta-2); border-color: var(--linha-forte); }
@@ -101,7 +101,7 @@
 
 /* criar cartão sobre o fio */
 .ln-fio-toque { fill: none; stroke: transparent; stroke-width: 16; pointer-events: stroke; cursor: copy; }
-.ln-mais { position: absolute; z-index: 6; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; border: 1.5px solid var(--gatilho); background: var(--elevada);
+.ln-mais { position: absolute; z-index: 6; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 4px; border: 1.5px solid var(--gatilho); background: var(--elevada);
   color: var(--gatilho); font: 600 15px/1 var(--fonte); display: grid; place-items: center; cursor: pointer; box-shadow: 0 1px 4px rgba(46, 48, 54, .18); padding: 0; }
 .ln-mais[hidden] { display: none; }
 .ln-mais:hover { background: var(--gatilho); color: #fff; }
@@ -157,3 +157,106 @@ body.ln-modal-aberto { overflow: hidden; }
 .ln-no:hover .ln-ac--trava, .ln-ac--trava.is-on { opacity: 1; }
 .ln-ac--trava.is-on { color: var(--destaque-texto); }
 .ln-no.is-multi::after { bottom: auto; top: 4px; right: 4px; }
+
+
+/* ==========================================================================
+   Motor comum (linha-nos.js, 20/11/2026): a linha ocupa a largura da janela e desce até a base;
+   a régua e os nomes das camadas ficam presos; dois modos (compacto e extenso).
+   ========================================================================== */
+.lnn { --gatilho: #2F6FD0; --susp: #9A6B12; --lnn-fundo: var(--u-superficie, #FAFAF7); }
+.lnn-quadro { position: relative; border-top: 1px solid var(--linha, #D7DADD); border-bottom: 1px solid var(--linha, #D7DADD); background: var(--lnn-fundo); }
+.lnn-rolo { position: relative; overflow: auto; overscroll-behavior: contain; }
+.lnn-tela { position: relative; }
+.lnn-corpo { position: absolute; top: 0; }
+.lnn-cab { position: absolute; top: 0; z-index: 20; background: var(--lnn-fundo); box-shadow: 0 1px 0 var(--linha, #D7DADD); }
+.lnn-lat { position: absolute; left: 0; top: 0; z-index: 21; background: var(--elevada, #fff); box-shadow: 1px 0 0 var(--linha, #D7DADD); }
+.lnn-canto { position: absolute; left: 0; top: 0; z-index: 22; background: var(--elevada, #fff); box-shadow: 1px 1px 0 var(--linha, #D7DADD); }
+.lnn-medidor { position: absolute; left: -99999px; top: 0; visibility: hidden; pointer-events: none; }
+.lnn-medidor .ln-no { position: relative; }
+.lnn .ln-rot { position: absolute; left: 14px; right: 8px; font-size: 11px; color: var(--tinta-2, #5B6773); line-height: 1.2; }
+.lnn .ln-rot--cam { font-size: 10.5px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; color: var(--tinta-2, #5B6773); }
+.lnn .ln-rot--linha { font-size: 11.5px; font-weight: 600; color: var(--gatilho); }
+.lnn .ln-rot--linha small { display: block; font-weight: 400; font-size: 10.5px; color: var(--tinta-2, #5B6773); }
+
+/* faixas: seta em SVG (gira quando fechada) */
+.ln-faixa { display: inline-flex; align-items: center; gap: 4px; }
+.ln-faixa__seta { display: inline-grid; place-items: center; width: 14px; height: 14px; flex: 0 0 auto; }
+.ln-faixa__seta svg { width: 12px; height: 12px; transition: transform .15s; }
+.ln-faixa__seta.is-fechada svg { transform: rotate(-90deg); }
+.ln-faixa--etapa b { font-weight: 700; margin-right: 2px; }
+
+/* régua */
+.ln-data.is-hoje, .ln-data.is-hoje b { color: var(--u-foco, #3C82DC); font-weight: 650; }
+.ln-data--dia { font-size: 11px; }
+.ln-marca.is-semana { border-left-color: color-mix(in srgb, var(--linha-forte, #C3C8CD) 80%, transparent); }
+.ln-fresta { position: absolute; background: repeating-linear-gradient(90deg, rgba(63, 75, 87, .06) 0 2px, transparent 2px 4px); z-index: 0; }
+.ln-hoje { position: absolute; width: 0; border-left: 2px solid var(--u-foco, #3C82DC); z-index: 3; pointer-events: none; }
+.ln-hoje--cab { z-index: 2; }
+
+/* hiato (tempo parado) e pausa (suspensão): atravessam as camadas */
+.ln-hiato, .ln-pausa { position: absolute; box-sizing: border-box; border-radius: 8px; z-index: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: flex-start; padding-top: 24px; gap: 4px; text-align: center; font-size: 11.5px; color: var(--tinta-2, #5B6773); overflow: hidden; }
+.ln-hiato { border: 1.5px dashed #A9B0B7; background: repeating-linear-gradient(135deg, rgba(63, 75, 87, .05) 0 6px, transparent 6px 12px); }
+.ln-pausa { background: repeating-linear-gradient(90deg, #DDE0E3 0 3px, #EEF0F1 3px 9px); }
+.ln-hiato b, .ln-pausa b { font-size: 12px; font-weight: 650; color: var(--tinta, #3F4B57); }
+.ln-hiato strong { font-size: 15px; font-weight: 650; color: var(--tinta, #3F4B57); }
+.ln-hiato .pg-caixa, .ln-pausa .pg-caixa { width: 22px; height: 22px; background: #fff; }
+.ln-hiato__cmd { display: flex; gap: 4px; margin-top: 4px; }
+
+/* cartão: altura do texto (sem reticências) */
+.lnn .ln-no { overflow: visible; }
+.lnn .ln-no__nome { overflow-wrap: anywhere; }
+.ln-no.is-fantasma { border-style: dashed; opacity: .55; background: var(--lnn-fundo); box-shadow: none; }
+.ln-no.is-fantasma:hover { opacity: .9; }
+.ln-no:focus-visible { outline: 2px solid var(--u-foco, #3C82DC); outline-offset: 2px; }
+.ln-no:not(.is-fantasma):hover { box-shadow: 0 3px 10px rgba(46, 48, 54, .12); }
+/* extenso: cartão estreito — o nome corre dentro da caixa, em letra menor; os comandos ficam no cartão aberto */
+.ln-no.is-estreito { padding: 4px 5px; }
+.ln-no.is-estreito .ln-no__nome { font-size: 11px; line-height: 14px; }
+.ln-no.is-estreito .ln-no__cab > :not(.ln-no__cod), .ln-no.is-estreito .ln-cmd, .ln-no.is-estreito .ln-acoes, .ln-no.is-estreito .ln-dec { display: none; }
+.ln-no.is-estreito .ln-no__pe { flex-wrap: wrap; }
+
+/* comandos do cartão: sempre em caixa */
+.ln-cmd { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.ln-cmd .pg-caixa { width: 20px; height: 20px; }
+.ln-cmd .pg-caixa svg { width: 12px; height: 12px; }
+.ln-cmd__dur { display: inline-flex; align-items: center; gap: 3px; }
+.ln-cmd__dur b { min-width: 24px; text-align: center; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+.ln-cmd__dir { margin-left: auto; display: inline-flex; gap: 3px; }
+.ln-cmd .n { font-size: 10px; font-weight: 650; margin-left: 1px; }
+.ln-cmd .pg-caixa.is-on { background: var(--tinta, #3F4B57); color: #fff; border-color: var(--tinta, #3F4B57); }
+.ln-cmd .pg-caixa.pert-O { background: #FBE3CC; color: #8A5A2B; border-color: #E9B98A; }
+.ln-cmd .pg-caixa.pert-S { background: var(--veu, rgba(63,75,87,.05)); color: var(--tinta-2, #5B6773); }
+.ln-cmd .pg-caixa.pert-txt { width: auto; min-width: 22px; padding: 0 4px; font-size: 11px; font-weight: 700; }
+.ln-no__datas { font-size: 11px; color: var(--tinta-2, #5B6773); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* projeto: situação, atraso e empurrado */
+.ln-no.is-feito { background: color-mix(in srgb, var(--odisse-nevoa, #E6E8EB) 55%, #fff); }
+.ln-no.is-feito .ln-no__nome { color: var(--tinta-2, #5B6773); }
+.ln-no.is-hoje { background: #EAF2FC; }
+.ln-no.is-empurrado { background-image: repeating-linear-gradient(135deg, rgba(187, 130, 72, .13) 0 5px, transparent 5px 10px); }
+.ln-no.is-acrescentado { border-style: dashed; }
+.ln-atraso { position: absolute; top: 0; right: 0; bottom: 0; border-radius: 0 2px 2px 0; pointer-events: none;
+  background: repeating-linear-gradient(135deg, rgba(164, 71, 59, .26) 0 5px, rgba(243, 225, 222, .55) 5px 10px); }
+.ln-no--evt .ln-atraso { border-radius: 0 12px 12px 0; }
+.ln-no > :not(.ln-atraso) { position: relative; }
+.ln-etq { display: inline-block; padding: 0 5px; border-radius: 4px; font-size: 10px; font-weight: 600; white-space: nowrap; background: var(--veu, rgba(63,75,87,.06)); color: var(--tinta-2, #5B6773); }
+.ln-etq.atraso { background: #F3E1DE; color: #A4473B; }
+.ln-etq.empurrado { background: #F6E9D9; color: #8A5A2B; }
+.ln-etq.hoje { background: var(--u-foco, #3C82DC); color: #fff; }
+.ln-etq.tracejada { background: transparent; border: 1px dashed var(--linha-forte, #C3C8CD); }
+
+/* minimapa: por cima da linha, no canto de baixo */
+.lnn-mini { position: absolute; right: 18px; bottom: 18px; width: 280px; height: 56px; z-index: 30; border: 1px solid var(--linha, #D7DADD); border-radius: 8px;
+  background: rgba(255, 255, 255, .94); box-shadow: 0 4px 14px rgba(46, 48, 54, .12); overflow: hidden; cursor: pointer; }
+.lnn-mini .ln-mini__tela { position: relative; height: 54px; }
+.lnn .ln-legenda { padding: 10px 0 0; }
+@media (max-width: 760px) { .lnn-mini { display: none; } }
+@media (prefers-reduced-motion: reduce) { .ln-faixa__seta svg { transition: none; } }
+.ln-chave[aria-pressed="true"] { background: var(--odisse-ardosia, #3F4B57); color: var(--odisse-papel, #FAFAF7); border-color: var(--odisse-ardosia, #3F4B57); }
+.ln-no.is-multi::after { content: ""; width: 16px; height: 16px; border-radius: 4px;
+  background: var(--gatilho) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.2 6 9.6l4.5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat; }
+
+.lnn .ln-no__nome { overflow-wrap: break-word; hyphens: auto; }
+.ln-faixa { transition: none; }
+.ln-cmd .pg-caixa:has(.n) { width: auto; padding: 0 4px; gap: 2px; grid-auto-flow: column; }

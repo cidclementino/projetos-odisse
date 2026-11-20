@@ -12,7 +12,8 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="projetos.css?v=20261120a">
 <link rel="stylesheet" href="pgt-servicos.css?v=20261120b">
-<link rel="stylesheet" href="escopo.css?v=20261120a">
+<link rel="stylesheet" href="pgt-linha.css?v=20261120a">
+<link rel="stylesheet" href="escopo.css?v=20261120b">
 </head>
 <body>
 
@@ -28,13 +29,14 @@
 <script src="auth.js"></script>
 <script>exigirAutenticacao();</script>
 <script src="base.js"></script>
-<script src="escopo.js?v=20261120a"></script>
+<script src="linha-nos.js?v=20261120a"></script>
+<script src="escopo.js?v=20261120b"></script>
 <script>
-// Projeto: projeto.html#prj_… (Ficha) · #prj_…/pgt (o escopo em Linha ou Cartões) · #prj_…/alteracoes (Alterações de escopo)
+// Projeto: projeto.html#prj_… (Ficha) · #prj_…/escopo (o escopo em Linha ou Cartões; #prj_…/pgt continua valendo) · #prj_…/alteracoes (Alterações de escopo)
 // (Cid, 20/11/2026) O PGT do projeto é a ferramenta de gestão do projeto ativo.
 let F = null; // resposta de producao/projetos/:id
 const id = () => location.hash.slice(1).split('/')[0];
-const sub = () => ({ pgt: 'pgt', alteracoes: 'alteracoes' }[location.hash.slice(1).split('/')[1]] || 'ficha');
+const sub = () => ({ pgt: 'pgt', escopo: 'pgt', alteracoes: 'alteracoes' }[location.hash.slice(1).split('/')[1]] || 'ficha');
 let GERANDO = false;
 const raiz = document.getElementById('ficha');
 
@@ -89,7 +91,7 @@ function cabecalho() {
   const nAlt = ESC.E ? ESC.E.alteracoes.filter(a => !(['duracao', 'mover'].includes(a.tipo) && !a.dias) && a.tipo !== 'inicio').length : 0;
   return `<div class="abas-caixa-linha"><span class="u-rotulo">Projeto</span><nav class="abas-caixa" aria-label="Subpáginas do projeto">
       <a href="#${p.id}" class="${s === 'ficha' ? 'ativa' : ''}">Ficha</a>
-      <a href="#${p.id}/pgt" class="${s === 'pgt' ? 'ativa' : ''}">PGT</a>
+      <a href="#${p.id}/escopo" class="${s === 'pgt' ? 'ativa' : ''}">Escopo</a>
       <a href="#${p.id}/alteracoes" class="${s === 'alteracoes' ? 'ativa' : ''}">Alterações de escopo${nAlt ? ` <span class="esc-n">${nAlt}</span>` : ''}</a></nav></div>
     <nav class="u-trilha" aria-label="Caminho"><a href="index.html">Projetos</a><span class="sep">/</span><span aria-current="page">${escHtml(p.codigo)}</span></nav>
     <div class="ficha__cab esc-cab">
@@ -107,7 +109,7 @@ function cabecalho() {
 
 function desenhar() {
   const s = sub();
-  if (s === 'ficha') { desenharFicha(); return; }
+  if (s === 'ficha') { desenharFicha(); escDesenharSelecao(); return; }
   raiz.innerHTML = cabecalho() + `<div id="esc-corpo"></div>`;
   ligarCabecalho();
   desenharEscopo();
@@ -129,24 +131,45 @@ function desenharEscopo() {
   const nAlt = ESC.E.alteracoes.filter(a => !(['duracao', 'mover'].includes(a.tipo) && !a.dias) && a.tipo !== 'inicio').length;
   if (n) n.textContent = nAlt;
   if (s === 'alteracoes') { escDesenharAlteracoes(corpo, ESC.E); return; }
-  const M = escCalendario(ESC.E);
+  const X = escLinhaDados(ESC.E);
+  const L = ESC.linha;
   const susp = (ESC.E.projeto.suspensoes || []).find(x => !x.ate);
+  const linha = ESC.modo !== 'cartoes';
+  const chave = (id, on, rot, dica) => `<button type="button" class="u-botao ln-chave" id="${id}" aria-pressed="${on}" title="${dica}">${rot}</button>`;
   corpo.innerHTML = `<div class="pg-filtros esc-filtros">
       <span class="pg-seletor" role="radiogroup" aria-label="Como ver">
-        <button type="button" role="radio" data-modo="linha" aria-checked="${ESC.modo !== 'cartoes'}">Linha</button>
-        <button type="button" role="radio" data-modo="cartoes" aria-checked="${ESC.modo === 'cartoes'}">Cartões</button></span>
+        <button type="button" role="radio" data-modo="linha" aria-checked="${linha}">Linha</button>
+        <button type="button" role="radio" data-modo="cartoes" aria-checked="${!linha}">Cartões</button></span>
+      ${linha ? `${LinhaNos.seletorModo(L)}
+        ${chave('esc-cli', L.cliente, 'Ver como cliente', 'Esconde a camada do estúdio')}
+        ${chave('esc-nc', L.naoContratados, 'Não contratados', 'Mostra, tracejados, os cartões do PGT que ficaram fora do escopo; um clique acrescenta (potencial aditivo)')}
+        <button type="button" class="u-botao" id="esc-rec">${L.recolhidas.size ? 'Abrir tudo' : 'Recolher etapas'}</button>` : ''}
       <label class="esc-inicio">Começa em <input type="date" id="esc-inicio" value="${ESC.E.projeto.escopo_inicio || ''}"></label>
-      <span class="pg-apoio">Fim previsto <b>${escDMA(M.ultimoDia(M.fim))}</b></span>
-      ${susp ? `<span class="pg-etq atencao">suspenso desde ${escDiaFmt(susp.de)}</span>` : ''}
       <span class="pg-empurra"></span>
+      ${X.fimBase ? `<span class="esc-fim"><span class="u-rotulo">Fim contratado</span><b>${escDMA(X.fimBase)}</b></span>` : ''}
+      <span class="esc-fim"><span class="u-rotulo">Fim previsto</span><b class="${X.difFim > 0 ? 'atraso' : ''}">${escDMA(X.fimPrev)}</b>${X.difFim ? `<span class="pg-etq ${X.difFim > 0 ? 'atencao' : 'ok'}">${X.difFim > 0 ? '+' : ''}${X.difFim}d</span>` : ''}</span>
+      ${susp ? `<span class="pg-etq atencao">suspenso desde ${escDiaFmt(susp.de)}</span>` : ''}
       <button type="button" class="u-botao" id="esc-hoje">Ir para hoje</button>
     </div>
     <div id="esc-vista"></div>`;
-  corpo.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { ESC.modo = b.dataset.modo; try { localStorage.setItem('esc:modo', ESC.modo); } catch (_) {} desenharEscopo(); });
+  corpo.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { ESC.modo = b.dataset.modo; try { localStorage.setItem('esc:modo', ESC.modo); } catch (_) {} desenharEscopo(); escDesenharSelecao(); });
   corpo.querySelector('#esc-inicio').onchange = (ev) => { if (ev.target.value) escAcao({ acao: 'inicio', dia: ev.target.value }); };
-  corpo.querySelector('#esc-hoje').onclick = () => { ESC.rolagem = null; desenharEscopo(); document.querySelector('.esc-linha.hoje, .esc-no.hoje')?.scrollIntoView({ block: 'center', inline: 'center' }); };
+  if (linha) {
+    LinhaNos.ligarModo(corpo, L, () => { escLinhaGuardar(); desenharEscopo(); });
+    corpo.querySelector('#esc-cli').onclick = () => { L.cliente = !L.cliente; L.sel = null; escLinhaGuardar(); desenharEscopo(); };
+    corpo.querySelector('#esc-nc').onclick = () => { L.naoContratados = !L.naoContratados; escLinhaGuardar(); desenharEscopo(); };
+    corpo.querySelector('#esc-rec').onclick = () => {
+      if (L.recolhidas.size) L.recolhidas.clear(); else ESC.E.cartoes.filter(c => c.tipo === 'etapa').forEach(c => L.recolhidas.add(c.id));
+      desenharEscopo();
+    };
+  }
+  corpo.querySelector('#esc-hoje').onclick = () => {
+    if (linha) { L.irPara = X.M.hoje; L.rolagem = null; desenharEscopo(); return; }
+    document.querySelector('.esc-linha.hoje')?.scrollIntoView({ block: 'center' });
+  };
   const vista = corpo.querySelector('#esc-vista');
   if (ESC.modo === 'cartoes') escDesenharCartoes(vista, ESC.E); else escDesenharLinha(vista, ESC.E);
+  escDesenharSelecao();
 }
 
 function desenharFicha() {
@@ -166,7 +189,7 @@ function desenharFicha() {
         <div class="pg-bloco-corpo">
           <div class="esc-res-col"><span class="u-rotulo">Em andamento</span>${R.hoje.length ? `<ul class="esc-res">${R.hoje.map(x => escLinhaCurta(x, R.M)).join('')}</ul>` : '<p class="sem small">Nada cai em hoje.</p>'}</div>
           <div class="esc-res-col"><span class="u-rotulo">Adiante</span>${R.adiante.length ? `<ul class="esc-res">${R.adiante.map(x => escLinhaCurta(x, R.M)).join('')}</ul>` : '<p class="sem small">Nada adiante.</p>'}</div>
-          <div class="esc-res-pe"><a class="u-botao" href="#${p.id}/pgt">Abrir o PGT do projeto</a>
+          <div class="esc-res-pe"><a class="u-botao" href="#${p.id}/escopo">Abrir o Escopo</a>
             ${R.aditivos.length ? `<a class="pg-apoio" href="#${p.id}/alteracoes">${R.aditivos.length} alteraç${R.aditivos.length === 1 ? 'ão' : 'ões'} de potencial aditivo</a>` : ''}</div>
         </div></section>
       <section class="pg-bloco"><div class="pg-bloco-cab"><h3 class="pg-bloco-h">Suspensão</h3></div>

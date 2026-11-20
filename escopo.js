@@ -18,6 +18,12 @@ const ESC_IC = {
   mais: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M7 3v8M3 7h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
   esq: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M8.5 3.5 5 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   dir: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M5.5 3.5 9 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  fechar: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 3.5l7 7M10.5 3.5l-7 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>',
+  decisao: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.8 14.2 8 8 14.2 1.8 8Z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  cliente: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.2" r="2.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3 13.5c.6-2.6 2.6-4 5-4s4.4 1.4 5 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  terceiros: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.2" cy="5.6" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="10.8" cy="5.6" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M1.6 13c.4-2 1.8-3.2 3.6-3.2S8.4 11 8.8 13M7.2 13c.4-2 1.8-3.2 3.6-3.2s3.2 1.2 3.6 3.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  doc: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2H4.5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V5Z M9.5 2v3h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+  fora: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M8 2.5h3.5V6M11.5 2.5 6.5 7.5M10 8.5v3H2.5V4h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const ESC_DIA = 86400000;
 const escDia = (s) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
@@ -153,8 +159,25 @@ function escCalendario(E) {
   const fim = itens.length ? Math.max(...itens.map((x) => x.fim)) : inicio;
   // último dia de trabalho de um item (o fim é o começo do dia útil seguinte)
   const ultimoDia = (t) => voltar(t, 1);
-  return { itens, hiatos, etapas, inicio, fim, hoje, ultimoDia, ativo, util };
+  return { itens, hiatos, etapas, inicio, fim, hoje, ultimoDia, ativo, util, somar, sus };
 }
+// o que foi contratado: os cartões da proposta com os dias contratados, sem hiatos, sem acréscimos e sem decisões
+// (as suspensões ficam: suspensão não é atraso). Serve para o fim contratado e para saber quem foi empurrado.
+function escBase(E) {
+  const B = { projeto: E.projeto, alteracoes: [], cartoes: E.cartoes.filter((c) => !c.adicionado)
+    .map((c) => ({ ...c, dias: c.dias_contratados || c.dias, folga: 0, suprimido_em: null, decisao_resultado: null })) };
+  return escCalendario(B);
+}
+// simula uma mudança e diz quanto ela mexe: quantos cartões mudam de data e o fim novo
+function escSimular(E, mudar) {
+  const C = { ...E, projeto: { ...E.projeto }, cartoes: E.cartoes.map((c) => ({ ...c })) };
+  mudar(C);
+  const A = escCalendario(E), N = escCalendario(C);
+  const antes = new Map(A.itens.map((x) => [x.c.id, x.ini]));
+  let n = 0; for (const x of N.itens) if (antes.get(x.c.id) !== x.ini) n++;
+  return { n, fimAntes: A.ultimoDia(A.fim), fimDepois: N.ultimoDia(N.fim) };
+}
+const escUteis = (a, b, util) => { let n = 0; for (let t = a; t < b; t += ESC_DIA) if (util(t)) n++; return n; };
 
 // ---------------------------------------------------------------- resumo do dia (Ficha)
 function escResumo(E) {
@@ -173,18 +196,18 @@ const escCartao = (id) => ESC.E.cartoes.find((c) => c.id === id);
 
 // manda a ação para o Universo em fila (a ordem dos cliques se mantém) e redesenha com o que voltou
 function escAcao(corpo, otimista) {
-  if (otimista) { otimista(ESC.E); ESC.aoMudar && ESC.aoMudar(); }
+  if (otimista) { otimista(ESC.E); ESC.aoMudar && ESC.aoMudar(); escPainelAtualizar(); }
   ESC.pendentes++;
   ESC.fila = ESC.fila.then(async () => {
     try {
       const r = await Universo.post(`escopo/${ESC.prj}/acao`, corpo);
       ESC.pendentes--;
-      if (!ESC.pendentes) { ESC.E = r; ESC.aoMudar && ESC.aoMudar(); }
+      if (!ESC.pendentes) { ESC.E = r; ESC.aoMudar && ESC.aoMudar(); escPainelAtualizar(); }
     } catch (err) {
       ESC.pendentes--;
       escAviso(mensagemDe(err));
       try { ESC.E = await Universo.get(`escopo/${ESC.prj}`); } catch (_) { /* fica o que está */ }
-      ESC.aoMudar && ESC.aoMudar();
+      ESC.aoMudar && ESC.aoMudar(); escPainelAtualizar();
     }
   });
   return ESC.fila;
@@ -197,91 +220,240 @@ const escMover = (id, delta) => escAcao({ acao: 'mover', cartao_id: id, dias: de
   const c = E.cartoes.find((x) => x.id === id); if (c) c.folga = Math.max(-400, Math.min(400, c.folga + delta));
 });
 
-// ---------------------------------------------------------------- Linha do projeto
-//   régua só com as datas que têm marco (espaço fixo entre elas): o hiato aparece como uma caixa tracejada do
-//   mesmo tamanho, dure 10 ou 20 dias. Faixas: fase, etapa, régua; camadas Estúdio · Cliente · Terceiros.
-const ESC_W = 168, ESC_X0 = 24, ESC_LANE = 100, ESC_GAP = 8;
+// ---------------------------------------------------------------- Linha do projeto (motor comum: linha-nos.js)
+//   A mesma Linha do PGT (camadas, 1ª e 2ª linha, caixas do que corre junto, fios, gatilhos, recolher, minimapa,
+//   compacto e extenso), com o que é do projeto por cima: hoje, situação (passou, hoje, adiante), atraso (o que passou
+//   do contratado, hachura vermelha), empurrado (começa depois do contratado, hachura ocre), hiato, suspensão, decisão
+//   real e, se pedido, os cartões do PGT que não foram contratados (tracejados; um clique acrescenta, potencial aditivo).
+const ESC_LN_CHAVE = 'esc:linha';
+ESC.linha = (() => {
+  let g = {};
+  try { g = JSON.parse(localStorage.getItem(ESC_LN_CHAVE) || '{}'); } catch (_) { /* sem armazenamento */ }
+  return { modo: g.modo === 'extenso' ? 'extenso' : 'compacto', dia: g.dia || 0, cliente: !!g.cliente, naoContratados: !!g.naoContratados,
+    recolhidas: new Set(), sel: null, selecao: new Set(), rolagem: null };
+})();
+function escLinhaGuardar() {
+  const L = ESC.linha;
+  try { localStorage.setItem(ESC_LN_CHAVE, JSON.stringify({ modo: L.modo, dia: L.dia, cliente: L.cliente, naoContratados: L.naoContratados })); } catch (_) { /* sem armazenamento */ }
+}
 function escCamada(c) {
-  if (c.tipo === 'entrega') return 'est';
-  if (c.tempo === 'cliente' || (c.cliente && c.tempo !== 'estudio' && c.tempo !== 'terceiros')) return 'cli';
-  if (c.tempo === 'terceiros' || c.terceiros) return 'out';
+  if (c.tipo === 'entrega' || c.tempo === 'estudio') return 'est';
+  if (c.tempo === 'cliente') return 'cli';
+  if (c.tempo === 'terceiros') return 'out';
+  if (c.cliente && c.terceiros) return 'tres';
+  if (c.cliente) return 'l1';
+  if (c.terceiros) return 'l2';
   return 'est';
 }
-function escDesenharLinha(el, E) {
-  const M = escCalendario(E);
-  if (!M.itens.length) { el.innerHTML = '<div class="pg-vazio">Nenhum cartão no escopo.</div>'; return; }
-  const marcos = [...new Set([...M.itens.flatMap((x) => [x.ini, x.fim]), ...M.hiatos.flatMap((h) => [h.ini, h.fim]), M.hoje])].sort((a, b) => a - b);
-  const col = new Map(marcos.map((t, i) => [t, i]));
-  const x = (t) => ESC_X0 + col.get(t) * ESC_W;
-  // camadas e pistas (a primeira pista livre em cada camada)
-  const CAMADAS = [['est', 'Estúdio'], ['cli', 'Cliente'], ['out', 'Terceiros']];
-  const pistas = { est: [], cli: [], out: [] };
-  const pos = new Map();
-  const ocupar = (cam, a, b) => {
-    const p = pistas[cam];
-    let i = p.findIndex((fim) => fim <= a);
-    if (i < 0) { i = p.length; p.push(b); } else p[i] = b;
-    return i;
-  };
-  const hiatoDe = new Map(M.hiatos.map((h) => [h.antes.id, h]));
-  for (const it of M.itens) {
-    const h = hiatoDe.get(it.c.id);
-    const cam = escCamada(it.c);
-    if (h) {   // o hiato fica na mesma pista do cartão que ele antecede
-      const p = pistas[cam];
-      let i = p.findIndex((fim) => fim <= col.get(h.ini));
-      if (i < 0) { i = p.length; p.push(0); }
-      p[i] = col.get(it.fim); h.pista = i; h.cam = cam;
-      pos.set(it.c.id, { cam, pista: i });
-    } else pos.set(it.c.id, { cam, pista: ocupar(cam, col.get(it.ini), col.get(it.fim)) });
+const ESC_ATOR_GRUPO = { est: 'est', l1: 'cli', l2: 'out', tres: 'cli', cli: 'cli', out: 'out' };
+const escCorFase = (E, id) => ESC_COR_FASE[id] || ESC_CORES[[...new Set(E.cartoes.map((c) => c.fase_id))].indexOf(id) % ESC_CORES.length];
+const escIconeTipo = (c) => (c.tipo === 'entrega' ? '' : c.decisao && c.decisao.length ? ESC_IC.decisao : c.cliente && c.terceiros ? ESC_IC.terceiros : c.cliente ? ESC_IC.cliente : c.terceiros ? ESC_IC.terceiros : '');
+
+// cartões do PGT publicado que não entraram no escopo (só das etapas contratadas); o serviço é o que mais casa
+function escNaoContratados(E, M) {
+  const P = ESC.pgt && ESC.pgt.P;
+  if (!P) return [];
+  const origens = new Set(E.cartoes.map((c) => c.origem_id).filter(Boolean));
+  const etapas = E.cartoes.filter((c) => c.tipo === 'etapa' && c.origem_id && !c.suprimido_em);
+  const itensDe = (pet) => [...P.entregaveis.filter((x) => x.etapa_id === pet), ...P.eventos.filter((x) => x.etapa_id === pet && !x.encerramento)]
+    .sort((a, b) => (a.ordem - b.ordem) || String(a.id).localeCompare(String(b.id)));
+  // serviço: o que tem mais cartões do escopo marcados como P
+  const conta = {};
+  for (const e of etapas) for (const x of itensDe(e.origem_id)) if (origens.has(x.id)) for (const [srv, p] of Object.entries(x.servicos || {})) if (p === 'P' || p === 'S') conta[srv] = (conta[srv] || 0) + 1;
+  const srv = Object.entries(conta).sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (!srv) return [];
+  const liberados = new Set(); for (const v of P.eventos) for (const r of v.decisao || []) for (const id of r.libera || []) liberados.add(id);
+  const quando = new Map(M.itens.map((x) => [x.c.id, x]));
+  const porOrigem = new Map(E.cartoes.filter((c) => c.origem_id).map((c) => [c.origem_id, c]));
+  const fora = [];
+  for (const e of etapas) {
+    const qe = M.etapas.find((x) => x.c.id === e.id);
+    if (!qe) continue;
+    let depois = e.id; let cursor = qe.ini;
+    for (const x of itensDe(e.origem_id)) {
+      const noEscopo = porOrigem.get(x.id);
+      if (noEscopo) { const q = quando.get(noEscopo.id); if (q) { depois = noEscopo.id; cursor = q.fim; } continue; }
+      const p = x.servicos && x.servicos[srv];
+      if (!(p === 'O' || p === 'P') || liberados.has(x.id)) continue;
+      const ent = String(x.id).startsWith('pen_');
+      const dias = ent || x.tempo === 'estudio' ? Math.max(1, Math.ceil((x.prazo_turnos || 2) / 2)) : x.tempo === 'cliente' ? 3 : x.tempo === 'terceiros' ? 7 : 1;
+      fora.push({ x, ent, dias, depois, ini: cursor, fim: M.somar(cursor, dias), etapa: e, opcional: p === 'O' });
+    }
   }
-  const altura = Object.fromEntries(CAMADAS.map(([k]) => [k, pistas[k].length]));
-  const Y0 = 112;  // abaixo das faixas de fase, etapa e da régua
-  let y = Y0; const topo = {};
-  for (const [k] of CAMADAS) { topo[k] = y; y += Math.max(altura[k], k === 'est' ? 1 : 0) * ESC_LANE + (altura[k] || k === 'est' ? 28 : 0); }
-  const H = y + 8;
-  const W = x(marcos[marcos.length - 1]) + ESC_X0 + 40;
-  const corFase = (id) => ESC_COR_FASE[id] || ESC_CORES[[...new Set(E.cartoes.map((c) => c.fase_id))].indexOf(id) % ESC_CORES.length];
-  // fases (faixa de cima) e etapas
-  const fases = [];
-  for (const et of M.etapas) {
-    const f = fases[fases.length - 1];
-    if (f && f.id === et.c.fase_id) { f.fim = Math.max(f.fim, et.fim); } else fases.push({ id: et.c.fase_id, nome: et.c.fase_nome, ini: et.ini, fim: et.fim });
-  }
-  const faixaFase = fases.map((f) => `<div class="esc-fase" style="left:${x(f.ini)}px;width:${x(f.fim) - x(f.ini) - 2}px;--cor:${corFase(f.id)}">${escHtml(f.nome || '')}</div>`).join('');
-  const faixaEtapa = M.etapas.map((e) => `<div class="esc-etapa" style="left:${x(e.ini)}px;width:${x(e.fim) - x(e.ini) - 2}px;--cor:${corFase(e.c.fase_id)}" title="${escHtml(e.c.texto)}">
-    <b>${escHtml(e.c.sigla || '')}</b> ${escHtml(e.c.texto)}</div>`).join('');
-  const regua = marcos.map((t, i) => {
-    const salto = i < marcos.length - 1 ? Math.round((marcos[i + 1] - t) / ESC_DIA) : 0;
-    return `<div class="esc-marco${t === M.hoje ? ' hoje' : ''}" style="left:${x(t)}px"><span>${ESC_SEM[new Date(t).getUTCDay()]}</span><b>${escDM(t)}</b></div>
-      ${salto > 1 ? `<div class="esc-salto" style="left:${x(t) + ESC_W / 2}px" title="${salto} dias corridos até a data seguinte">+${salto}d</div>` : ''}`;
-  }).join('');
-  const camadas = CAMADAS.filter(([k]) => k === 'est' || altura[k]).map(([k, n]) =>
-    `<div class="esc-camada" style="top:${topo[k] - 22}px;width:${W}px"><span>${n}</span></div>`).join('');
-  const cartoes = M.itens.map((it) => {
-    const p = pos.get(it.c.id); const c = it.c;
-    const l = x(it.ini) + ESC_GAP / 2; const w = Math.max(70, x(it.fim) - x(it.ini) - ESC_GAP);
-    const dec = c.decisao && c.decisao.length ? `<span class="esc-etq">${escHtml((c.decisao.find((r) => r.id === c.decisao_resultado) || {}).nome || 'decisão')}</span>` : '';
-    return `<div class="esc-no ${c.tipo} ${it.estado}${c.adicionado ? ' adicionado' : ''}${c.encerramento ? ' enc' : ''}" data-no="${c.id}"
-        style="left:${l}px;top:${topo[p.cam] + p.pista * ESC_LANE}px;width:${w}px;--cor:${corFase(c.fase_id)}" tabindex="0">
-      <div class="esc-no__cab"><span class="esc-cod">${escHtml(c.codigo || (c.adicionado ? 'novo' : ''))}</span>
-        <span class="esc-dur"><button type="button" class="pg-caixa" data-dur="-1" aria-label="Reduzir um dia" title="Reduzir um dia">${ESC_IC.menos}</button><b>${c.dias}d</b><button type="button" class="pg-caixa" data-dur="1" aria-label="Estender um dia" title="Estender um dia">${ESC_IC.mais}</button></span></div>
-      <div class="esc-no__txt" title="${escHtml(c.texto)}">${escHtml(c.texto)}</div>
-      <div class="esc-no__pe"><span class="esc-dt">${escDM(it.ini)}–${escDM(M.ultimoDia(it.fim))}</span>${it.estado === 'hoje' ? '<span class="esc-etq hoje">hoje</span>' : ''}${c.adicionado ? '<span class="esc-etq">acrescentado</span>' : ''}${dec}</div>
-    </div>`;
-  }).join('');
-  const hiatos = M.hiatos.map((h) => `<div class="esc-hiato" style="left:${x(h.ini) + ESC_GAP / 2}px;top:${topo[h.cam || 'est'] + h.pista * ESC_LANE}px;width:${Math.max(70, x(h.fim) - x(h.ini) - ESC_GAP)}px"
-      title="Tempo parado antes de ${escHtml(h.antes.codigo || h.antes.texto)}"><span>hiato</span><b>${plural(h.dias, 'dia útil', 'dias úteis')}</b></div>`).join('');
-  el.innerHTML = `<div class="esc-tela" id="esc-tela"><div class="esc-mapa" style="width:${W}px;height:${H}px">
-      ${faixaFase}${faixaEtapa}<div class="esc-regua">${regua}</div>${camadas}
-      <div class="esc-hojelinha" style="left:${x(M.hoje)}px;height:${H - 52}px" aria-hidden="true"></div>
-      ${hiatos}${cartoes}</div></div>`;
-  const tela = el.querySelector('#esc-tela');
-  if (ESC.rolagem != null) tela.scrollLeft = ESC.rolagem;
-  else tela.scrollLeft = Math.max(0, x(M.hoje) - tela.clientWidth / 3);
-  tela.onscroll = () => { ESC.rolagem = tela.scrollLeft; };
-  escLigarNos(el);
+  return fora;
 }
+
+function escLinhaDados(E) {
+  const M = escCalendario(E);
+  const B = escBase(E);
+  const L = ESC.linha;
+  const baseIni = new Map(B.itens.map((x) => [x.c.id, x.ini]));
+  const porId = Object.fromEntries(E.cartoes.map((c) => [c.id, c]));
+  const etapaDe = (c) => porId[c.etapa_id] || {};
+  const fase = (c) => ({ id: c.fase_id || 'sem', nome: c.fase_nome || 'Fase', cor: escCorFase(E, c.fase_id) });
+  const etapa = (c) => { const e = etapaDe(c); return { id: e.id || 'sem', sigla: e.sigla || '', nome: e.texto || '' }; };
+  const nos = []; const passos = [];
+  let grupo = null;
+  for (const it of M.itens) {
+    const c = it.c;
+    const contratado = c.dias_contratados || c.dias;
+    const atraso = !c.adicionado && c.dias > contratado ? c.dias - contratado : 0;
+    const b = baseIni.get(c.id);
+    const empurrado = b != null && it.ini > b ? escUteis(b, it.ini, M.util) : 0;
+    const res = c.decisao && c.decisao.length ? c.decisao.find((r) => r.id === c.decisao_resultado) : null;
+    const etqs = [it.estado === 'hoje' ? '<span class="ln-etq hoje">hoje</span>' : '',
+      atraso ? `<span class="ln-etq atraso">+${atraso}d atraso</span>` : '',
+      empurrado ? `<span class="ln-etq empurrado" title="Começa ${empurrado} dia(s) útil(eis) depois do contratado">+${empurrado}d</span>` : '',
+      c.folga < 0 ? `<span class="ln-etq tracejada">${-c.folga}d em paralelo</span>` : '',
+      c.adicionado ? '<span class="ln-etq tracejada">acrescentado</span>' : '',
+      c.decisao && c.decisao.length ? `<span class="ln-etq">${res ? escHtml(res.nome) : 'decisão em aberto'}</span>` : ''].filter(Boolean);
+    const marca = c.sem_prazo ? '*' : c.tempo === 'cliente' || c.tempo === 'terceiros' ? '~' : '';
+    const html = `${atraso ? `<div class="ln-atraso" style="width:${Math.round((atraso / c.dias) * 100)}%"></div>` : ''}
+      <div class="ln-no__cab"><span class="ln-no__cod">${escIconeTipo(c)}${escHtml(c.codigo || (c.adicionado ? 'novo' : ''))}</span><span title="${marca === '*' ? 'o PGT não tinha prazo' : marca ? 'estimado' : ''}">${marca}</span></div>
+      <div class="ln-no__nome">${escHtml(c.texto)}</div>
+      ${etqs.length ? `<div class="ln-no__pe">${etqs.join('')}</div>` : ''}
+      <div class="ln-cmd"><span class="ln-no__datas">${escDM(it.ini)}${M.ultimoDia(it.fim) !== it.ini ? ' – ' + escDM(M.ultimoDia(it.fim)) : ''}</span>
+        <span class="ln-cmd__dir"><span class="ln-cmd__dur"><button type="button" class="pg-caixa" data-esc-dur="${c.id}|-1" aria-label="Reduzir um dia" title="Reduzir um dia">${ESC_IC.menos}</button><b>${c.dias}d${marca}</b><button type="button" class="pg-caixa" data-esc-dur="${c.id}|1" aria-label="Estender um dia" title="Estender um dia">${ESC_IC.mais}</button></span>
+        <button type="button" class="pg-caixa" data-esc-abrir="${c.id}" aria-label="Abrir" title="Abrir o cartão (ou duplo clique)">${ESC_IC.lapis}</button></span></div>`;
+    nos.push({ id: c.id, ini: it.ini, fim: it.fim, ator: escCamada(c), ent: c.tipo === 'entrega', fase: fase(c), etapa: etapa(c), html, destaque: !!(atraso || empurrado),
+      cls: [`is-${it.estado === 'hoje' ? 'hoje' : it.estado}`, atraso ? 'is-atrasado' : '', empurrado ? 'is-empurrado' : '', c.adicionado ? 'is-acrescentado' : '', c.encerramento ? 'ln-no--enc' : '', c.decisao && c.decisao.length ? 'ln-no--dec' : ''].filter(Boolean).join(' '),
+      titulo: `${c.codigo || ''} ${c.texto}\n${escDMA(it.ini)} a ${escDMA(M.ultimoDia(it.fim))} · ${c.dias} dia(s) útil(eis)${c.dias_contratados ? ` · contratado: ${c.dias_contratados}` : ''}` });
+    // passos: entregas que correm juntas formam um passo só
+    if (c.tipo === 'entrega' && c.junto_anterior && grupo && grupo.etapa === c.etapa_id && c.folga === 0) grupo.ids.push(c.id);
+    else { grupo = c.tipo === 'entrega' ? { etapa: c.etapa_id, ids: [c.id] } : null; passos.push(grupo ? grupo.ids : [c.id]); }
+  }
+  // decisões: os cartões que um resultado ainda pode liberar aparecem tracejados depois da decisão
+  const gatilhos = [];
+  const quando = new Map(M.itens.map((x) => [x.c.id, x]));
+  for (const it of M.itens) {
+    const c = it.c;
+    if (!c.decisao || !c.decisao.length) continue;
+    let cursor = it.fim;
+    for (const r of c.decisao) for (const id of r.libera || []) {
+      const alvo = porId[id]; if (!alvo || alvo.suprimido_em) continue;
+      gatilhos.push({ de: c.id, para: id, rotulo: r.nome });
+      if (quando.has(id) || c.decisao_resultado) continue;      // já liberado, ou decidido por outro caminho
+      const fim = M.somar(cursor, alvo.dias);
+      nos.push({ id, ini: cursor, fim, ator: escCamada(alvo), ent: alvo.tipo === 'entrega', fase: fase(alvo), etapa: etapa(alvo), fantasma: true,
+        cls: 'is-tracejado', titulo: `Entra se ${c.codigo || 'a decisão'} for «${r.nome}» (extra previsto)`,
+        html: `<div class="ln-no__cab"><span class="ln-no__cod">${escHtml(alvo.codigo || '')}</span><span>${alvo.dias}d</span></div>
+          <div class="ln-no__nome">${escHtml(alvo.texto)}</div><div class="ln-no__pe"><span class="ln-tag--susp">entra com «${escHtml(r.nome)}»</span></div>` });
+      cursor = fim;
+    }
+  }
+  // não contratados (pedido na barra)
+  if (L.naoContratados) {
+    for (const f of escNaoContratados(E, M)) {
+      const pseudo = { tipo: f.ent ? 'entrega' : 'evento', tempo: f.ent ? null : f.x.tempo, cliente: !!f.x.cliente, terceiros: !!f.x.terceiros };
+      nos.push({ id: 'nc:' + f.x.id, ini: f.ini, fim: f.fim, ator: escCamada(pseudo), ent: f.ent, fase: fase(f.etapa), etapa: etapa({ etapa_id: f.etapa.id }), fantasma: true,
+        cls: 'is-tracejado', titulo: `${f.x.codigo} · não contratado (${f.opcional ? 'opcional' : 'pertinente'} no PGT). Acrescentar entra como potencial aditivo.`,
+        html: `<div class="ln-no__cab"><span class="ln-no__cod">${escHtml(f.x.codigo || '')}</span><span>${f.dias}d</span></div>
+          <div class="ln-no__nome">${escHtml(f.x.texto || f.x.nome)}</div>
+          <div class="ln-cmd"><span class="ln-etq tracejada">não contratado</span><span class="ln-cmd__dir"><button type="button" class="pg-caixa" data-esc-nc="${escHtml(f.x.id)}" aria-label="Acrescentar ao escopo" title="Acrescentar ao escopo (potencial aditivo)">${ESC_IC.mais}</button></span></div>` });
+    }
+  }
+  const hiatos = M.hiatos.map((h) => ({ id: h.antes.id, ini: h.ini, fim: h.fim,
+    html: `<b>Hiato</b><span>${escDM(h.ini)} – ${escDM(M.ultimoDia(h.fim))}</span><strong>${plural(h.dias, 'dia útil', 'dias úteis')}</strong>
+      <span>antes de ${escHtml(h.antes.codigo || h.antes.texto)}</span>
+      <span class="ln-hiato__cmd"><button type="button" class="pg-caixa" data-esc-abrir="${h.antes.id}" aria-label="Editar o hiato" title="Editar (abre ${escHtml(h.antes.codigo || 'o cartão')})">${ESC_IC.lapis}</button>
+        <button type="button" class="pg-caixa" data-esc-fechar="${h.antes.id}" aria-label="Fechar o hiato" title="Fechar o hiato: puxa tudo o que vem depois">${ESC_IC.fechar}</button></span>` }));
+  const pausas = M.sus.map((s) => ({ ini: s.de, fim: s.ate, html: `<b>Suspenso</b><span>${escDM(s.de)} – ${escDM(s.ate - ESC_DIA)}</span>` }));
+  const fimBase = B.itens.length ? B.ultimoDia(B.fim) : null;
+  const fimPrev = M.ultimoDia(M.fim);
+  return { M, B, nos, passos, gatilhos, hiatos, pausas, fimBase, fimPrev, difFim: fimBase != null && fimPrev > fimBase ? escUteis(fimBase, fimPrev, M.util) : fimBase != null && fimPrev < fimBase ? -escUteis(fimPrev, fimBase, M.util) : 0 };
+}
+
+function escDesenharLinha(el, E) {
+  const L = ESC.linha;
+  if (L.naoContratados && !ESC.pgt && !ESC.pgtCarregando) {
+    ESC.pgtCarregando = true;
+    escCarregarPgt().then((d) => { ESC.pgt = d; }).catch((err) => escAviso(`Não consegui ler o PGT publicado (${mensagemDe(err)}).`))
+      .finally(() => { ESC.pgtCarregando = false; ESC.aoMudar && ESC.aoMudar(); });
+  }
+  const X = escLinhaDados(E);
+  if (!X.nos.length) { el.innerHTML = '<div class="pg-vazio">Nenhum cartão no escopo.</div>'; return; }
+  const redesenhar = () => { escLinhaGuardar(); ESC.aoMudar && ESC.aoMudar(); };
+  LinhaNos.desenhar(el, {
+    estado: L, recolhidas: L.recolhidas, nos: X.nos, passos: X.passos, gatilhos: X.gatilhos, hiatos: X.hiatos, pausas: X.pausas,
+    hoje: X.M.hoje, util: X.M.util, cliente: L.cliente, folgaBase: 12,
+    aoMudar: redesenhar,
+    aoAbrir: (id) => {
+      if (id.startsWith('nc:')) return escAcrescentarDoPgt(id.slice(3));
+      const c = escCartao(id); if (!c) return;
+      if (!X.M.itens.some((x) => x.c.id === id) && c.liberado_por) return escAbrirCartao(c.liberado_por);   // tracejado: abre a decisão
+      escAbrirCartao(id);
+    },
+    aoSelecao: escDesenharSelecao,
+    podeNovo: (id) => { const c = escCartao(id); return c && !c.encerramento && X.M.itens.some((x) => x.c.id === id) ? id : null; },
+    aoNovoNoFio: (id) => escAbrirAcrescentar(id),
+    aoLigar: (tela) => {
+      tela.querySelectorAll('[data-esc-dur]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); const [id, d] = b.dataset.escDur.split('|'); escDuracao(id, Number(d)); });
+      tela.querySelectorAll('[data-esc-abrir]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); escAbrirCartao(b.dataset.escAbrir); });
+      tela.querySelectorAll('[data-esc-fechar]').forEach((b) => b.onclick = (ev) => {
+        ev.stopPropagation(); const c = escCartao(b.dataset.escFechar);
+        if (c && c.folga > 0) escAcao({ acao: 'mover', cartao_id: c.id, dias: -c.folga }, (E2) => { const x = E2.cartoes.find((y) => y.id === c.id); if (x) x.folga = 0; });
+      });
+      tela.querySelectorAll('[data-esc-nc]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); escAcrescentarDoPgt(b.dataset.escNc); });
+    },
+    legenda: `<span><i class="ln-am ln-am--ent"></i> entrega</span><span><i class="ln-am ln-am--evt"></i> evento</span>
+      <span><i class="ln-am ln-am--grupo"></i> correm juntas</span><span><i class="ln-am ln-am--gat"></i> gatilho da decisão</span>
+      <span><i class="ln-am ln-am--trac"></i> acrescentado, ainda por decidir ou não contratado</span>
+      <span><i class="ln-am esc-am--atraso"></i> passou do contratado (atraso)</span><span><i class="ln-am esc-am--empurrado"></i> começa depois do contratado</span>
+      <span>* sem prazo no PGT · ~ estimado (cliente 3, terceiros 7 dias úteis)</span>
+      <span>vários: Ctrl+clique ou arraste no vazio · Esc limpa · Extenso: Ctrl + roda muda a largura do dia</span>`,
+  });
+}
+
+// um cartão do PGT que não foi contratado entra no escopo (potencial aditivo), com o código e a origem dele
+async function escAcrescentarDoPgt(origemId) {
+  const P = ESC.pgt && ESC.pgt.P; if (!P) return;
+  const E = ESC.E; const M = escCalendario(E);
+  const f = escNaoContratados(E, M).find((x) => x.x.id === origemId);
+  if (!f) return;
+  const motivo = prompt(`Acrescentar ${f.x.codigo} · ${f.x.texto || f.x.nome} ao escopo?\nFica registrado como potencial aditivo.\n\nMotivo (opcional; dá para preencher depois):`, '');
+  if (motivo === null) return;
+  await escAcao({ acao: 'acrescentar', depois_de: f.depois, tipo: f.ent ? 'entrega' : 'evento', texto: f.x.texto || f.x.nome, dias: f.dias,
+    tempo: f.ent ? null : f.x.tempo || 'estudio', motivo, origem_id: f.x.id, codigo: f.x.codigo, cliente: !!f.x.cliente, terceiros: !!f.x.terceiros,
+    evento_tipo: f.ent ? null : f.x.tipo || null, sem_prazo: f.ent && !f.x.prazo_turnos });
+}
+
+// barra de seleção (vários cartões): duração de cada um, adiar ou adiantar o bloco (move o primeiro; os outros seguem), suprimir
+function escDesenharSelecao() {
+  let bar = document.getElementById('esc-selbar');
+  const L = ESC.linha;
+  const ids = [...L.selecao].filter((id) => escCartao(id));
+  if (!bar) { bar = document.createElement('div'); bar.id = 'esc-selbar'; bar.className = 'esc-selbar'; document.body.appendChild(bar); }
+  bar.hidden = !ids.length || !document.querySelector('#esc-vista .lnn');
+  if (bar.hidden) return;
+  bar.innerHTML = `<strong>${plural(ids.length, 'cartão selecionado', 'cartões selecionados')}</strong>
+    <span class="esc-selbar__g">Duração de cada um <button type="button" class="u-botao" data-sb="dur|-1">− 1 dia</button><button type="button" class="u-botao" data-sb="dur|1">+ 1 dia</button></span>
+    <span class="esc-selbar__g">O bloco <button type="button" class="u-botao" data-sb="mov|-1">Adiantar 1 dia</button><button type="button" class="u-botao" data-sb="mov|1">Adiar 1 dia</button></span>
+    <span class="esc-selbar__g"><button type="button" class="u-botao" data-sb="sup|0">Suprimir</button><button type="button" class="u-botao" data-sb="limpar|0">Limpar (Esc)</button></span>`;
+  bar.querySelectorAll('[data-sb]').forEach((b) => b.onclick = async () => {
+    const [a, d] = b.dataset.sb.split('|');
+    if (a === 'limpar') { L.selecao.clear(); ESC.aoMudar && ESC.aoMudar(); escDesenharSelecao(); return; }
+    if (a === 'dur') { for (const id of ids) escDuracao(id, Number(d)); return; }
+    if (a === 'mov') {
+      const M = escCalendario(ESC.E);
+      const primeiro = M.itens.find((x) => ids.includes(x.c.id));
+      if (primeiro) escMover(primeiro.c.id, Number(d));
+      return;
+    }
+    if (a === 'sup') {
+      const alvo = ids.filter((id) => !escCartao(id).encerramento && !escCartao(id).suprimido_em);
+      const motivo = prompt(`Suprimir ${plural(alvo.length, 'cartão', 'cartões')} do escopo? Fica registrado como potencial aditivo.\n\nMotivo (opcional):`, '');
+      if (motivo === null) return;
+      for (const id of alvo) escAcao({ acao: 'suprimir', cartao_id: id, motivo });
+      L.selecao.clear(); escDesenharSelecao();
+    }
+  });
+}
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && ESC.linha.selecao.size && !document.querySelector('.escm-fundo') && !ev.target.closest?.('input, textarea, select')) {
+    ESC.linha.selecao.clear(); ESC.aoMudar && ESC.aoMudar(); escDesenharSelecao();
+  }
+});
+
 function escLigarNos(el) {
   el.querySelectorAll('[data-no]').forEach((n) => {
     n.querySelectorAll('[data-dur]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); escDuracao(n.dataset.no, Number(b.dataset.dur)); });
@@ -316,70 +488,164 @@ function escDesenharCartoes(el, E) {
   el.querySelectorAll('[data-abrir]').forEach((b) => b.onclick = () => escAbrirCartao(b.dataset.abrir));
 }
 
-// ---------------------------------------------------------------- o cartão aberto (Gaveta)
+// ---------------------------------------------------------------- o cartão aberto (painel sobre a Linha)
+//   Blocos: Datas (começa em, termina em, duração, hiato ou paralelo; a data nova mostra antes quanto empurra),
+//   Decisão, Materiais (do PGT; o que tem link abre ao lado, para ler sem sair), Observações e as Alterações deste
+//   cartão (com o motivo). No pé: suprimir/restaurar e acrescentar depois deste. Etapa: só o que cabe a ela.
+const ESC_P = { id: null, mat: null, previa: null };
+function escLeitura(url) {
+  try {
+    const u = new URL(url);
+    let m = u.pathname.match(/\/file\/d\/([^/]+)/);
+    if (u.hostname === 'drive.google.com' && m) return `https://drive.google.com/file/d/${m[1]}/preview`;
+    if (u.hostname === 'drive.google.com' && u.searchParams.get('id')) return `https://drive.google.com/file/d/${u.searchParams.get('id')}/preview`;
+    m = u.pathname.match(/^\/(document|spreadsheets|presentation|forms)\/d\/([^/]+)/);
+    if (u.hostname === 'docs.google.com' && m) return `https://docs.google.com/${m[1]}/d/${m[2]}/${m[1] === 'forms' ? 'viewform?embedded=true' : 'preview'}`;
+    return url;
+  } catch (_) { return url; }
+}
 function escAbrirCartao(id) {
-  const c = escCartao(id);
-  if (!c) return;
-  const M = escCalendario(ESC.E);
-  const q = M.itens.find((x) => x.c.id === id);
+  if (!escCartao(id)) return;
+  ESC_P.id = id; ESC_P.mat = null; ESC_P.previa = null;
+  if (!ESC.pgt && !ESC.pgtCarregando) {
+    ESC.pgtCarregando = true;
+    escCarregarPgt().then((d) => { ESC.pgt = d; }).catch(() => { /* materiais ficam sem a lista */ }).finally(() => { ESC.pgtCarregando = false; escPainelAtualizar(); });
+  }
+  escPainelAtualizar();
+}
+function escFecharCartao() {
+  ESC_P.id = null;
+  document.getElementById('escm')?.remove();
+  document.body.classList.remove('escm-aberto');
+}
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && ESC_P.id && !ev.target.closest?.('input, textarea, select')) escFecharCartao(); });
+
+function escPainelAtualizar() {
+  if (!ESC_P.id || !ESC.E) return;
+  const c = escCartao(ESC_P.id);
+  if (!c) { escFecharCartao(); return; }
+  const E = ESC.E;
+  const M = escCalendario(E);
+  const q = M.itens.find((x) => x.c.id === c.id);
   const etapa = c.tipo === 'etapa';
-  const dec = c.decisao && c.decisao.length;
-  const painel = abrirPainel(`
-    <div class="painel__topo"><h2>${escHtml((c.codigo || c.sigla ? (c.codigo || c.sigla) + ' · ' : '') + c.texto)}</h2><button class="painel__fechar" aria-label="Fechar">×</button></div>
-    <div id="p-aviso"></div>
-    <p class="small">${escHtml(c.fase_nome || '')}${q ? ` · ${escDMA(q.ini)} a ${escDMA(M.ultimoDia(q.fim))}` : ''}${c.dias_contratados && !etapa ? ` · contratado: ${plural(c.dias_contratados, 'dia', 'dias')}` : ''}${c.sem_prazo ? ' · o PGT não tinha prazo' : ''}</p>
-    ${etapa ? '' : `
-    <div class="field"><label class="field__label">Duração</label>
-      <div class="esc-ctl"><button type="button" class="pg-caixa" data-g-dur="-1" aria-label="Reduzir um dia">${ESC_IC.menos}</button>
-        <span class="pg-unidade"><input type="number" min="1" max="400" id="g-dias" value="${c.dias}"><i>dias úteis</i></span>
-        <button type="button" class="pg-caixa" data-g-dur="1" aria-label="Estender um dia">${ESC_IC.mais}</button></div>
-      <p class="field__hint">Estende ou reduz o cartão; os seguintes andam junto.</p></div>
-    <div class="field"><label class="field__label">Mover, sem mudar a duração</label>
-      <div class="esc-ctl"><button type="button" class="pg-caixa" data-g-mov="-1" aria-label="Um dia antes" title="Um dia antes">${ESC_IC.esq}</button>
-        <input type="date" id="g-inicio" value="${q ? escISO(q.ini) : ''}" aria-label="Começa em">
-        <button type="button" class="pg-caixa" data-g-mov="1" aria-label="Um dia depois" title="Um dia depois">${ESC_IC.dir}</button>
-        <span class="small muted">${c.folga > 0 ? `hiato de ${plural(c.folga, 'dia útil', 'dias úteis')} antes` : c.folga < 0 ? `${plural(-c.folga, 'dia', 'dias')} em paralelo com o anterior` : 'logo depois do anterior'}</span></div>
-      <p class="field__hint">Para frente abre um hiato (tempo parado) antes do cartão; para trás, ele corre em paralelo com o anterior.</p></div>`}
-    ${dec ? `<div class="field"><label class="field__label">Decisão</label><span class="pg-seletor" role="radiogroup" aria-label="Resultado">
-      ${c.decisao.map((r) => `<button type="button" role="radio" data-res="${escHtml(r.id)}" aria-checked="${c.decisao_resultado === r.id}">${escHtml(r.nome)}</button>`).join('')}</span>
-      <p class="field__hint">O resultado que libera uma rodada a põe no escopo como extra previsto.</p></div>` : ''}
-    <div class="field"><label class="field__label">Observações</label><textarea id="g-obs" rows="3">${escHtml(c.observacoes || '')}</textarea></div>
-    <div class="painel__acoes esc-acoes">
-      <button type="button" class="u-botao" id="g-acrescentar">${ESC_IC.mais}<span>Acrescentar ${etapa ? 'no começo da etapa' : 'depois deste'}</span></button>
-      ${c.encerramento ? '' : c.suprimido_em ? '<button type="button" class="u-botao" id="g-restaurar">Restaurar</button>' : `<button type="button" class="btn-link perigo" id="g-suprimir">Suprimir ${etapa ? 'a etapa' : 'do escopo'}</button>`}
-    </div>`);
-  const av = avisoEm(painel.querySelector('#p-aviso'));
-  const reabrir = () => { if (document.querySelector('.painel')) escAbrirCartao(id); };
-  painel.querySelectorAll('[data-g-dur]').forEach((b) => b.onclick = () => { escDuracao(id, Number(b.dataset.gDur)); reabrirDepois(reabrir); });
-  painel.querySelectorAll('[data-g-mov]').forEach((b) => b.onclick = () => { escMover(id, Number(b.dataset.gMov)); reabrirDepois(reabrir); });
-  const gd = painel.querySelector('#g-dias');
-  if (gd) gd.onchange = () => { const n = Math.round(Number(gd.value)); if (n >= 1 && n !== c.dias) { escDuracao(id, n - c.dias); reabrirDepois(reabrir); } };
-  const gi = painel.querySelector('#g-inicio');
+  const et = etapa ? c : escCartao(c.etapa_id) || {};
+  const cor = escCorFase(E, c.fase_id);
+  let raiz = document.getElementById('escm');
+  const rolagem = raiz?.querySelector('.escm-esq')?.scrollTop || 0;
+  if (!raiz) {
+    raiz = document.createElement('div'); raiz.id = 'escm';
+    document.body.appendChild(raiz);
+    raiz.addEventListener('mousedown', (ev) => { if (ev.target.classList.contains('escm-fundo')) escFecharCartao(); });
+  }
+  document.body.classList.add('escm-aberto');
+  // materiais do PGT ligados ao cartão (ou à etapa dele)
+  const P = ESC.pgt && ESC.pgt.P;
+  const mats = P ? (P.materiais || []).filter((m) => m.alvo_id && (m.alvo_id === c.origem_id || (!etapa && m.alvo_id === et.origem_id))) : [];
+  const comLink = mats.filter((m) => m.link);
+  const sel = comLink.find((m) => m.id === ESC_P.mat);
+  // situação
+  const B = escBase(E);
+  const b = B.itens.find((x) => x.c.id === c.id);
+  const empurrado = q && b && q.ini > b.ini ? escUteis(b.ini, q.ini, M.util) : 0;
+  const contratado = c.dias_contratados || null;
+  const atraso = !c.adicionado && contratado && c.dias > contratado ? c.dias - contratado : 0;
+  const ant = q ? M.itens[M.itens.indexOf(q) - 1] : null;
+  const etqs = [q ? `<span class="pg-etq ${q.estado === 'hoje' ? 'hoje' : ''}">${q.estado === 'feito' ? 'passou' : q.estado === 'hoje' ? 'em andamento' : 'adiante'}</span>` : c.suprimido_em ? '<span class="pg-etq tracejada">suprimido</span>' : '<span class="pg-etq tracejada">fora do calendário</span>',
+    atraso ? `<span class="pg-etq esc-atraso">+${atraso}d além do contratado</span>` : '',
+    empurrado ? `<span class="pg-etq atencao">começa ${plural(empurrado, 'dia útil', 'dias úteis')} depois do contratado</span>` : '',
+    c.adicionado ? '<span class="pg-etq tracejada">acrescentado · potencial aditivo</span>' : ''].filter(Boolean).join('');
+  const bloco = (titulo, corpo) => `<section class="pg-bloco escm-bloco"><div class="pg-bloco-cab"><h3 class="pg-bloco-h">${titulo}</h3></div><div class="pg-bloco-corpo">${corpo}</div></section>`;
+  const prev = ESC_P.previa;
+  const datas = etapa || !q ? '' : bloco('Datas', `<div class="escm-grade">
+      <label class="u-campo"><span>Começa em</span><input type="date" id="m-inicio" value="${prev ? prev.dia : escISO(q.ini)}">
+        <small>${c.folga > 0 ? `hiato de ${plural(c.folga, 'dia útil', 'dias úteis')} antes` : c.folga < 0 ? `${plural(-c.folga, 'dia', 'dias')} em paralelo com o anterior` : ant ? `logo depois de ${escHtml(ant.c.codigo || ant.c.texto)}` : 'no começo do escopo'}</small></label>
+      <label class="u-campo"><span>Termina em</span><input type="text" value="${escDMA(M.ultimoDia(q.fim))}" readonly tabindex="-1"><small>calculado: começo + duração</small></label>
+      <div class="u-campo"><span>Duração</span><span class="esc-ctl"><button type="button" class="pg-caixa" data-m-dur="-1" aria-label="Reduzir um dia">${ESC_IC.menos}</button>
+        <span class="pg-unidade"><input type="number" min="1" max="400" id="m-dias" value="${c.dias}" aria-label="Dias úteis"><i>dias úteis</i></span>
+        <button type="button" class="pg-caixa" data-m-dur="1" aria-label="Estender um dia">${ESC_IC.mais}</button></span>
+        <small>${contratado ? `contratado: ${plural(contratado, 'dia útil', 'dias úteis')}` : 'acrescentado (sem prazo contratado)'}; os seguintes andam junto</small></div>
+      <div class="u-campo"><span>Mover sem mudar a duração</span><span class="esc-ctl"><button type="button" class="pg-caixa" data-m-mov="-1" aria-label="Um dia antes" title="Um dia antes">${ESC_IC.esq}</button>
+        <b class="escm-folga">${c.folga > 0 ? `hiato de ${c.folga}` : c.folga < 0 ? `${-c.folga} em paralelo` : 'sem folga'}</b>
+        <button type="button" class="pg-caixa" data-m-mov="1" aria-label="Um dia depois" title="Um dia depois">${ESC_IC.dir}</button></span>
+        <small>depois abre um hiato antes do cartão; antes do fim do anterior, corre em paralelo</small></div>
+    </div>
+    ${prev ? `<div class="escm-previa">Começar em ${escDMA(escDia(prev.dia))} ${prev.dias > 0 ? 'adia' : 'adianta'} este cartão ${plural(Math.abs(prev.dias), 'dia útil', 'dias úteis')}${prev.n > 1 ? ` e mexe em mais ${plural(prev.n - 1, 'cartão', 'cartões')}` : ''}; o fim previsto ${prev.fimDepois === prev.fimAntes ? `continua em ${escDMA(prev.fimAntes)}` : `passa de ${escDMA(prev.fimAntes)} para <b>${escDMA(prev.fimDepois)}</b>`}. Fica registrado como ajuste de prazo.
+      <span class="escm-previa__cmd"><button type="button" class="u-botao forte" id="m-aplicar">Aplicar</button><button type="button" class="u-botao" id="m-desfazer">Desfazer</button></span></div>` : ''}`);
+  const dec = c.decisao && c.decisao.length ? bloco('Decisão', `<span class="pg-seletor" role="radiogroup" aria-label="Resultado">
+      ${c.decisao.map((r, i) => `<button type="button" role="radio" data-res="${escHtml(r.id)}" aria-checked="${c.decisao_resultado === r.id}" title="${i === 0 ? 'caminho esperado' : (r.libera || []).length ? `libera ${r.libera.map((x) => escCartao(x)?.codigo || '').join(', ')}` : ''}">${escHtml(r.nome)}</button>`).join('')}</span>
+      <p class="pg-apoio escm-dica">O resultado que libera uma rodada a põe no escopo como extra previsto. Clicar de novo no resultado escolhido desfaz.</p>`) : '';
+  const listaMats = !P && ESC.pgtCarregando ? '<p class="pg-apoio">Lendo os materiais do PGT…</p>'
+    : mats.length ? `<div class="escm-mats">${mats.map((m) => `<div class="escm-mat${m.id === ESC_P.mat ? ' is-on' : ''}">
+        <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml(m.nome)}</b><small>${escHtml(m.tipo || 'material')}${m.alvo_id === et.origem_id && !etapa ? ' · da etapa' : ''}</small></span>
+        ${m.link ? `<button type="button" class="u-botao" data-ler="${m.id}">${m.id === ESC_P.mat ? 'Fechar' : 'Ler aqui'}</button><a class="pg-caixa" href="${escHtml(m.link)}" target="_blank" rel="noopener" aria-label="Abrir em nova aba" title="Abrir em nova aba">${ESC_IC.fora}</a>` : '<span class="pg-apoio">sem link</span>'}</div>`).join('')}</div>`
+      : `<p class="pg-apoio">${c.origem_id ? 'Este cartão não tem materiais no PGT.' : 'Cartão acrescentado: sem materiais do PGT.'}</p>`;
+  const alts = E.alteracoes.filter((a) => a.cartao_id === c.id && !(['duracao', 'mover'].includes(a.tipo) && !a.dias));
+  const listaAlts = alts.length ? `<div class="escm-alts">${alts.map((a) => {
+      const [nat, cls] = ESC_NATUREZA[a.natureza] || [a.natureza, ''];
+      const d = new Date(a.em);
+      return `<div class="escm-alt"><span class="pg-apoio">${escDM(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))}</span><span>${escHtml(escTextoAlteracao(a))}<small>${a.motivo ? escHtml(a.motivo) : 'motivo: a preencher'}</small></span>
+        <span class="pg-etq ${cls}">${nat}</span><button type="button" class="pg-caixa" data-motivo="${a.id}" aria-label="Escrever o motivo" title="Escrever o motivo">${ESC_IC.lapis}</button></div>`;
+    }).join('')}</div>` : '<p class="pg-apoio">Nada mudou neste cartão.</p>';
+  raiz.innerHTML = `<div class="escm-fundo"><div class="escm${sel ? ' com-leitor' : ''}" role="dialog" aria-modal="true" aria-label="${escHtml((c.codigo || c.sigla || '') + ' ' + c.texto)}" style="--fase:${cor}">
+    <header class="escm-cab"><div>
+        <div class="escm-etqs"><span class="escm-cod">${escHtml(c.codigo || c.sigla || (c.adicionado ? 'novo' : ''))}</span>
+          <span class="pg-etq">${etapa ? 'etapa' : c.tipo === 'entrega' ? 'entrega · estúdio' : `evento · ${{ est: 'estúdio', cli: 'tempo do cliente', out: 'tempo de terceiros', l1: 'estúdio e cliente', l2: 'estúdio e terceiros', tres: 'estúdio, cliente e terceiros' }[escCamada(c)]}`}</span>
+          <span class="pg-etq escm-fase">${escHtml(c.fase_nome || '')}${!etapa && et.sigla ? ` · ${escHtml(et.sigla)} ${escHtml(et.texto || '')}` : ''}</span></div>
+        <h2>${escHtml(c.texto)}</h2>
+        <div class="escm-etqs">${etqs}${q ? `<span class="pg-apoio">${escDMA(q.ini)} a ${escDMA(M.ultimoDia(q.fim))}</span>` : ''}</div></div>
+      <button type="button" class="pg-caixa escm-fechar" aria-label="Fechar" title="Fechar (Esc)">${ESC_IC.fechar}</button></header>
+    <div class="escm-corpo">
+      <div class="escm-esq">
+        ${datas}${dec}
+        ${bloco('Materiais', listaMats)}
+        ${bloco('Observações', `<textarea id="m-obs" rows="3" class="escm-obs" placeholder="Anotações deste cartão no projeto">${escHtml(c.observacoes || '')}</textarea>`)}
+        ${bloco('Alterações deste cartão', listaAlts)}
+        <div class="escm-pe">${c.encerramento ? '<span></span>' : c.suprimido_em ? '<button type="button" class="u-botao" id="m-restaurar">Restaurar ao escopo</button>' : `<button type="button" class="btn-link perigo" id="m-suprimir">Suprimir ${etapa ? 'a etapa' : 'este cartão'}</button>`}
+          <button type="button" class="u-botao" id="m-acrescentar">${ESC_IC.mais}<span>${etapa ? 'Acrescentar no começo da etapa' : 'Acrescentar depois deste'}</span></button></div>
+      </div>
+      ${sel ? `<div class="escm-dir"><div class="escm-dir__cab"><b>${escHtml(sel.nome)}</b><a class="u-botao" href="${escHtml(sel.link)}" target="_blank" rel="noopener">${ESC_IC.fora}<span>Abrir em nova aba</span></a></div>
+        <iframe class="escm-leitor" src="${escHtml(escLeitura(sel.link))}" title="${escHtml(sel.nome)}" referrerpolicy="no-referrer"></iframe></div>` : ''}
+    </div></div></div>`;
+  raiz.querySelector('.escm-esq').scrollTop = rolagem;
+  const $ = (s) => raiz.querySelector(s);
+  $('.escm-fechar').onclick = escFecharCartao;
+  raiz.querySelectorAll('[data-m-dur]').forEach((b2) => b2.onclick = () => escDuracao(c.id, Number(b2.dataset.mDur)));
+  raiz.querySelectorAll('[data-m-mov]').forEach((b2) => b2.onclick = () => escMover(c.id, Number(b2.dataset.mMov)));
+  const gd = $('#m-dias');
+  if (gd) gd.onchange = () => { const n = Math.round(Number(gd.value)); if (n >= 1 && n !== c.dias) escDuracao(c.id, n - c.dias); };
+  const gi = $('#m-inicio');
   if (gi && q) gi.onchange = () => {
     if (!gi.value) return;
     const alvo = escDia(gi.value);
-    // diferença em dias úteis entre o começo atual e o novo
-    let n = 0, t = q.ini;
+    let n = 0, t = q.ini;     // diferença em dias úteis entre o começo atual e o novo
     if (alvo > t) { while (t < alvo) { t += ESC_DIA; if (M.util(t)) n++; } } else { while (t > alvo) { t -= ESC_DIA; if (M.util(t)) n--; } }
-    if (n) { escMover(id, n); reabrirDepois(reabrir); }
+    if (!n) { ESC_P.previa = null; escPainelAtualizar(); return; }
+    const sim = escSimular(E, (C) => { const x = C.cartoes.find((y) => y.id === c.id); x.folga = Math.max(-400, Math.min(400, x.folga + n)); });
+    ESC_P.previa = { dia: gi.value, dias: n, ...sim };
+    escPainelAtualizar();
   };
-  painel.querySelectorAll('[data-res]').forEach((b) => b.onclick = () => {
-    const res = b.dataset.res === c.decisao_resultado ? null : b.dataset.res;
-    escAcao({ acao: 'decisao', cartao_id: id, resultado: res }); reabrirDepois(reabrir);
+  const ap = $('#m-aplicar');
+  if (ap) ap.onclick = () => { const n = ESC_P.previa.dias; ESC_P.previa = null; escMover(c.id, n); };
+  const dz = $('#m-desfazer');
+  if (dz) dz.onclick = () => { ESC_P.previa = null; escPainelAtualizar(); };
+  raiz.querySelectorAll('[data-res]').forEach((b2) => b2.onclick = () => escAcao({ acao: 'decisao', cartao_id: c.id, resultado: b2.dataset.res === c.decisao_resultado ? null : b2.dataset.res }));
+  raiz.querySelectorAll('[data-ler]').forEach((b2) => b2.onclick = () => { ESC_P.mat = ESC_P.mat === b2.dataset.ler ? null : b2.dataset.ler; escPainelAtualizar(); });
+  const go = $('#m-obs');
+  go.onchange = () => escAcao({ acao: 'observacoes', cartao_id: c.id, observacoes: go.value });
+  raiz.querySelectorAll('[data-motivo]').forEach((b2) => b2.onclick = async () => {
+    const a = E.alteracoes.find((x) => x.id === b2.dataset.motivo);
+    const m = prompt('Motivo desta alteração:', a.motivo || '');
+    if (m !== null) escAcao({ acao: 'motivo', alteracao_id: a.id, motivo: m });
   });
-  const go = painel.querySelector('#g-obs');
-  go.onchange = () => escAcao({ acao: 'observacoes', cartao_id: id, observacoes: go.value });
-  const sup = painel.querySelector('#g-suprimir');
+  const sup = $('#m-suprimir');
   if (sup) sup.onclick = async () => {
     const motivo = prompt(`Suprimir ${c.codigo || c.sigla || ''} · ${c.texto}? Fica registrado nas Alterações de escopo (potencial aditivo).\n\nMotivo (opcional; dá para preencher depois):`, '');
     if (motivo === null) return;
-    await escAcao({ acao: 'suprimir', cartao_id: id, motivo });
-    fecharPainel();
+    await escAcao({ acao: 'suprimir', cartao_id: c.id, motivo });
   };
-  const res = painel.querySelector('#g-restaurar');
-  if (res) res.onclick = async () => { await escAcao({ acao: 'restaurar', cartao_id: id }); fecharPainel(); };
-  painel.querySelector('#g-acrescentar').onclick = () => escAbrirAcrescentar(id);
-  av('');
+  const res = $('#m-restaurar');
+  if (res) res.onclick = () => escAcao({ acao: 'restaurar', cartao_id: c.id });
+  $('#m-acrescentar').onclick = () => { escFecharCartao(); escAbrirAcrescentar(c.id); };
 }
 function reabrirDepois(fn) { ESC.fila.then(() => setTimeout(fn, 0)); }
 
