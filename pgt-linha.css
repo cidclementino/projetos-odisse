@@ -189,7 +189,7 @@ body.ln-modal-aberto { overflow: hidden; }
 .ln-data.is-hoje, .ln-data.is-hoje b { color: var(--u-foco, #3C82DC); font-weight: 650; }
 .ln-data--dia { font-size: 11px; }
 .ln-marca.is-semana { border-left-color: color-mix(in srgb, var(--linha-forte, #C3C8CD) 80%, transparent); }
-.ln-fresta { position: absolute; background: repeating-linear-gradient(90deg, rgba(63, 75, 87, .06) 0 2px, transparent 2px 4px); z-index: 0; }
+.ln-fresta { position: absolute; background: rgba(63, 75, 87, .045); z-index: 0; }
 .ln-hoje { position: absolute; width: 0; border-left: 2px solid var(--u-foco, #3C82DC); z-index: 3; pointer-events: none; }
 .ln-hoje--cab { z-index: 2; }
 

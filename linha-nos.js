@@ -33,7 +33,7 @@ const LinhaNos = (() => {
   const LAT = 132;           // coluna dos nomes das camadas
   const X0 = 28;
   const W_COMP = 184;        // compacto: espaço entre datas
-  const FRESTA = 10;         // extenso: fim de semana
+  const FRESTA = 12;         // extenso: o fim de semana inteiro (sábado leva a fresta, domingo nada)
   const GAP = 12;
   const Y_FASE = 0, Y_ETAPA = 24, Y_REGUA = 50, Y_COMP = 86, Y_CAM = 108;
   const SEM = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
@@ -95,8 +95,9 @@ const LinhaNos = (() => {
     if (cfg.estado.modo === 'extenso') {
       const D = cfg.estado.dia || DIA_PADRAO;
       const pos = new Map(); let x = X0;
-      for (let t = tMin; t <= tMax + DIA; t += DIA) { pos.set(t, x); x += fds(t) ? FRESTA : D; }
-      const larg = (t) => (fds(t) ? FRESTA : D);
+      const largDe = (t) => { const w = new Date(t).getUTCDay(); return w === 6 ? FRESTA : w === 0 ? (new Date(t - DIA).getUTCDay() === 6 && t - DIA >= tMin ? 0 : FRESTA) : D; };
+      for (let t = tMin; t <= tMax + DIA; t += DIA) { pos.set(t, x); x += largDe(t); }
+      const larg = largDe;
       const xDe = (t) => (pos.has(t) ? pos.get(t) : t < tMin ? X0 : x);
       return { modo: 'extenso', D, x: xDe, larg, tMin, tMax, largura: x + X0 + 40, marcos: null };
     }
@@ -271,7 +272,7 @@ const LinhaNos = (() => {
       let mesAntes = -1;
       for (let t = S.tMin; t <= S.tMax; t += DIA) {
         const d = new Date(t); const mes = d.getUTCMonth();
-        if (fds(t)) { marcas += `<div class="ln-fresta" style="left:${S.x(t)}px;width:${FRESTA}px;top:${G.topo}px;height:${G.altura - G.topo}px"></div>`; continue; }
+        if (fds(t)) { const w = S.larg(t); if (w) marcas += `<div class="ln-fresta" style="left:${S.x(t)}px;width:${w}px;top:${G.topo}px;height:${G.altura - G.topo}px" title="fim de semana"></div>`; continue; }
         const novo = mes !== mesAntes; mesAntes = mes;
         const mostra = todos || d.getUTCDay() === 1 || novo || t === cfg.hoje;
         marcas += `<div class="ln-marca${d.getUTCDay() === 1 ? ' is-semana' : ''}" style="left:${S.x(t)}px;top:${G.topo}px;height:${G.altura - G.topo}px"></div>`;
