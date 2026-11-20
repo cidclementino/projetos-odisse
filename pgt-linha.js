@@ -76,17 +76,18 @@ function lnDuracao(x) {
   return { dias: 1, pontual: true };
 }
 
+// Serviços que a Linha oferece: a página diz (o Plano do fluxo oferece só os serviços em fluxo).
+const lnServicos = () => (typeof servicosDaLinha === 'function' ? servicosDaLinha() : D.servicos);
 function lnModelo() {
-  const srv = LN.srv && D.servicos.some((s) => s.id === LN.srv) ? LN.srv : D.servicos[0]?.id;
+  const SV = lnServicos();
+  const srv = LN.srv && SV.some((s) => s.id === LN.srv) ? LN.srv : SV[0]?.id;
   LN.srv = srv;
   const pertEtapa = (e) => e.servicos[srv]?.pertinencia;
   const cabe = (e) => pertEtapa(e) === 'P' || (LN.opcionais && pertEtapa(e) === 'O');
-  let fases = D.fases.filter((fa) => !fa.ilha);
-  let etapas = D.etapas.filter((e) => fases.some((fa) => fa.id === e.fase_id) && cabe(e));
-  if (!etapas.length) {                                      // serviço só de ilhas (CR, LA)
-    fases = D.fases.filter((fa) => fa.ilha);
-    etapas = D.etapas.filter((e) => fases.some((fa) => fa.id === e.fase_id) && cabe(e));
-  }
+  // serviço em fluxo: as fases encadeadas (etapas sem dono); serviço em ilha: as etapas dele (0022)
+  const ilha = D.servicos.find((s) => s.id === srv)?.dinamica === 'ilha';
+  let fases = ilha ? D.fases.filter((fa) => fa.solta) : D.fases.filter((fa) => !fa.solta);
+  const etapas = D.etapas.filter((e) => fases.some((fa) => fa.id === e.fase_id) && (ilha ? e.servico_id === srv : !e.servico_id) && cabe(e));
   fases = fases.filter((fa) => etapas.some((e) => e.fase_id === fa.id));
   // quem cada decisão libera
   const liberadoPor = {};
@@ -426,7 +427,7 @@ function desenharLinha() {
     <div class="ln-rot ln-rot--cam" style="top:${G.l2 + LN_LINHA / 2 + 8}px">Outros</div></div>`;
   el.innerHTML = `<div class="ln">
     <div class="ln-barra">
-      <select id="ln-srv" aria-label="Serviço">${D.servicos.map((s) => `<option value="${s.id}" ${s.id === M.srv ? 'selected' : ''}>${escHtml(s.sigla + ' · ' + s.nome)}</option>`).join('')}</select>
+      <select id="ln-srv" aria-label="Serviço">${lnServicos().map((s) => `<option value="${s.id}" ${s.id === M.srv ? 'selected' : ''}>${escHtml(s.sigla + ' · ' + s.nome)}</option>`).join('')}</select>
       <label class="small"><input type="checkbox" id="ln-opc" ${LN.opcionais ? 'checked' : ''}> mostrar opcionais</label>
       <label class="small"><input type="checkbox" id="ln-cli" ${LN.cliente ? 'checked' : ''}> ver como cliente</label>
       <button type="button" class="btn-link" id="ln-rec">${LN.recolhidas.size ? 'expandir tudo' : 'recolher etapas'}</button>
@@ -667,7 +668,7 @@ function lnDesenharModal() {
   }
   document.body.classList.add('ln-modal-aberto');
   const e = etapaDe(x.etapa_id); const fa = e ? faseDe(e.fase_id) : null;
-  const srv = D.servicos.find((s) => s.id === LN.srv) || D.servicos[0];
+  const srv = D.servicos.find((s) => s.id === LN.srv) || lnServicos()[0];
   // o cartão com uma coluna de serviço só (a da Linha); S é a lista de serviços visíveis do plano
   const S0 = S; S = [srv];
   const cartao = x.encerramento ? cartaoEncerramento(x, e) : ehEnt(x) ? cartaoEnt(x, false) : cartaoEvento(x, false);
@@ -764,7 +765,7 @@ function lnDesenharBarraSelecao() {
   const ids = [...LN.selecao];
   el.hidden = !ids.length || !linhaVisivel;
   if (el.hidden) return;
-  if (!LN.selSrv.size || ![...LN.selSrv].every((s) => D.servicos.some((x) => x.id === s))) LN.selSrv = new Set([LN.srv || D.servicos[0].id]);
+  if (!LN.selSrv.size || ![...LN.selSrv].every((s) => lnServicos().some((x) => x.id === s))) LN.selSrv = new Set([LN.srv || lnServicos()[0].id]);
   const ents = ids.filter((id) => entDe(id)); const evs = ids.filter((id) => evtDe(id));
   const pertDe = (id, srv) => (entDe(id) || evtDe(id)).servicos[srv] || '';
   const resumoPert = (srv) => {          // como está hoje no serviço: tudo P, tudo O, misto…
@@ -773,7 +774,7 @@ function lnDesenharBarraSelecao() {
   };
   el.innerHTML = `<strong>${ids.length} selecionado${ids.length > 1 ? 's' : ''}</strong>
     <span class="small" style="opacity:.8">${ents.length} entrega${ents.length === 1 ? '' : 's'} · ${evs.length} evento${evs.length === 1 ? '' : 's'}</span>
-    <span class="ln-sel__grupo">Serviços ${D.servicos.map((s) => `<button type="button" class="ln-sel__srv${LN.selSrv.has(s.id) ? ' is-on' : ''}" data-sel-srv="${s.id}" title="${escHtml(s.nome)} · hoje: ${resumoPert(s.id)}">${escHtml(s.sigla)}</button>`).join('')}</span>
+    <span class="ln-sel__grupo">Serviços ${lnServicos().map((s) => `<button type="button" class="ln-sel__srv${LN.selSrv.has(s.id) ? ' is-on' : ''}" data-sel-srv="${s.id}" title="${escHtml(s.nome)} · hoje: ${resumoPert(s.id)}">${escHtml(s.sigla)}</button>`).join('')}</span>
     <span class="ln-sel__grupo">Pertinência
       <button type="button" class="btn btn--small" data-sel-pert="P" title="Vem marcado nos serviços escolhidos">P</button>
       <button type="button" class="btn btn--small" data-sel-pert="O" title="Opcional nos serviços escolhidos">O</button>

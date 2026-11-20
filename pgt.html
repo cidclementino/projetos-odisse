@@ -10,8 +10,9 @@
 <link rel="stylesheet" href="https://marca.odisse.com.br/v1/marca.css">
 <link rel="stylesheet" href="https://universo.odisse.com.br/base/v1/universo.css">
 <link rel="stylesheet" href="styles.css">
-<link rel="stylesheet" href="projetos.css">
+<link rel="stylesheet" href="projetos.css?v=20261120a">
 <link rel="stylesheet" href="pgt-linha.css?v=20261116c">
+<link rel="stylesheet" href="pgt-servicos.css?v=20261120a">
 </head>
 <body>
 
@@ -19,41 +20,50 @@
   <header class="topo" data-pagina="pgt"></header>
   <script src="topo.js"></script>
 
-  <main class="crm">
-    <div class="crm__barra">
-      <h1>Plano Geral de Trabalho</h1>
+  <main class="crm pgt">
+    <!-- Abas em caixa com o nome da seção; o título é o da aba (ou o do serviço, na subpágina) -->
+    <div class="abas-caixa-linha">
+      <span class="u-rotulo">Plano Geral de Trabalho</span>
+      <nav class="abas-caixa" id="abas" aria-label="Plano Geral de Trabalho">
+        <a href="#servicos" data-rota="servicos">Serviços</a>
+        <a href="#faixas" data-rota="faixas">Faixas e prazo</a>
+        <a href="#fluxo" data-rota="fluxo">Plano do fluxo</a>
+        <a href="#ilhas" data-rota="ilhas">Plano das ilhas</a>
+        <a href="#materiais" data-rota="materiais">Materiais</a>
+      </nav>
+    </div>
+    <div class="crm__barra pgt-cab">
+      <div><nav class="u-trilha" id="trilha" hidden></nav><h1 id="titulo">Plano Geral de Trabalho</h1></div>
       <div class="gestao__pub" id="pub"></div>
     </div>
-    <p class="gestao__intro">O padrão do estúdio: fases, etapas, entregas, eventos e materiais, e para quais serviços cada um vale.
-      Vem depois das <a href="bases.html">Bases</a> e ordena propostas, contratos e o escopo de cada projeto.</p>
-    <div class="abas gestao__abas" role="tablist">
-      <button type="button" data-aba="plano">Fases, etapas, entregas e eventos</button>
-      <button type="button" data-aba="linha">Linha</button>
-      <button type="button" data-aba="materiais">Materiais</button>
-    </div>
-    <div class="gestao__filtros">
+    <div id="sub-abas"></div>
+    <div id="aviso"></div>
+
+    <section data-painel="servicos" hidden><div id="servicos"><p class="muted">Carregando…</p></div></section>
+    <section data-painel="ficha" hidden><div id="ficha"></div></section>
+    <section data-painel="faixas" hidden><div id="faixas"></div></section>
+
+    <div class="gestao__filtros" id="filtros" hidden>
+      <span id="f-modo"></span>
       <select id="f-servico" aria-label="Serviço"></select>
       <select id="f-etapa" aria-label="Etapa"></select>
       <input type="search" id="f-texto" placeholder="Filtrar etapas, entregas, eventos e materiais">
       <label class="small" id="f-todos-rot" hidden><input type="checkbox" id="f-todos"> incluir os que não se aplicam</label>
       <button class="btn-link" type="button" id="f-limpar" hidden>limpar filtros</button>
     </div>
-    <div id="aviso"></div>
 
     <section data-painel="plano" hidden><div id="marcando"></div><div id="plano"><p class="muted">Carregando…</p></div></section>
 
-    <section data-painel="linha" hidden><div id="linha"><p class="muted">Carregando…</p></div></section>
+    <section data-painel="linha" hidden><div id="linha-modo"></div><div id="linha"><p class="muted">Carregando…</p></div></section>
 
     <section data-painel="materiais" hidden>
-      <p class="gestao__intro">Modelos, formulários, checklists e referências de uso interno, ligados a uma etapa, a uma entrega ou a um evento.
-        Por enquanto, por link (Drive, Biblioteca); o envio de arquivos e a criação de formulários vêm depois.</p>
-      <div class="gestao__filtros"><select id="f-alvo" aria-label="Ligado a"></select>
-        <span class="small muted">Os filtros de cima também valem aqui.</span></div>
+      <div class="gestao__filtros"><select id="f-alvo" aria-label="Ligado a"></select></div>
       <div id="materiais"></div>
     </section>
 
-    <div class="legenda-pert" id="legenda-pert"></div>
+    <div class="legenda-pert" id="legenda-pert" hidden></div>
     <div id="arquivados"></div>
+    <div id="notas"></div>
     <div class="rodape-fixo">
       <div class="massa ln-selbar" id="ln-selbar" hidden></div>
       <div class="massa fila" id="fila" hidden></div>
@@ -68,7 +78,8 @@
 <script>exigirAutenticacao();</script>
 <script src="base.js"></script>
 <script src="gestao.js"></script>
-<script src="pgt-linha.js?v=20261116c"></script>
+<script src="pgt-linha.js?v=20261120a"></script>
+<script src="pgt-servicos.js?v=20261120a"></script>
 <script>
 // ==========================================================================
 // Plano Geral de Trabalho — uma interface única (passo 3e) com eventos (passo 3f, migração 0008).
@@ -279,8 +290,7 @@ function desenharFila() {
       FILA.clear(); guardarFila(); montarD(); desenhar();
     };
   }
-  desenharPublicacao(document.getElementById('pub'), { publicacao: D0.publicacao, pendente: D0.pendente || n > 0 }, 'pgt', recarregar,
-    async () => { if (FILA.size) await salvar(); return !FILA.size; });
+  desenharPub();
 }
 
 let salvando = null;
@@ -333,18 +343,20 @@ window.addEventListener('beforeunload', (ev) => { if (FILA.size) { ev.preventDef
 
 // ================================================================ filtros (valem para as duas abas)
 function filtro() {
-  return { srv: document.getElementById('f-servico').value, eta: document.getElementById('f-etapa').value,
+  return { srv: servicoFixo() || document.getElementById('f-servico').value, eta: document.getElementById('f-etapa').value,
     q: semAcento(document.getElementById('f-texto').value.trim()), todos: document.getElementById('f-todos').checked };
 }
-const filtrando = () => { const f = filtro(); return !!(f.srv || f.eta || f.q); };
+const filtrando = () => { const f = filtro(); return !!((f.srv && !servicoFixo()) || f.eta || f.q); };
 const passoVisivel = (x, f) => (!f.srv || f.todos || x.servicos[f.srv]) && (!f.q || semAcento(x.codigo + ' ' + (x.texto || x.nome)).includes(f.q));
 const etapaCasa = (e, f) => !f.q || semAcento(e.sigla + ' ' + e.nome).includes(f.q);
 function montarFiltros() {
   const fs = document.getElementById('f-servico'); const fe = document.getElementById('f-etapa');
   const vs = fs.value; const ve = fe.value;
-  fs.innerHTML = '<option value="">Todos os serviços</option>' + D.servicos.map((s) => `<option value="${s.id}">${escHtml(s.sigla + ' · ' + s.nome)}</option>`).join('');
-  fe.innerHTML = '<option value="">Todas as etapas</option>' + D.etapas.map((e) => `<option value="${e.id}">${escHtml(e.sigla + ' · ' + e.nome)}</option>`).join('');
-  fs.value = vs; fe.value = ve;
+  const sv = servicosDaVista();
+  fs.innerHTML = '<option value="">Todos os serviços</option>' + sv.map((s) => `<option value="${s.id}">${escHtml(s.sigla + ' · ' + s.nome)}</option>`).join('');
+  fe.innerHTML = '<option value="">Todas as etapas</option>' + etapasDaVista().map((e) => `<option value="${e.id}">${escHtml(e.sigla + ' · ' + e.nome)}</option>`).join('');
+  fs.hidden = !!servicoFixo();
+  fs.value = sv.some((x) => x.id === vs) ? vs : ''; fe.value = etapasDaVista().some((e) => e.id === ve) ? ve : '';
   document.getElementById('f-todos-rot').hidden = !fs.value;
   document.getElementById('f-limpar').hidden = !filtrando();
 }
@@ -352,6 +364,7 @@ function montarFiltros() {
 function desenhar() {
   montarFiltros();
   desenharFila();
+  desenharServicos();
   desenharMarcando();
   desenharPlano();
   montarFiltroAlvo();
@@ -420,24 +433,26 @@ function prazoEtapa(e) {
 
 function desenharPlano() {
   const f = filtro();
-  S = f.srv ? [srvDe(f.srv)] : D.servicos;
+  const vista = vistaDoPlano();          // 'fluxo' | 'ilhas' (ver pgt-servicos.js)
   const el = document.getElementById('plano');
-  const cols = `84px 72px minmax(0,1fr) 196px repeat(${S.length}, 36px) 96px`;
+  if (!vista) { el.innerHTML = ''; return; }
+  const sv = servicosDaVista();
+  S = f.srv ? sv.filter((s) => s.id === f.srv) : vista === 'ilhas' ? [] : sv;
   const arrasta = !filtrando();
-  const cab = `<div class="plano-cab grade">
+  const grade = (n) => `84px 72px minmax(0,1fr) 196px ${n ? `repeat(${n}, 36px)` : ''} 96px`;
+  const cab = (lista) => `<div class="plano-cab grade" style="--cols:${grade(lista.length)}">
     <span style="grid-column:2;grid-row:2">Sigla<span class="th-sub">/ código</span></span>
     <span style="grid-column:3;grid-row:2">Etapa<span class="th-sub">/ entrega ou evento</span></span>
     <span style="grid-column:4;grid-row:2" class="centro">Prazo<span class="th-sub">/ pessoas</span></span>
-    <span style="grid-column:5 / span ${S.length};grid-row:1" class="grupo-srv">${S.length > 1 ? 'Serviços' : 'Serviço'}</span>
-    ${S.map((s, i) => `<span style="grid-column:${5 + i};grid-row:2" class="centro" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</span>`).join('')}
-    <span style="grid-column:${5 + S.length};grid-row:2" class="centro">Passos<span class="th-sub">/ materiais</span></span>
+    ${lista.length ? `<span style="grid-column:5 / span ${lista.length};grid-row:1" class="grupo-srv">${lista.length > 1 ? 'Serviços' : 'Serviço'}</span>` : ''}
+    ${lista.map((s, i) => `<span style="grid-column:${5 + i};grid-row:2" class="centro" title="${escHtml(s.nome)}">${escHtml(s.sigla)}</span>`).join('')}
+    <span style="grid-column:${5 + lista.length};grid-row:2" class="centro">Passos<span class="th-sub">/ materiais</span></span>
   </div>`;
 
-  const etapasVisiveis = (faseId) => D.etapas.filter((e) => e.fase_id === faseId && (!f.eta || e.id === f.eta)
-    && (!f.srv || f.todos || e.servicos[f.srv])
-    && (etapaCasa(e, f) || D.seq[e.id].some((x) => passoVisivel(x, f))));
-  const pilhaEtapas = (fa, rotuloNova) => `<div class="pilha" data-pilha="pgt_etapas" data-grupo="${fa.id}">${etapasVisiveis(fa.id).map((e) => cartaoEtapa(e, f, arrasta)).join('')}</div>
-      ${filtrando() || travado(fa.id) ? '' : novoInline('etapa', fa.id, rotuloNova)}`;
+  const etapasVisiveis = (faseId, dono) => D.etapas.filter((e) => e.fase_id === faseId && (dono === undefined ? !e.servico_id : e.servico_id === dono)
+    && (!f.eta || e.id === f.eta)
+    && (!f.srv || f.todos || e.servicos[f.srv] || dono)
+    && (etapaCasa(e, f) || D.seq[e.id].some((x) => passoVisivel(x, f)) || (dono && !f.q)));
   const blocoFase = (fa) => {
     const etapas = etapasVisiveis(fa.id);
     if (filtrando() && !etapas.length) return '';
@@ -447,8 +462,7 @@ function desenharPlano() {
     return `<div class="fase${trv ? ' is-travado' : ''}" data-fase="${fa.id}">
       <div class="fase__cab grade">
         ${controles(fa.id)}
-        <div class="fase__estado"><button type="button" class="estado-btn${fa.ilha ? '' : ' is-on'}" data-ilha="${fa.id}" aria-pressed="${!fa.ilha}"
-          title="${fa.ilha ? 'Ilha: fora do encadeamento de prazos e das parcelas. Clique para pôr no fluxo.' : 'No fluxo projetual. Clique para virar ilha.'}" ${trv ? 'disabled' : ''}>${fa.ilha ? 'Ilha' : 'Fluxo'}</button></div>
+        <div class="fase__estado"></div>
         <div class="fase__textos">
           ${ed ? `<input class="fase__nome-in" data-campo-de="${fa.id}" data-campo="nome" value="${escHtml(fa.nome)}" aria-label="Nome da fase">
                  <textarea class="fase__desc-in" data-campo-de="${fa.id}" data-campo="descricao" rows="2" placeholder="Descrição da fase: o texto que a explica na proposta comercial">${escHtml(fa.descricao || '')}</textarea>`
@@ -457,26 +471,50 @@ function desenharPlano() {
         </div>
         <div class="centro fase__prazo">${prazos.length ? `<span title="Soma das etapas (faixa entre os serviços)">${fmtPrazo(Math.min(...prazos))}${Math.min(...prazos) !== Math.max(...prazos) ? ' – ' + fmtPrazo(Math.max(...prazos)) : ''}</span>` : ''}</div>
       </div>
-      ${pilhaEtapas(fa, `+ Nova etapa em ${fa.nome}`)}
+      <div class="pilha" data-pilha="pgt_etapas" data-grupo="${fa.id}">${etapas.map((e) => cartaoEtapa(e, f, arrasta)).join('')}</div>
+      ${filtrando() || trv ? '' : novoInline('etapa', fa.id, `+ Nova etapa em ${fa.nome}`)}
     </div>`;
   };
-
-  const htmlFluxo = D.fases.filter((fa) => !fa.ilha).map(blocoFase).join('');
-  const htmlSoltas = D.fases.filter((fa) => fa.solta).map((fa) => (filtrando() && !etapasVisiveis(fa.id).length) ? ''
-    : `<div class="fase fase--solta" data-fase="${fa.id}">${pilhaEtapas(fa, '+ Nova etapa avulsa')}</div>`).join('');
-  const htmlIlhas = htmlSoltas + D.fases.filter((fa) => fa.ilha && !fa.solta).map(blocoFase).join('');
-  el.innerHTML = `<div class="plano" style="--cols:${cols}">${cab}
-    ${htmlFluxo || !filtrando() ? `<section class="estado estado--fluxo"><div class="estado__faixa">Fluxo projetual
-      <span>fases encadeadas: prazos em sequência e parcelas ao concluir cada fase</span></div>${htmlFluxo}</section>` : ''}
-    ${htmlIlhas || !filtrando() ? `<section class="estado estado--ilha"><div class="estado__faixa">Ilhas
-      <span>serviços avulsos, contratados à parte, fora do encadeamento e das parcelas</span></div>${htmlIlhas}</section>` : ''}
-    ${filtrando() && !htmlFluxo && !htmlIlhas ? '<div class="vazio"><p>Nada com esses filtros.</p></div>' : ''}
-  </div>`;
+  // uma ilha: o serviço e as etapas dele (o nome e a sigla se editam na Ficha do serviço)
+  const blocoIlha = (srv) => {
+    const solta = D.fases.find((fa) => fa.solta);
+    if (!solta) return '';
+    const etapas = etapasVisiveis(solta.id, srv.id);
+    if (filtrando() && !etapas.length) return '';
+    const antes = S; S = [srv];
+    const html = `<div class="fase fase--ilha" data-ilha-srv="${srv.id}" style="--cols:${grade(1)}">
+      <div class="fase__cab grade">
+        <div class="ctl"><a class="ctl__btn" href="#servico/${srv.id}" title="Abrir a ficha de ${escHtml(srv.sigla)}" aria-label="Abrir a ficha">${ICONE.lapis}</a></div>
+        <div class="fase__estado"><span class="sigla">${escHtml(srv.sigla)}</span></div>
+        <div class="fase__textos"><h3 class="fase__nome">${escHtml(srv.nome)}</h3></div>
+        <div class="centro fase__prazo">${(() => { const t = etapas.reduce((n, e) => n + (e.prazos[srv.id] || 0), 0); return t ? fmtPrazo(t) : ''; })()}</div>
+      </div>
+      <div class="pilha" data-pilha="pgt_etapas" data-grupo="${solta.id}">${etapas.map((e) => cartaoEtapa(e, f, arrasta)).join('')
+        || '<div class="vazio vazio--ilha"><p class="small muted">Nenhuma etapa ainda.</p></div>'}</div>
+      ${filtrando() ? '' : novoInline('etapa', solta.id, `+ Nova etapa em ${srv.sigla}`, srv.id)}
+    </div>`;
+    S = antes;
+    return html;
+  };
+  if (vista === 'fluxo') {
+    const htmlFluxo = D.fases.filter((fa) => !fa.solta).map(blocoFase).join('');
+    el.innerHTML = `<div class="plano" style="--cols:${grade(S.length)}">${cab(S)}
+      <section class="estado estado--fluxo">${htmlFluxo || '<div class="vazio"><p>Nada com esses filtros.</p></div>'}</section></div>`;
+  } else {
+    const ilhas = f.srv ? sv.filter((x) => x.id === f.srv) : sv;
+    const htmlIlhas = ilhas.map(blocoIlha).join('');
+    el.innerHTML = `<div class="plano" style="--cols:${grade(1)}">${cab([{ sigla: '', nome: 'Serviço da ilha' }])}
+      <section class="estado estado--ilha">${htmlIlhas || '<div class="vazio"><p>' + (filtrando() ? 'Nada com esses filtros.' : 'Nenhum serviço em ilha.') + '</p></div>'}</section></div>`;
+  }
   ligarPlano(el);
   lnDesenharModal();     // o cartão aberto em popup na aba Linha acompanha as mudanças
 }
 
 function cartaoEtapa(e, f, arrasta) {
+  if (e.servico_id) { const antes = S; S = [srvDe(e.servico_id)].filter(Boolean); try { return cartaoEtapa0(e, f, arrasta); } finally { S = antes; } }
+  return cartaoEtapa0(e, f, arrasta);
+}
+function cartaoEtapa0(e, f, arrasta) {
   const casaPeloNome = !!f.q && etapaCasa(e, f);
   const passos = D.seq[e.id].filter((x) => casaPeloNome ? (!f.srv || f.todos || x.servicos[f.srv]) : passoVisivel(x, f));
   const enc = ENC();
@@ -526,6 +564,7 @@ function cartaoEnt(x, arrasta) {
   const nomeCat = (id) => (D.categorias.find((c) => c.id === id) || {}).nome || id;
   const dis = trv ? 'disabled' : '';
   const junto = !!x.junto_anterior && x.podeJuntar;
+  const cabeca = x.noCluster && !junto;   // primeira entrega do grupo que corre junto: o símbolo forte
   let corpo = '';
   if (aberto) {
     corpo = `<div class="card__corpo">
@@ -553,8 +592,8 @@ function cartaoEnt(x, arrasta) {
       <div class="codigo">${escHtml(x.codigo)}</div>
       <div>${escHtml(x.texto)}${x.categorias.length ? ` <span class="small muted">· só em ${x.categorias.length} categoria${x.categorias.length > 1 ? 's' : ''}</span>` : ''} ${seloSuspenso(x.id)}</div>
       <div class="prazo-ctl">
-        <button type="button" class="junto${junto ? ' is-on' : ''}" data-junto="${x.id}" aria-pressed="${junto}" ${dis || (x.podeJuntar ? '' : 'disabled')}
-          title="${!x.podeJuntar ? 'Só junta com uma entrega logo acima' : junto ? 'Corre junto com a entrega anterior (clique para separar)' : 'Correr junto com a entrega anterior'}">${ICONE.junto}</button>
+        <button type="button" class="junto${junto ? ' is-on' : ''}${cabeca ? ' is-cabeca' : ''}" data-junto="${x.id}" aria-pressed="${junto}" ${dis || (x.podeJuntar ? '' : cabeca ? 'aria-disabled="true"' : 'disabled')}
+          title="${cabeca ? `Primeira entrega do grupo que corre junto${x.podeJuntar ? ' (clique para ligar também à entrega de cima)' : ''}` : !x.podeJuntar ? 'Só junta com uma entrega logo acima' : junto ? 'Corre junto com a entrega de cima (clique para separar)' : 'Correr junto com a entrega de cima'}">${ICONE.junto}</button>
         ${seletorPrazo(x, dis)}
         <select data-pessoas="${x.id}" aria-label="Pessoas em ${escHtml(x.codigo)}" title="Pessoas" ${dis}>${PESSOAS.map((n) => `<option value="${n}" ${x.pessoas === n ? 'selected' : ''}>${n} p.</option>`).join('')}</select>
         <button type="button" class="fixo${x.prazo_fixo ? ' is-on' : ''}" data-fixo="${x.id}" aria-pressed="${!!x.prazo_fixo}" ${dis}
@@ -753,8 +792,8 @@ function blocoMateriais(alvo, titulo, arrasta) {
 }
 
 // "+ Nova etapa" / "+ Nova entrega" / "+ Novo evento": vira um campo ali mesmo e cria na hora
-function novoInline(tipo, grupo, rotulo) {
-  return `<div class="novo-inline" data-novo="${tipo}" data-grupo="${grupo}"><button type="button" class="novo-inline__btn">${escHtml(rotulo)}</button></div>`;
+function novoInline(tipo, grupo, rotulo, servico = '') {
+  return `<div class="novo-inline" data-novo="${tipo}" data-grupo="${grupo}"${servico ? ` data-servico="${servico}"` : ''}><button type="button" class="novo-inline__btn">${escHtml(rotulo)}</button></div>`;
 }
 function abrirNovo(box) {
   const tipo = box.dataset.novo;
@@ -773,9 +812,11 @@ function abrirNovo(box) {
     criar.disabled = true;
     try {
       const f = filtro();
-      const servicos = f.srv ? { servicos: { [f.srv]: 'P' } } : {};
+      // na ilha, o que nasce é do dono da etapa (P); no fluxo, vem marcado no serviço do filtro
+      const dono = tipo === 'etapa' ? box.dataset.servico : etapaDe(box.dataset.grupo)?.servico_id;
+      const servicos = dono ? { servicos: { [dono]: 'P' } } : f.srv ? { servicos: { [f.srv]: 'P' } } : {};
       const r = tipo === 'etapa'
-        ? await Universo.criar('pgt-etapas', { fase_id: box.dataset.grupo, sigla: sigla.value.trim().toUpperCase(), nome: nome.value.trim() })
+        ? await Universo.criar('pgt-etapas', { fase_id: box.dataset.grupo, sigla: sigla.value.trim().toUpperCase(), nome: nome.value.trim(), ...(dono ? { servico_id: dono } : {}) })
         : tipo === 'evento'
           ? await Universo.criar('pgt-eventos', { etapa_id: box.dataset.grupo, nome: nome.value.trim(), tipo: tipoEvt.value,
             cliente: ['reuniao', 'apresentacao', 'aprovacao', 'visita'].includes(tipoEvt.value) ? 1 : 0,
@@ -853,10 +894,6 @@ function ligarPlano(el) {
     const id = c.dataset.catDe;
     mudar({ tipo: 'ct', ent: id, ids: [...el.querySelectorAll(`[data-cat-de="${id}"]:checked`)].map((x) => x.value) });
   });
-  el.querySelectorAll('[data-ilha]').forEach((b) => b.onclick = () => {
-    const fa = faseDe(b.dataset.ilha);
-    mudar({ tipo: 'ed', id: fa.id, campos: { ilha: fa.ilha ? 0 : 1 } }, { redesenhar: true });
-  });
   // entregas e eventos: células, prazo, pessoas, prazo fixo, correr junto
   el.querySelectorAll('.pert[data-ent]').forEach((b) => b.onclick = () => {
     const x = entDe(b.dataset.ent);
@@ -876,6 +913,7 @@ function ligarPlano(el) {
   });
   el.querySelectorAll('[data-junto]').forEach((b) => b.onclick = () => {
     const x = entDe(b.dataset.junto);
+    if (!x.podeJuntar) return;   // a cabeça do grupo sem entrega logo acima: só mostra
     mudar({ tipo: 'ed', id: x.id, campos: { junto_anterior: x.junto_anterior ? 0 : 1 } }, { redesenhar: true });
   });
   // criar / arquivar (na hora)
@@ -1023,8 +1061,7 @@ function irAoCartao(id) {
   if (e) ABERTOS.add(e.id);
   if (x) ABERTOS.add(x.encerramento ? `${x.id}@${x.etapa_id}` : x.id);
   guardarAbertos();
-  document.querySelector('.gestao__abas [data-aba="plano"]').click();
-  desenharPlano();
+  irPara(e?.servico_id ? 'ilhas' : 'fluxo', { cartoes: true });
   const c = document.querySelector(x?.encerramento ? `[data-card-enc="${x.etapa_id}"]` : `[data-card="${id}"]`);
   if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.add('destaque'); setTimeout(() => c.classList.remove('destaque'), 1600); }
 }
@@ -1042,7 +1079,7 @@ function desenharMateriais() {
   const lista = (alvo ? materiaisDe(alvo) : D.materiais).filter(casa);
   if (!lista.length) {
     el.innerHTML = `<div class="vazio"><p>${alvo ? `Nenhum material ligado a ${escHtml(alvoNome(alvo))}.` : D.materiais.length ? 'Nenhum material com esses filtros.'
-      : 'Nenhum material ainda. Acrescente abrindo uma entrega, um evento ou uma etapa em Fases, etapas, entregas e eventos.'}</p>
+      : 'Nenhum material ainda. Acrescente abrindo uma entrega, um evento ou uma etapa no Plano do fluxo ou no Plano das ilhas.'}</p>
       ${alvo ? '<button type="button" class="btn btn--ghost btn--small" id="mat-ir">Acrescentar material</button>' : ''}</div>`;
     const b = el.querySelector('#mat-ir'); if (b) b.onclick = () => irAoCartao(alvo);
     return;
@@ -1063,7 +1100,7 @@ document.getElementById('legenda-pert').innerHTML = `<span>${exPert('P')} vem ma
   <span>${celulaFixa('P', 'exemplo')} ${celulaFixa('O', 'exemplo')} na etapa: vem das entregas</span>
   <span class="legenda-amostra legenda-amostra--evt">evento</span>
   <span class="legenda-amostra legenda-amostra--enc">encerramento</span>
-  <span class="legenda-icone">${ICONE.junto} corre junto com a entrega anterior</span>
+  <span class="legenda-icone"><span class="junto is-cabeca" aria-hidden="true">${ICONE.junto}</span><span class="junto is-on" aria-hidden="true">${ICONE.junto}</span> correm juntas (a primeira no tom forte; as ligadas abaixo, no tom sutil)</span>
   <span class="legenda-icone">${ICONE.fixo} prazo fixo (mais pessoas não encurtam)</span>
   <span class="legenda-icone">${ICONE.cliente} com o cliente</span>
   <span class="legenda-icone">${ICONE.terceiros} com terceiros</span>
@@ -1083,13 +1120,9 @@ document.getElementById('f-limpar').onclick = () => {
   aplicarFiltros();
 };
 document.getElementById('f-alvo').onchange = () => desenharMateriais();
-ligarAbas(document.querySelector('.gestao__abas'), (aba) => {
-  document.getElementById('legenda-pert').hidden = aba !== 'plano';
-  document.querySelector('main > .gestao__filtros').hidden = aba === 'linha';   // a Linha tem os próprios controles
-  if (aba === 'linha') desenharLinha();
-  lnDesenharBarraSelecao();
-});
+iniciarRotas();
 carregar();
+carregarBases();
 </script>
 </body>
 </html>

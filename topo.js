@@ -5,17 +5,17 @@
 //   <header class="topo" data-pagina="projetos"></header><script src="topo.js"></script>
 // ==========================================================================
 (() => {
-  // Cadeia progressiva: Bases → Plano Geral de Trabalho → Projetos; depois, o dia a dia (horas, equipe).
+  // Cadeia progressiva: Plano Geral de Trabalho (serviços, prazos, fluxo e ilhas) → Projetos; depois, o dia a dia.
+  // As Bases entraram no PGT (aba Serviços) em 20/11/2026; bases.html leva para lá.
   const SECOES = [
-    { id: 'bases', nome: 'Bases', href: 'bases.html', dica: 'Serviços, tipologias, CUB, fatores do CAU e índice de complexidade' },
-    { id: 'pgt', nome: 'Plano Geral de Trabalho', href: 'pgt.html', dica: 'Plano Geral de Trabalho: fases, etapas, entregáveis e materiais por serviço' },
-    { sep: true },   // | separa a estrutura (Bases, PGT) do dia a dia (Projetos, Horas, Equipe)
+    { id: 'pgt', nome: 'Plano Geral de Trabalho', href: 'pgt.html', dica: 'Serviços, faixas e prazo, plano do fluxo, plano das ilhas e materiais' },
+    { sep: true },   // | separa a estrutura (PGT) do dia a dia (Projetos, Horas, Equipe)
     { id: 'projetos', nome: 'Projetos', href: 'index.html', dica: 'Projetos em andamento, etapas e prazos' },
     { id: 'horas', nome: 'Horas', href: 'horas.html', dica: 'Apontamento de horas da semana' },
     // a equipe é cadastro comum: mora no Universo (cargos, registro, assinaturas, site)
     { id: 'equipe', nome: 'Equipe ↗', href: 'https://universo.odisse.com.br/#/equipe', dica: 'No Universo: quem faz, cargos, registro e assinaturas' }
   ];
-  const PERTENCE = { projeto: 'projetos' };
+  const PERTENCE = { projeto: 'projetos', bases: 'pgt' };
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const raiz = document.querySelector('header.topo');
   if (!raiz) return;
