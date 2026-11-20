@@ -1,5 +1,5 @@
 // ==========================================================================
-// Plano Geral de Trabalho — rotas, Serviços (com a Ficha de cada um), Faixas e prazo e publicação única.
+// Plano Geral de Trabalho — rotas, Serviços (lista que abre no próprio serviço), Faixas e prazo e publicação única.
 // (Cid, 20/11/2026) As Bases entraram no PGT. Abas: Serviços · Faixas e prazo · Plano do fluxo · Plano das ilhas · Materiais.
 //   * Serviço EM FLUXO: entra no plano comum (fases encadeadas) e marca P/O/— nos cartões; pede tipologia; o índice de
 //     complexidade se ajusta por categoria (sem valor próprio, vale o padrão do serviço, que fica oculto).
@@ -21,7 +21,7 @@ const IC2 = {
 };
 
 // ---------------------------------------------------------------- rotas
-//   #servicos · #servico/<id> · #servico/<id>/pgt · #faixas · #fluxo · #ilhas · #materiais
+//   #servicos (#servicos/<id> abre o serviço na lista) · #faixas · #fluxo · #ilhas · #materiais
 const ABAS = { servicos: 'Serviços', faixas: 'Faixas e prazo', fluxo: 'Plano do fluxo', ilhas: 'Plano das ilhas', materiais: 'Materiais' };
 let ROTA = { aba: 'servicos' };
 let MODO_FLUXO = (() => { try { return sessionStorage.getItem('pgt:modo') || 'cartoes'; } catch (_) { return 'cartoes'; } })();
@@ -29,7 +29,8 @@ let MODO_FLUXO = (() => { try { return sessionStorage.getItem('pgt:modo') || 'ca
 function lerRota() {
   const h = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
   const [a, b, c] = h.split('/');
-  if (a === 'servico' && b) return { aba: 'servico', srv: b, sub: c === 'pgt' ? 'pgt' : 'ficha' };
+  // endereço da subpágina que existiu por algumas horas (20/11): abre o serviço na lista
+  if ((a === 'servico' || a === 'servicos') && b) return { aba: 'servicos', abrir: b };
   // endereços antigos da página (abas plano/linha/materiais) e das Bases
   if (a === 'plano' || a === 'linha') return { aba: 'fluxo' };
   return { aba: ABAS[a] ? a : 'servicos' };
@@ -54,14 +55,12 @@ function iniciarRotas() {
 }
 
 // O que o plano mostra agora: 'fluxo', 'ilhas' ou nada; e o serviço fixo (na subpágina PGT de um serviço)
-function servicoAtual() { return ROTA.aba === 'servico' ? (D || B)?.servicos.find((s) => s.id === ROTA.srv) || null : null; }
 function vistaDoPlano() {
   if (ROTA.aba === 'fluxo') return MODO_FLUXO === 'linha' ? null : 'fluxo';
   if (ROTA.aba === 'ilhas') return 'ilhas';
-  if (ROTA.aba === 'servico' && ROTA.sub === 'pgt') { const s = servicoAtual(); return s ? (s.dinamica === 'ilha' ? 'ilhas' : 'fluxo') : null; }
   return null;
 }
-const servicoFixo = () => (ROTA.aba === 'servico' && ROTA.sub === 'pgt' ? ROTA.srv : '');
+const servicoFixo = () => '';
 function servicosDaVista() {
   if (!D) return [];
   const fixo = servicoFixo();
@@ -89,29 +88,18 @@ function servicosDaLinha() {
 function mostrarRota() {
   ROTA = lerRota();
   try { sessionStorage.setItem('pgt:rota', location.hash.replace(/^#/, '')); } catch (_) { /* sem armazenamento */ }
-  const srv = servicoAtual();
-  // Abas: as da seção; na subpágina de um serviço, Ficha | PGT com a Trilha
   const linha = document.querySelector('.abas-caixa-linha');
-  const trilha = document.getElementById('trilha');
-  if (ROTA.aba === 'servico') {
-    linha.innerHTML = `<span class="u-rotulo">Serviço</span><nav class="abas-caixa" id="abas" aria-label="Subpáginas do serviço">
-      <a href="#servico/${ROTA.srv}" class="${ROTA.sub === 'ficha' ? 'ativa' : ''}">Ficha</a>
-      <a href="#servico/${ROTA.srv}/pgt" class="${ROTA.sub === 'pgt' ? 'ativa' : ''}">PGT</a></nav>`;
-    trilha.hidden = false;
-    trilha.innerHTML = `<a href="#servicos">Serviços</a><span class="sep">/</span><span aria-current="page">${escHtml(srv ? srv.sigla : '…')}</span>`;
-    document.getElementById('titulo').textContent = srv ? srv.nome : 'Serviço';
-  } else {
-    linha.innerHTML = `<span class="u-rotulo">Plano Geral de Trabalho</span><nav class="abas-caixa" id="abas" aria-label="Plano Geral de Trabalho">
-      ${Object.entries(ABAS).map(([k, n]) => `<a href="#${k}" class="${ROTA.aba === k ? 'ativa' : ''}"${ROTA.aba === k ? ' aria-current="page"' : ''}>${n}</a>`).join('')}</nav>`;
-    trilha.hidden = true;
-    document.getElementById('titulo').textContent = ABAS[ROTA.aba];
-  }
-  document.title = `${ROTA.aba === 'servico' ? (srv ? srv.sigla + ' · ' + srv.nome : 'Serviço') : ABAS[ROTA.aba]} · Plano Geral de Trabalho — Odisse`;
+  linha.innerHTML = `<span class="u-rotulo">Plano Geral de Trabalho</span><nav class="abas-caixa" id="abas" aria-label="Plano Geral de Trabalho">
+    ${Object.entries(ABAS).map(([k, n]) => `<a href="#${k}" class="${ROTA.aba === k ? 'ativa' : ''}"${ROTA.aba === k ? ' aria-current="page"' : ''}>${n}</a>`).join('')}</nav>`;
+  document.getElementById('trilha').hidden = true;
+  document.getElementById('titulo').textContent = ABAS[ROTA.aba];
+  document.title = `${ABAS[ROTA.aba]} · Plano Geral de Trabalho — Odisse`;
+  if (ROTA.abrir) { SERV_ABERTOS.add(ROTA.abrir); history.replaceState(null, '', '#servicos'); }
 
   const plano = !!vistaDoPlano();
   const linhaNaTela = ROTA.aba === 'fluxo' && MODO_FLUXO === 'linha';
   const mostrar = {
-    servicos: ROTA.aba === 'servicos', ficha: ROTA.aba === 'servico' && ROTA.sub === 'ficha', faixas: ROTA.aba === 'faixas',
+    servicos: ROTA.aba === 'servicos', faixas: ROTA.aba === 'faixas',
     plano, linha: linhaNaTela, materiais: ROTA.aba === 'materiais',
   };
   document.querySelectorAll('[data-painel]').forEach((s) => { s.hidden = !mostrar[s.dataset.painel]; });
@@ -133,6 +121,7 @@ function mostrarRota() {
   }
   desenharServicos();
   desenharNotas();
+  if (ROTA.abrir) setTimeout(() => document.querySelector(`[data-srv-card="${CSS.escape(ROTA.abrir)}"]`)?.scrollIntoView({ block: 'center' }), 0);
 }
 const seletorModo = () => `<span class="pg-seletor" role="radiogroup" aria-label="Como ver o Plano do fluxo">
   <button type="button" role="radio" data-modo="cartoes" aria-checked="${MODO_FLUXO !== 'linha'}">Cartões</button>
@@ -212,16 +201,7 @@ function textoIC(s) {
 }
 function desenharServicos() {
   const el = document.getElementById('servicos');
-  if (ROTA.aba === 'servico') {   // o nome chega com os dados
-    const sv = servicoAtual();
-    if (sv) {
-      document.getElementById('titulo').textContent = sv.nome;
-      const t = document.querySelector('#trilha [aria-current]'); if (t) t.textContent = sv.sigla;
-      document.title = `${sv.sigla} · ${sv.nome} · Plano Geral de Trabalho — Odisse`;
-    }
-  }
   if (!el || !B) return;
-  if (ROTA.aba === 'servico' && ROTA.sub === 'ficha') desenharFicha();
   if (ROTA.aba === 'servicos') {
     const q = semAcento(SERV_FILTRO.q);
     const lista = B.servicos.filter((s) => (SERV_FILTRO.din === 'todos' || s.dinamica === SERV_FILTRO.din)
@@ -235,14 +215,8 @@ function desenharServicos() {
         <span class="pg-empurra"></span>
         <button type="button" class="u-botao" id="novo-servico">${IC2.mais}<span>Novo serviço</span></button>
       </div>
-      <div class="pg-regua pg-grade-srv"><span>Serviço</span><span>Dinâmica</span><span>Preço</span><span>Índice de complexidade</span><span>Cartões</span></div>
-      <div class="pg-registro">${lista.map((s) => {
-        const c = contagemDe(s);
-        return `<a class="pg-linha pg-grade-srv" href="#servico/${s.id}">
-          <span class="pg-nome"><span class="pg-sigla">${escHtml(s.sigla)}</span><span><b>${escHtml(s.nome)}</b><small>${escHtml(s.descricao || '')}</small></span></span>
-          <span>${etqDinamica(s)}</span><span>${etqPreco(s)}</span><span class="pg-apoio">${textoIC(s)}</span>
-          <span class="pg-apoio">${c ? (c.p + c.o + c.ev ? `${c.p} P · ${c.o} O · ${c.ev} eventos` : '<span class="sem">vazio</span>') : ''}</span></a>`;
-      }).join('') || '<div class="pg-vazio">Nenhum serviço com esses filtros.</div>'}</div>
+      <div class="pg-regua pg-grade-srv"><span></span><span>Serviço</span><span>Dinâmica</span><span>Preço</span><span>Índice de complexidade</span><span>Cartões</span><span></span></div>
+      <div class="pg-registro">${lista.map(cartaoServico).join('') || '<div class="pg-vazio">Nenhum serviço com esses filtros.</div>'}</div>
       ${blocoTipologias()}
       ${B.arquivados?.length ? `<details class="arquivados"><summary>Arquivados (${B.arquivados.length})</summary>
         <ul class="lista-int">${B.arquivados.map((a, i) => `<li>${escHtml({ servico: 'Serviço', categoria: 'Categoria', uso: 'Uso' }[a.tipo] || a.tipo)} · ${escHtml(a.nome)}
@@ -251,6 +225,7 @@ function desenharServicos() {
       try { await arquivarRegistro(B.arquivados[Number(b.dataset.restaurar)], true); await recarregarTudo(); } catch (err) { aviso(mensagemDe(err)); }
     });
     el.querySelector('#novo-servico').onclick = () => abrirNovoServico();
+    ligarCartoesServico(el);
     el.querySelectorAll('[data-din]').forEach((b) => b.onclick = () => { SERV_FILTRO.din = b.dataset.din; desenharServicos(); });
     const qi = el.querySelector('#serv-q');
     qi.oninput = () => { SERV_FILTRO.q = qi.value; const p = qi.selectionStart; desenharServicos(); const n2 = document.getElementById('serv-q'); n2.focus(); n2.setSelectionRange(p, p); };
@@ -260,6 +235,60 @@ function desenharServicos() {
   desenharPub();
 }
 const SERV_FILTRO = { din: 'todos', q: '' };
+
+// ---------------------------------------------------------------- cartão do serviço (abre no lugar, como as etapas do plano)
+//   fechado: sigla, nome, dinâmica, preço, resumo do índice, cartões. Aberto: Em fluxo / Em ilha, Com / Sem preço e o
+//   índice — em ilha, direto no serviço; em fluxo, a lista das categorias da tipologia, cada uma com o seu.
+const SERV_ABERTOS = new Set((() => { try { return JSON.parse(localStorage.getItem('pgt:srv-abertos') || '[]'); } catch (_) { return []; } })());
+const guardarSrvAbertos = () => { try { localStorage.setItem('pgt:srv-abertos', JSON.stringify([...SERV_ABERTOS])); } catch (_) { /* sem armazenamento */ } };
+function cartaoServico(s) {
+  const c = contagemDe(s);
+  const aberto = SERV_ABERTOS.has(s.id);
+  return `<div class="pg-srv${aberto ? ' aberto' : ''}" data-srv-card="${s.id}">
+    <div class="pg-linha pg-grade-srv" data-srv-alterna="${s.id}" role="button" tabindex="0" aria-expanded="${aberto}">
+      <span><button type="button" class="pg-caixa" data-srv-editar="${s.id}" title="Editar sigla, nome e descrição" aria-label="Editar">${IC2.lapis}</button></span>
+      <span class="pg-nome"><span class="pg-sigla">${escHtml(s.sigla)}</span><span><b>${escHtml(s.nome)}</b><small>${escHtml(s.descricao || '')}</small></span></span>
+      <span>${etqDinamica(s)}</span><span>${etqPreco(s)}</span><span class="pg-apoio">${textoIC(s)}</span>
+      <span class="pg-apoio">${c ? (c.p + c.o + c.ev ? `${c.p} P · ${c.o} O · ${c.ev} eventos` : '<span class="sem">vazio</span>') : ''}</span>
+      <span class="pg-caixa pg-srv-seta" aria-hidden="true">${IC2.seta}</span>
+    </div>
+    ${aberto ? `<div class="pg-srv-corpo">
+      <div class="pg-srv-chaves">
+        <span class="pg-seletor" role="radiogroup" aria-label="Dinâmica">
+          <button type="button" role="radio" data-dinamica="fluxo" aria-checked="${s.dinamica !== 'ilha'}">Em fluxo</button>
+          <button type="button" role="radio" data-dinamica="ilha" aria-checked="${s.dinamica === 'ilha'}">Em ilha</button></span>
+        <span class="pg-seletor" role="radiogroup" aria-label="Preço">
+          <button type="button" role="radio" data-preco="1" aria-checked="${!!s.com_preco}">Com preço</button>
+          <button type="button" role="radio" data-preco="0" aria-checked="${!s.com_preco}">Sem preço</button></span>
+        <span class="pg-apoio">${s.com_preco ? `Tabela do CAU${s.modificador != null ? ` · modificador ${fmtNum(s.modificador)}` : ' · modificador a definir no vendas'}` : 'Valor informado em cada proposta'}</span>
+        <span class="pg-empurra"></span>
+        <a class="u-botao" href="#${s.dinamica === 'ilha' ? 'ilhas' : 'fluxo'}" data-ver-plano="${s.id}">Ver no ${s.dinamica === 'ilha' ? 'Plano das ilhas' : 'Plano do fluxo'}</a>
+      </div>
+      ${tabelaIC(s)}
+    </div>` : ''}
+  </div>`;
+}
+function ligarCartoesServico(el) {
+  el.querySelectorAll('[data-srv-alterna]').forEach((linha) => {
+    const alternar = (ev) => {
+      if (ev.target.closest('[data-srv-editar]')) return;
+      const id = linha.dataset.srvAlterna;
+      if (SERV_ABERTOS.has(id)) SERV_ABERTOS.delete(id); else SERV_ABERTOS.add(id);
+      guardarSrvAbertos(); desenharServicos();
+    };
+    linha.onclick = alternar;
+    linha.onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); alternar(ev); } };
+  });
+  el.querySelectorAll('[data-srv-editar]').forEach((b) => b.onclick = (ev) => { ev.stopPropagation(); abrirEditarServico(srvB(b.dataset.srvEditar)); });
+  el.querySelectorAll('[data-srv-card]').forEach((card) => {
+    const s = srvB(card.dataset.srvCard);
+    if (!s || !card.querySelector('.pg-srv-corpo')) return;
+    card.querySelectorAll('[data-dinamica]').forEach((b) => b.onclick = () => trocarDinamica(s, b.dataset.dinamica));
+    card.querySelectorAll('[data-preco]').forEach((b) => b.onclick = () => trocarPreco(s, Number(b.dataset.preco)));
+    card.querySelector('[data-ver-plano]').onclick = () => { if (s.dinamica !== 'ilha') { MODO_FLUXO = 'cartoes'; guardarModo(); } };
+    ligarIC(card, s);
+  });
+}
 
 // Serviço novo: vazio (em fluxo ou em ilha) ou cópia de outro
 function abrirNovoServico() {
@@ -310,98 +339,37 @@ function abrirNovoServico() {
   f.sigla.focus();
 }
 
-// ---------------------------------------------------------------- Ficha do serviço
-let FICHA = null;     // { id, campos: {...} } mudanças não salvas dos textos
-function desenharFicha() {
-  const el = document.getElementById('ficha');
-  const s = srvB(ROTA.srv);
-  if (!s) { el.innerHTML = B ? '<div class="pg-vazio">Serviço não encontrado. <a href="#servicos">Voltar aos serviços</a>.</div>' : ''; return; }
-  if (FICHA && FICHA.id !== s.id) FICHA = null;
-  const v = (k) => (FICHA && k in FICHA.campos ? FICHA.campos[k] : s[k]) ?? '';
-  const c = contagemDe(s);
-  const etapasIlha = D ? D.etapas.filter((e) => e.servico_id === s.id) : [];
-  el.innerHTML = `<div class="blocos-fluxo pg-fluxo" style="--bloco-larg:520px">
-      ${bloco('servico', 'Serviço', `
-        <div class="pg-campos">
-          <label class="u-campo"><span>Sigla</span><input data-c="sigla" value="${escHtml(v('sigla'))}" maxlength="4"></label>
-          <label class="u-campo pg-largo"><span>Nome</span><input data-c="nome" value="${escHtml(v('nome'))}"></label>
-          <label class="u-campo pg-inteiro"><span>Descrição</span><textarea data-c="descricao" rows="3">${escHtml(v('descricao'))}</textarea></label>
-          <label class="u-campo pg-inteiro"><span>Observações (uso interno)</span><textarea data-c="observacoes" rows="2">${escHtml(v('observacoes'))}</textarea></label>
-        </div>`)}
-      ${bloco('dinamica', 'Dinâmica e preço', `
-        <div class="u-campo"><span>Dinâmica</span>
-          <span class="pg-seletor" role="radiogroup" aria-label="Dinâmica">
-            <button type="button" role="radio" data-dinamica="fluxo" aria-checked="${s.dinamica !== 'ilha'}">Em fluxo</button>
-            <button type="button" role="radio" data-dinamica="ilha" aria-checked="${s.dinamica === 'ilha'}">Em ilha</button></span>
-          <small>${s.dinamica === 'ilha' ? 'Tem o próprio plano, com cartões só dele. Não pede tipologia.' : 'Entra no plano comum das fases e marca o que é pertinente em cada cartão. Pede tipologia.'}</small></div>
-        <div class="u-campo"><span>Preço</span>
-          <span class="pg-seletor" role="radiogroup" aria-label="Preço">
-            <button type="button" role="radio" data-preco="1" aria-checked="${!!s.com_preco}">Com preço</button>
-            <button type="button" role="radio" data-preco="0" aria-checked="${!s.com_preco}">Sem preço</button></span>
-          <small>${s.com_preco ? `Calculado pela tabela do CAU${s.modificador != null ? `, com modificador ${fmtNum(s.modificador)}` : ' (o modificador se define no vendas)'}.`
-            : 'Sem cálculo: o valor se informa no vendas, em cada proposta.'}
-            <a href="https://vendas.odisse.com.br/honorarios.html" target="_blank" rel="noopener">Honorários no vendas ${IC2.fora}</a></small></div>`)}
-      ${bloco('plano', s.dinamica === 'ilha' ? 'Plano da ilha' : 'No plano do fluxo', `
-        <p class="pg-numeros">${c ? `<span><b>${c.p}</b> entregas que vêm marcadas</span><span><b>${c.o}</b> opcionais</span><span><b>${c.ev}</b> eventos</span>` : ''}
-          ${s.dinamica === 'ilha' ? `<span><b>${etapasIlha.length}</b> etapa${etapasIlha.length === 1 ? '' : 's'}</span>` : ''}</p>
-        <a class="u-botao pg-meia" href="#servico/${s.id}/pgt">Abrir o PGT de ${escHtml(s.sigla)}</a>`)}
-    </div>
-    ${blocoIC(s)}
-    <p class="pg-arquivar"><button type="button" class="btn-link perigo" id="arquivar-srv">Arquivar serviço</button></p>
-    ${FICHA && Object.keys(FICHA.campos).length ? `<div class="pg-barra-salvar"><span>Mudanças não salvas na ficha</span><div>
-      <button type="button" class="u-botao" id="ficha-descartar">Descartar</button><button type="button" class="u-botao forte" id="ficha-salvar">Salvar</button></div></div>` : ''}`;
-  ligarBlocos(el);
-  el.querySelectorAll('[data-c]').forEach((i) => i.addEventListener('input', () => {
-    FICHA = FICHA || { id: s.id, campos: {} };
-    const val = i.dataset.c === 'sigla' ? i.value.toUpperCase() : i.value;
-    if ((s[i.dataset.c] ?? '') === val) delete FICHA.campos[i.dataset.c]; else FICHA.campos[i.dataset.c] = val;
-    redesenharBarraFicha();
-  }));
-  el.querySelectorAll('[data-dinamica]').forEach((b) => b.onclick = () => trocarDinamica(s, b.dataset.dinamica));
-  el.querySelectorAll('[data-preco]').forEach((b) => b.onclick = () => trocarPreco(s, Number(b.dataset.preco)));
-  ligarIC(el, s);
-  el.querySelector('#arquivar-srv').onclick = async () => {
-    if (!confirm(`Arquivar ${s.sigla} · ${s.nome}? Ele sai dos serviços e do plano (as marcações e os cartões ficam guardados; dá para restaurar no fim da página Serviços).`)) return;
-    try { await arquivarRegistro(s); await recarregarTudo(); location.hash = 'servicos'; } catch (err) { aviso(mensagemDe(err)); }
+// ---------------------------------------------------------------- editar sigla, nome e textos (Gaveta)
+function abrirEditarServico(s) {
+  if (!s) return;
+  const painel = abrirPainel(`
+    <div class="painel__topo"><h2>${escHtml(s.sigla + ' · ' + s.nome)}</h2><button class="painel__fechar" aria-label="Fechar">×</button></div>
+    <div id="p-aviso"></div>
+    <form id="f">
+      <div class="row-2">
+        <div class="field"><label class="field__label">Sigla</label><input type="text" name="sigla" maxlength="4" value="${escHtml(s.sigla)}" required></div>
+        <div class="field"><label class="field__label">Nome</label><input type="text" name="nome" value="${escHtml(s.nome)}" required></div>
+      </div>
+      <div class="field"><label class="field__label">Descrição</label><textarea name="descricao" rows="3">${escHtml(s.descricao || '')}</textarea></div>
+      <div class="field"><label class="field__label">Observações (uso interno)</label><textarea name="observacoes" rows="2">${escHtml(s.observacoes || '')}</textarea></div>
+      <div class="painel__acoes"><button class="u-botao forte" type="submit">Salvar</button>
+        <button class="btn-link perigo" type="button" id="arquivar">Arquivar serviço</button></div>
+    </form>`);
+  const av = avisoEm(painel.querySelector('#p-aviso'));
+  const f = painel.querySelector('#f');
+  f.onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await Universo.alterar('bases-servicos', s.id, { versao: s.versao, sigla: f.sigla.value.trim().toUpperCase(), nome: f.nome.value.trim(),
+        descricao: f.descricao.value.trim() || null, observacoes: f.observacoes.value.trim() || null });
+      fecharPainel(); await recarregarTudo();
+    } catch (err) { av(mensagemDe(err)); }
   };
-  ligarBarraFicha(s);
+  painel.querySelector('#arquivar').onclick = async () => {
+    if (!confirm(`Arquivar ${s.sigla} · ${s.nome}? Ele sai dos serviços e do plano (as marcações e os cartões ficam guardados; dá para restaurar no fim da página Serviços).`)) return;
+    try { await arquivarRegistro(s); fecharPainel(); await recarregarTudo(); } catch (err) { av(mensagemDe(err)); }
+  };
 }
-function redesenharBarraFicha() {
-  const s = srvB(ROTA.srv);
-  const tem = FICHA && Object.keys(FICHA.campos).length;
-  let barra = document.querySelector('#ficha .pg-barra-salvar');
-  if (!tem) { barra?.remove(); document.body.classList.remove('pg-com-barra'); return; }
-  if (!barra) {
-    document.getElementById('ficha').insertAdjacentHTML('beforeend', `<div class="pg-barra-salvar"><span>Mudanças não salvas na ficha</span><div>
-      <button type="button" class="u-botao" id="ficha-descartar">Descartar</button><button type="button" class="u-botao forte" id="ficha-salvar">Salvar</button></div></div>`);
-    ligarBarraFicha(s);
-  }
-  document.body.classList.add('pg-com-barra');
-}
-function ligarBarraFicha(s) {
-  const sal = document.getElementById('ficha-salvar');
-  if (!sal) return;
-  document.body.classList.add('pg-com-barra');
-  sal.onclick = salvarFicha;
-  document.getElementById('ficha-descartar').onclick = () => { FICHA = null; document.body.classList.remove('pg-com-barra'); desenharFicha(); };
-}
-async function salvarFicha() {
-  const s = srvB(ROTA.srv);
-  if (!FICHA || !s) return;
-  const campos = Object.fromEntries(Object.entries(FICHA.campos).map(([k, v]) => [k, String(v).trim() || null]));
-  if (campos.sigla === null || campos.nome === null) { aviso('Sigla e nome não podem ficar vazios.'); return; }
-  try {
-    await Universo.alterar('bases-servicos', s.id, { versao: s.versao, ...campos });
-    FICHA = null; document.body.classList.remove('pg-com-barra');
-    aviso('Ficha salva.', 'ok'); setTimeout(() => aviso(''), 2500);
-    await recarregarTudo();
-    mostrarRota();
-  } catch (err) { aviso(mensagemDe(err)); if (err.status === 409) carregarBases({ soNovo: true }); }
-}
-document.addEventListener('keydown', (ev) => {
-  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 's' && FICHA && Object.keys(FICHA.campos).length) { ev.preventDefault(); ev.stopImmediatePropagation(); salvarFicha(); }
-}, true);
-window.addEventListener('beforeunload', (ev) => { if (FICHA && Object.keys(FICHA.campos).length) { ev.preventDefault(); ev.returnValue = ''; } });
 
 async function trocarDinamica(s, din) {
   if ((s.dinamica || 'fluxo') === din) return;
@@ -412,7 +380,7 @@ async function trocarDinamica(s, din) {
   try {
     await Universo.alterar('bases-servicos', s.id, { versao: s.versao, dinamica: din });
     aviso(`${s.sigla} agora está ${din === 'ilha' ? 'em ilha' : 'em fluxo'}.`, 'ok');
-    await recarregarTudo(); mostrarRota();
+    await recarregarTudo();
   } catch (err) { aviso(mensagemDe(err)); }
 }
 async function trocarPreco(s, com) {
@@ -450,12 +418,11 @@ function ligarBlocos(raiz) {
 const NIVEL_CURTO = { baixo: 'Baixo', medio: 'Médio', alto: 'Alto' };
 const selIC = (valor, attrs, herdado = false) => `<select class="pg-ic ${herdado ? 'herdado' : 'nv-' + (valor || 'medio')}" ${attrs} aria-label="Nível">
   ${NIVEIS.map((n) => `<option value="${n.id}" ${n.id === (valor || 'medio') ? 'selected' : ''}>${NIVEL_CURTO[n.id]}</option>`).join('')}</select>`;
-function blocoIC(s) {
-  const cab = `<thead><tr><th>${s.dinamica === 'ilha' ? '' : 'Categoria da tipologia'}</th>${CRITERIOS_IC.map((c) => `<th class="pg-vertical" title="${escHtml(c.longo)}"><span>${escHtml(c.nome)}</span></th>`).join('')}<th></th></tr></thead>`;
+function tabelaIC(s) {
+  const cab = `<thead><tr><th>${s.dinamica === 'ilha' ? 'Índice de complexidade' : 'Categoria da tipologia'}</th>${CRITERIOS_IC.map((c) => `<th class="pg-vertical" title="${escHtml(c.longo)}"><span>${escHtml(c.nome)}</span></th>`).join('')}<th></th></tr></thead>`;
   if (s.dinamica === 'ilha') {
-    return bloco('ic', 'Índice de complexidade', `<div class="pg-matriz"><table class="u-tabela pg-tabela-ic">${cab}<tbody><tr>
-      <td><b>${escHtml(s.sigla)}</b></td>${CRITERIOS_IC.map((k) => `<td>${selIC((s.ic_padrao || {})[k.id], `data-ic-padrao="${k.id}"`)}</td>`).join('')}<td></td></tr></tbody></table></div>`,
-      '<span class="pg-etq">do serviço</span>');
+    return `<div class="pg-matriz"><table class="u-tabela pg-tabela-ic">${cab}<tbody><tr>
+      <td><b>Índice do serviço</b></td>${CRITERIOS_IC.map((k) => `<td>${selIC((s.ic_padrao || {})[k.id], `data-ic-padrao="${k.id}"`)}</td>`).join('')}<td></td></tr></tbody></table></div>`;
   }
   let linhas = '';
   for (const g of GRUPOS) {
@@ -470,8 +437,7 @@ function blocoIC(s) {
         <td>${proprio ? `<button type="button" class="pg-caixa" data-ic-volta="${c.id}" title="Voltar ao padrão do serviço" aria-label="Voltar ao padrão">${IC2.volta}</button>` : ''}</td></tr>`;
     }
   }
-  return bloco('ic', 'Índice de complexidade', `<div class="pg-matriz"><table class="u-tabela pg-tabela-ic">${cab}<tbody>${linhas}</tbody></table></div>`,
-    '<span class="pg-etq">por categoria</span>');
+  return `<div class="pg-matriz"><table class="u-tabela pg-tabela-ic">${cab}<tbody>${linhas}</tbody></table></div>`;
 }
 function ligarIC(el, s) {
   el.querySelectorAll('[data-ic-padrao]').forEach((sel) => sel.onchange = async () => {
@@ -656,8 +622,7 @@ function desenharNotas() {
   const N = {
     servicos: [['Em fluxo e em ilha', 'Serviço em fluxo entra no plano comum das fases e marca o que é pertinente em cada cartão; pede tipologia, e o índice de complexidade se ajusta por categoria. Serviço em ilha tem o próprio plano, com cartões só dele, e um índice só.'],
       ['Trocar a dinâmica', 'Nada se perde: as marcações do fluxo e os cartões da ilha ficam guardados e voltam quando o serviço volta para a dinâmica deles. Ao entrar no fluxo pela primeira vez, tudo vem como opcional.'],
-      ['Preço e publicação', 'O valor (modificador, pesos, parcelas) é do vendas, em Honorários. Publicar grava os serviços e o plano de uma vez; o vendas usa a versão publicada nas propostas novas.']],
-    servico: [['Índice de complexidade', 'Em fluxo, cada categoria pode ter o próprio índice; sem valor próprio (tracejada), vale o padrão do serviço. Em ilha, vale o índice do serviço. Empenho e detalhamento são calculados na proposta.'],
+      ['Preço e publicação', 'O valor (modificador, pesos, parcelas) é do vendas, em Honorários. Publicar grava os serviços e o plano de uma vez; o vendas usa a versão publicada nas propostas novas.'], ['Índice de complexidade', 'Em fluxo, cada categoria pode ter o próprio índice; sem valor próprio (tracejada), vale o padrão do serviço. Em ilha, vale o índice do serviço. Empenho e detalhamento são calculados na proposta.'],
       ['Com preço e sem preço', 'Com preço, o honorário sai da tabela do CAU com o modificador do serviço. Sem preço, o valor se informa em cada proposta.']],
     faixas: [['Faixas de prazo', 'O prazo de cada entrega no plano é o de referência. Na proposta, com a área conhecida, o vendas multiplica esse prazo pelo da faixa. Entregas de prazo fixo e eventos não mudam. Valores provisórios, a calibrar.']],
     fluxo: [['Plano do fluxo', 'Fases encadeadas: prazos em sequência e parcelas ao concluir cada fase. Só aparecem os serviços em fluxo. A Linha mostra o mesmo plano no tempo.'],

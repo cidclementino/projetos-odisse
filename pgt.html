@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="projetos.css?v=20261120a">
 <link rel="stylesheet" href="pgt-linha.css?v=20261116c">
-<link rel="stylesheet" href="pgt-servicos.css?v=20261120a">
+<link rel="stylesheet" href="pgt-servicos.css?v=20261120b">
 </head>
 <body>
 
@@ -40,7 +40,6 @@
     <div id="aviso"></div>
 
     <section data-painel="servicos" hidden><div id="servicos"><p class="muted">Carregando…</p></div></section>
-    <section data-painel="ficha" hidden><div id="ficha"></div></section>
     <section data-painel="faixas" hidden><div id="faixas"></div></section>
 
     <div class="gestao__filtros" id="filtros" hidden>
@@ -79,7 +78,7 @@
 <script src="base.js"></script>
 <script src="gestao.js"></script>
 <script src="pgt-linha.js?v=20261120a"></script>
-<script src="pgt-servicos.js?v=20261120a"></script>
+<script src="pgt-servicos.js?v=20261120b"></script>
 <script>
 // ==========================================================================
 // Plano Geral de Trabalho — uma interface única (passo 3e) com eventos (passo 3f, migração 0008).
@@ -484,7 +483,7 @@ function desenharPlano() {
     const antes = S; S = [srv];
     const html = `<div class="fase fase--ilha" data-ilha-srv="${srv.id}" style="--cols:${grade(1)}">
       <div class="fase__cab grade">
-        <div class="ctl"><a class="ctl__btn" href="#servico/${srv.id}" title="Abrir a ficha de ${escHtml(srv.sigla)}" aria-label="Abrir a ficha">${ICONE.lapis}</a></div>
+        <div class="ctl"><button type="button" class="ctl__btn" data-editar-srv="${srv.id}" title="Editar sigla e nome de ${escHtml(srv.sigla)}" aria-label="Editar o serviço">${ICONE.lapis}</button></div>
         <div class="fase__estado"><span class="sigla">${escHtml(srv.sigla)}</span></div>
         <div class="fase__textos"><h3 class="fase__nome">${escHtml(srv.nome)}</h3></div>
         <div class="centro fase__prazo">${(() => { const t = etapas.reduce((n, e) => n + (e.prazos[srv.id] || 0), 0); return t ? fmtPrazo(t) : ''; })()}</div>
@@ -507,6 +506,7 @@ function desenharPlano() {
       <section class="estado estado--ilha">${htmlIlhas || '<div class="vazio"><p>' + (filtrando() ? 'Nada com esses filtros.' : 'Nenhum serviço em ilha.') + '</p></div>'}</section></div>`;
   }
   ligarPlano(el);
+  el.querySelectorAll('[data-editar-srv]').forEach((b) => b.onclick = () => abrirEditarServico(srvB(b.dataset.editarSrv)));
   lnDesenharModal();     // o cartão aberto em popup na aba Linha acompanha as mudanças
 }
 

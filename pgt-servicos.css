@@ -54,7 +54,15 @@ html { scrollbar-gutter: stable; }
 .pg-contagem { font-size: 13px; font-weight: 500; color: var(--u-tinta-2, #5B6773); margin-left: 6px; }
 .pg-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 16px; }
 .pg-busca { width: 220px; padding: 6px 10px; border: 1px solid var(--u-linha-forte, #C3C8CD); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; color: inherit; }
-.pg-grade-srv { display: grid; grid-template-columns: minmax(0, 1fr) 110px 110px 170px 190px; align-items: center; gap: 12px; }
+.pg-grade-srv { display: grid; grid-template-columns: 24px minmax(0, 1fr) 110px 110px 170px 170px 24px; align-items: center; gap: 12px; }
+.pg-srv { background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 8px; }
+.pg-srv > .pg-linha { border: 0; cursor: pointer; }
+.pg-srv.aberto { border-color: var(--u-linha-forte, #C3C8CD); box-shadow: 0 3px 10px rgba(46, 48, 54, .06); }
+.pg-srv.aberto > .pg-linha { border-radius: 8px 8px 0 0; }
+.pg-srv-seta svg { transition: transform .15s; transform: rotate(-90deg); }
+.pg-srv.aberto .pg-srv-seta svg { transform: none; }
+.pg-srv-corpo { padding: 4px 14px 16px 50px; }
+.pg-srv-chaves { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 4px 0 12px; }
 .pg-regua { margin-top: 16px; padding: 9px 14px; border-radius: 8px; background: rgba(255, 255, 255, .55);
   font-size: 11px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--u-tinta-2, #5B6773); }
 .pg-registro { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
@@ -139,16 +147,19 @@ body.pg-com-barra main { padding-bottom: 120px; }
 /* ---------------------------------------------------------------- telas menores */
 @media (max-width: 1100px) {
   .pg-regua { display: none; }
-  .pg-grade-srv { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "nome din preco" "ic ic cart"; row-gap: 6px; }
-  .pg-grade-srv > :nth-child(1) { grid-area: nome; }
-  .pg-grade-srv > :nth-child(2) { grid-area: din; }
-  .pg-grade-srv > :nth-child(3) { grid-area: preco; }
-  .pg-grade-srv > :nth-child(4) { grid-area: ic; }
-  .pg-grade-srv > :nth-child(5) { grid-area: cart; text-align: right; }
+  .pg-grade-srv { grid-template-columns: 24px minmax(0, 1fr) auto auto 24px; grid-template-areas: "ed nome din preco seta" "ed ic ic cart seta"; row-gap: 6px; }
+  .pg-grade-srv > :nth-child(1) { grid-area: ed; }
+  .pg-grade-srv > :nth-child(2) { grid-area: nome; }
+  .pg-grade-srv > :nth-child(3) { grid-area: din; }
+  .pg-grade-srv > :nth-child(4) { grid-area: preco; }
+  .pg-grade-srv > :nth-child(5) { grid-area: ic; }
+  .pg-grade-srv > :nth-child(6) { grid-area: cart; text-align: right; }
+  .pg-grade-srv > :nth-child(7) { grid-area: seta; }
+  .pg-srv-corpo { padding-left: 14px; }
 }
 @media (max-width: 640px) {
-  .pg-grade-srv { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "nome nome" "din preco" "ic cart"; }
-  .pg-grade-srv > :nth-child(3) { justify-self: start; }
+  .pg-grade-srv { grid-template-columns: 24px auto minmax(0, 1fr) 24px; grid-template-areas: "ed nome nome seta" "ed din preco seta" "ed ic cart seta"; }
+  .pg-grade-srv > :nth-child(4) { justify-self: start; }
   .pg-meia { width: 100%; }
   .pg-campos { grid-template-columns: 1fr; }
   .pg-barra-salvar { padding: 12px 16px; }
