@@ -260,3 +260,11 @@ body.ln-modal-aberto { overflow: hidden; }
 .lnn .ln-no__nome { overflow-wrap: break-word; hyphens: auto; }
 .ln-faixa { transition: none; }
 .ln-cmd .pg-caixa:has(.n) { width: auto; padding: 0 4px; gap: 2px; grid-auto-flow: column; }
+
+/* régua: o mesmo rótulo de data e a mesma faixa de compressão nos dois modos (fina, clara; +Nd no meio da coluna) */
+.lnn .ln-data { font-size: 12.5px; font-weight: 650; color: var(--tinta, #3F4B57); line-height: 1.25; }
+.lnn .ln-data span { font-size: 10.5px; font-weight: 500; color: var(--tinta-2, #5B6773); opacity: 1; }
+.lnn .ln-data.is-hoje, .lnn .ln-data.is-hoje span { color: var(--u-foco, #3C82DC); }
+.lnn .ln-data.is-fds { color: var(--tinta, #3F4B57); }
+.lnn .ln-comp { height: 4px; border-radius: 2px; opacity: 1; font-size: 0; }
+.ln-comp__rot { position: absolute; transform: translateX(-50%); font-size: 11px; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }

@@ -226,7 +226,12 @@ const LinhaNos = (() => {
     return { lista, svg };
   }
 
-  const corSalto = (n) => { const k = Math.max(0, Math.min(1, (n - 1) / 6)); return `hsl(${130 - 130 * k} 52% ${52 - 4 * k}%)`; };
+  // faixa de compressão: fina e clara, do verde (1 dia útil até a data seguinte) ao vermelho (6 ou mais)
+const TONS_SALTO = ['#9FD3B9', '#C9DE9B', '#ECC28F', '#E9A57A', '#D9826A', '#C9624F'];
+const TEXTO_SALTO = ['#3E6B48', '#5E7A2E', '#8A5A2B', '#8A5A2B', '#A4473B', '#A4473B'];
+const corSalto = (n) => TONS_SALTO[Math.max(0, Math.min(5, n - 1))];
+const corTextoSalto = (n) => TEXTO_SALTO[Math.max(0, Math.min(5, n - 1))];
+const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}px;width:${Math.max(2, w - 4)}px;top:${Y_COMP}px;background:${corSalto(n)}" title="${titulo}"></div>`;
 
   // ---------------------------------------------------------------- cabeça: faixas, régua, compressão
   function cabeca(cfg, V, S, G) {
@@ -263,8 +268,9 @@ const LinhaNos = (() => {
         const prox = S.marcos[i + 1];
         const uteis = contarUteis(t, prox, cfg.util || ((x) => !fds(x)));
         const corridos = Math.round((prox - t) / DIA);
-        return `<div class="ln-comp" style="left:${S.x(t) + 1}px;width:${W_COMP - 2}px;top:${Y_COMP}px;background:${corSalto(Math.max(1, uteis))}"
-          title="${dm(t)} → ${dm(prox)}: ${corridos} dia${corridos > 1 ? 's' : ''} corrido${corridos > 1 ? 's' : ''}, ${uteis} út${uteis === 1 ? 'il' : 'eis'}">${uteis > 1 ? `+${uteis}d` : ''}</div>`;
+        const n = Math.max(1, uteis);
+        return segmento(S.x(t), W_COMP, n, `${dm(t)} → ${dm(prox)}: ${corridos} dia${corridos > 1 ? 's' : ''} corrido${corridos > 1 ? 's' : ''}, ${uteis} út${uteis === 1 ? 'il' : 'eis'}`)
+          + (uteis > 1 ? `<div class="ln-comp__rot" style="left:${S.x(t) + W_COMP / 2}px;top:${Y_REGUA + 10}px;color:${corTextoSalto(n)}">+${uteis}d</div>` : '');
       }).join('');
     } else {
       // extenso: um rótulo por dia útil (ou por semana, quando o dia fica estreito); fresta no fim de semana
@@ -276,8 +282,9 @@ const LinhaNos = (() => {
         const novo = mes !== mesAntes; mesAntes = mes;
         const mostra = todos || d.getUTCDay() === 1 || novo || t === cfg.hoje;
         marcas += `<div class="ln-marca${d.getUTCDay() === 1 ? ' is-semana' : ''}" style="left:${S.x(t)}px;top:${G.topo}px;height:${G.altura - G.topo}px"></div>`;
-        if (mostra) regua += `<div class="ln-data ln-data--dia${novo ? ' is-mes' : ''}${hojeCls(t)}" style="left:${S.x(t) + S.larg(t) / 2}px;top:${Y_REGUA}px">
-          <span>${SEM[d.getUTCDay()]}${novo ? ` · <b>${MES[mes]}</b>` : ''}</span>${dm(t)}</div>`;
+        comp += segmento(S.x(t), S.larg(t), cfg.util && !cfg.util(t) ? 6 : 1, `${SEM[d.getUTCDay()]} ${dm(t)}${cfg.util && !cfg.util(t) ? ' · suspenso' : ''}`);
+        if (mostra) regua += `<div class="ln-data${novo ? ' is-mes' : ''}${hojeCls(t)}" style="left:${S.x(t) + S.larg(t) / 2}px;top:${Y_REGUA}px">
+          <span>${SEM[d.getUTCDay()]}${novo ? ` · <b>${MES[mes]}</b>` : ''}${cfg.hoje === t ? ' · hoje' : ''}</span>${dm(t)}</div>`;
       }
     }
     return { faixas: fases + etapas, regua, marcas, comp };
@@ -333,7 +340,7 @@ const LinhaNos = (() => {
         <div class="lnn-lat" style="width:${LAT}px;height:${G.altura}px">${lat}</div>
         <div class="lnn-canto" style="width:${LAT}px;height:${Y_CAM}px">
           <div class="ln-rot" style="top:${Y_FASE + 3}px">fase</div><div class="ln-rot" style="top:${Y_ETAPA + 3}px">etapa</div>
-          <div class="ln-rot" style="top:${Y_REGUA + 8}px">datas</div>${S.modo === 'compacto' ? `<div class="ln-rot" style="top:${Y_COMP}px">compressão</div>` : `<div class="ln-rot" style="top:${Y_COMP}px">${S.D} px por dia</div>`}</div>
+          <div class="ln-rot" style="top:${Y_REGUA + 8}px">datas</div><div class="ln-rot" style="top:${Y_COMP - 5}px">compressão</div></div>
       </div>`;
     quadro.insertAdjacentHTML('beforeend', `<div class="lnn-mini" title="Clique para ir ao trecho">${mini(V, G)}</div>`);
     if (cfg.legenda) el.querySelector('.lnn').insertAdjacentHTML('beforeend', `<div class="ln-legenda small">${cfg.legenda}</div>`);
