@@ -12,15 +12,9 @@
 // etapaDe, entDe, evtDe, faseDe, alvoNome, materiaisDe, TIPOS_MAT, montarFiltroAlvo.
 // ==========================================================================
 
-const MT_MONTADOR = 'https://marca.odisse.com.br/v1/documentos/documentos.js';
-const MT = { id: null, r: null, sujo: false, aberto: null, inserir: null, mod: null, rec: null, tPrevia: 0, rodada: 0 };
-const MT_TIPOS = [['formulario', 'Formulário'], ['checklist', 'Checklist'], ['modelo', 'Modelo de documento']];
-const MT_CAMPOS = [['secao', 'Seção'], ['texto', 'Texto curto'], ['texto_longo', 'Texto longo'], ['data', 'Data'], ['numero', 'Número'],
-  ['escolha', 'Escolha'], ['marcar', 'Item de checklist'], ['tabela', 'Tabela'], ['pessoas', 'Pessoas'], ['assinatura', 'Assinatura'], ['automatico', 'Dado do projeto']];
-const MT_AUTO = [['projeto', 'Projeto (código e nome)'], ['cliente', 'Cliente'], ['endereco', 'Endereço do imóvel'], ['etapa', 'Etapa'],
-  ['cartao', 'Entrega ou evento'], ['data', 'Data'], ['responsavel', 'Responsável']];
-const MT_EXEMPLO = { projeto: 'OA-AAAA-000 · Nome do projeto', cliente: 'Nome do cliente', endereco: 'Endereço do imóvel', etapa: 'Etapa',
-  cartao: 'Entrega ou evento', data: 'dd/mm/aaaa', responsavel: 'Responsável' };
+const MT = { id: null, r: null, sujo: false, aberto: null, inserir: null, tPrevia: 0, rodada: 0, valores: null,
+  vista: (() => { try { return localStorage.getItem('pgt:mt-vista') || 'formulario'; } catch (_) { return 'formulario'; } })(), folha: 'vazia' };
+const MT_TIPOS = MP.TIPOS, MT_CAMPOS = MP.CAMPOS, MT_AUTO = MP.AUTO;
 const mtNome = (lista, id) => (lista.find((x) => x[0] === id) || [id, id])[1];
 const MT_IC = {
   alca: '<svg viewBox="0 0 14 14" aria-hidden="true"><g fill="currentColor"><circle cx="5" cy="3.5" r="1.1"/><circle cx="9" cy="3.5" r="1.1"/><circle cx="5" cy="7" r="1.1"/><circle cx="9" cy="7" r="1.1"/><circle cx="5" cy="10.5" r="1.1"/><circle cx="9" cy="10.5" r="1.1"/></g></svg>',
@@ -33,40 +27,24 @@ const mtModelo = (id) => mtModelos().find((m) => m.id === id);
 const mtLigacoes = (id) => D.materiais.filter((m) => m.modelo_id === id);
 const mtNovoId = () => 'c' + Math.random().toString(36).slice(2, 9);
 
-// ---------------------------------------------------------------- a folha: o padrão vira o conteúdo do montador da Marca
-function mtDoc(m) {
-  const campos = []; const blocos = []; const assinaturas = [];
-  let lista = null;
-  for (const c of m.campos || []) {
-    if (c.tipo !== 'marcar') lista = null;
-    const rot = c.rotulo || mtNome(MT_CAMPOS, c.tipo);
-    if (c.tipo === 'automatico') campos.push({ rotulo: rot, valor: MT_EXEMPLO[c.fonte] || '' });
-    else if (c.tipo === 'secao') blocos.push({ tipo: 'secao', texto: rot });
-    else if (c.tipo === 'texto') blocos.push({ tipo: 'paragrafo', texto: `${rot}: ${'_'.repeat(44)}` });
-    else if (c.tipo === 'data') blocos.push({ tipo: 'paragrafo', texto: `${rot}: ____/____/________` });
-    else if (c.tipo === 'numero') blocos.push({ tipo: 'paragrafo', texto: `${rot}: ______________${c.unidade ? ' ' + c.unidade : ''}` });
-    else if (c.tipo === 'texto_longo') blocos.push({ tipo: 'tabela', colunas: [{ titulo: rot }], linhas: Array.from({ length: c.linhas || 4 }, () => [' ']) });
-    else if (c.tipo === 'escolha') { blocos.push({ tipo: 'paragrafo', texto: rot, negrito: true }); blocos.push({ tipo: 'lista', itens: (c.opcoes || []).map((o) => `☐  ${o}`) }); }
-    else if (c.tipo === 'marcar') { if (!lista) { lista = { tipo: 'lista', itens: [] }; blocos.push(lista); } lista.itens.push(`☐  ${rot}`); }
-    else if (c.tipo === 'tabela') {
-      const cols = (c.colunas && c.colunas.length ? c.colunas : ['Coluna 1', 'Coluna 2']);
-      blocos.push({ tipo: 'paragrafo', texto: rot, negrito: true });
-      blocos.push({ tipo: 'tabela', colunas: cols.map((t) => ({ titulo: t })), linhas: Array.from({ length: c.linhas || 3 }, () => cols.map(() => ' ')) });
-    } else if (c.tipo === 'pessoas') {
-      blocos.push({ tipo: 'paragrafo', texto: rot, negrito: true });
-      blocos.push({ tipo: 'tabela', colunas: [{ titulo: 'Nome' }, { titulo: 'Papel' }, { titulo: 'Contato' }], linhas: Array.from({ length: c.linhas || 4 }, () => [' ', ' ', ' ']) });
-    } else if (c.tipo === 'assinatura') assinaturas.push({ nome: rot, cargo: '' });
-  }
-  return { modelo: m.folha === 'coluna' ? 'coluna' : 'ficha', miolo: m.miolo || 'texto', codigo: 'OA-AAAA-000', titulo: m.nome, campos, blocos, assinaturas };
-}
+// ---------------------------------------------------------------- prévia: Formulário (digital, em Blocos) ou Folha (o PDF)
+// O formulário é o que se preenche no cartão do projeto; a folha é o PDF — vazia por padrão, ou com o que se
+// digitou no formulário (aqui, para testar o padrão: nada do que se digita na prévia é gravado).
 async function mtPrevia() {
   const minha = ++MT.rodada;
+  if (!MT.r) return;
+  const caixaForm = document.querySelector('[data-mt-form]');
+  if (MT.vista === 'formulario') {
+    if (!caixaForm) return;
+    caixaForm.innerHTML = MP.formulario(MT.r, { valores: MT.valores || {} });
+    MP.ligar(caixaForm, MT.r, (v) => { MT.valores = v; });
+    return;
+  }
   const caixa = document.querySelector('[data-mt-folhas]');
   const escala = document.querySelector('.mt-escala');
-  if (!caixa || !MT.r) return;
+  if (!caixa) return;
   try {
-    if (!MT.mod) { MT.mod = await import(MT_MONTADOR); MT.rec = await MT.mod.recursos(); }
-    const n = await MT.mod.montar(caixa, mtDoc(MT.r), MT.rec);
+    const n = await MP.montar(caixa, MP.doc(MT.r, MT.folha === 'preenchida' ? (MT.valores || {}) : null));
     if (minha !== MT.rodada) return;
     const k = Math.min(0.72, (escala.parentElement.clientWidth - 32) / 794);
     caixa.style.transform = `scale(${k})`;
@@ -76,7 +54,15 @@ async function mtPrevia() {
     caixa.innerHTML = `<p class="pg-apoio">Não foi possível montar a prévia: ${escHtml(e.message)}</p>`;
   }
 }
-const mtPreviaDepois = () => { clearTimeout(MT.tPrevia); MT.tPrevia = setTimeout(mtPrevia, 250); };
+// miniatura da folha (Registro dos padrões): a primeira página reduzida
+async function mtMiniaturas(raiz) {
+  for (const box of raiz.querySelectorAll('[data-mt-mini]')) {
+    const m = mtModelo(box.dataset.mtMini); if (!m) continue;
+    try { const f = box.querySelector('.mt-mini__folhas'); await MP.montar(f, MP.doc(m)); f.style.transform = `scale(${box.clientWidth / 794})`; }
+    catch (_) { /* fica a caixa vazia */ }
+  }
+}
+const mtPreviaDepois = () => { clearTimeout(MT.tPrevia); MT.tPrevia = setTimeout(mtPrevia, MT.vista === 'formulario' ? 150 : 250); };
 
 // ---------------------------------------------------------------- a aba: Registro dos padrões + materiais com link
 function desenharMateriais() {
@@ -95,10 +81,11 @@ function desenharMateriais() {
   const padroes = `<section class="mt-secao">
     <div class="mt-secao__cab"><h2 class="pg-secao-h">Padrões</h2><span class="pg-apoio">${ms.length}</span><span class="pg-empurra"></span>
       <button type="button" class="u-botao forte" id="mt-novo">${MT_IC.mais}<span>Novo padrão</span></button></div>
-    ${ms.length ? `<div class="pg-regua mt-grade"><span>Padrão</span><span>Tipo</span><span>Folha</span><span>Ligado a</span><span></span></div>
+    ${ms.length ? `<div class="pg-regua mt-grade"><span></span><span>Padrão</span><span>Tipo</span><span>Folha</span><span>Ligado a</span><span></span></div>
     <div class="pg-registro">${ms.map((m) => {
       const n = mtLigacoes(m.id).length;
       return `<a class="pg-linha mt-grade" href="#materiais/${m.id}">
+        <span class="mt-mini" data-mt-mini="${m.id}" aria-hidden="true"><span class="mt-mini__folhas"></span></span>
         <span class="mt-nome"><b>${escHtml(m.nome)}</b><small>${(m.campos || []).length} campo${(m.campos || []).length === 1 ? '' : 's'}</small></span>
         <span><span class="pg-etq">${escHtml(mtNome(MT_TIPOS, m.tipo))}</span></span>
         <span class="pg-apoio">${m.folha === 'coluna' ? 'Coluna' : 'Ficha'}</span>
@@ -127,6 +114,7 @@ function desenharMateriais() {
       : `<div class="pg-vazio">${alvo ? `Nenhum material com link ligado a ${escHtml(alvoNome(alvo))}.` : 'Nenhum material com link com esses filtros. Acrescente abrindo uma entrega, um evento ou uma etapa no Plano do fluxo ou das ilhas.'}</div>`}
     </section>`;
   el.innerHTML = padroes + links;
+  mtMiniaturas(el);
   el.querySelectorAll('[data-alvo]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); irAoCartao(a.dataset.alvo); });
   el.querySelector('#mt-novo').onclick = async (ev) => {
     ev.currentTarget.disabled = true;
@@ -145,7 +133,7 @@ function desenharMateriais() {
 function mtDesenharEditor(el, id) {
   const m = mtModelo(id);
   if (!m) { el.innerHTML = '<div class="pg-vazio">Este padrão não existe mais (ou foi arquivado). <a href="#materiais">Voltar aos materiais</a>.</div>'; return; }
-  if (MT.id !== id || !MT.r) { MT.id = id; MT.r = structuredClone(m); MT.sujo = false; MT.aberto = null; MT.inserir = null; }
+  if (MT.id !== id || !MT.r) { if (MT.id !== id) MT.valores = null; MT.id = id; MT.r = structuredClone(m); MT.sujo = false; MT.aberto = null; MT.inserir = null; }
   const r = MT.r;
   // título e trilha da subpágina
   const tr = document.getElementById('trilha');
@@ -161,11 +149,11 @@ function mtDesenharEditor(el, id) {
       ${campo('Nome', `<input type="text" data-mt-txt="nome" value="${escHtml(r.nome)}" maxlength="160">`)}
       ${campo('Tipo', seletor('tipo', MT_TIPOS, 'Tipo'))}
       ${campo('Para que serve', `<textarea data-mt-txt="descricao" rows="2" maxlength="2000">${escHtml(r.descricao || '')}</textarea>`)}</div>`);
-  const bFolha = bloco('mt-folha', 'Folha', `<div class="mt-cols">
-      ${campo('Folha da Marca', seletor('folha', [['coluna', 'Coluna'], ['ficha', 'Ficha']], 'Folha'))}
+  const bFolha = bloco('mt-folha', 'Folha', `<div class="mt-cols mt-cols--linha">
+      ${campo('Folha', seletor('folha', [['coluna', 'Coluna'], ['ficha', 'Ficha']], 'Folha'))}
       ${campo('Miolo', seletor('miolo', [['texto', 'Campos'], ['vazio', 'Livre'], ['pontos', 'Quadrícula']], 'Miolo'))}
       ${campo('Quem preenche', seletor('preenche', [['estudio', 'Estúdio'], ['cliente', 'Cliente'], ['ambos', 'Ambos']], 'Quem preenche'))}
-      ${campo('Ao concluir', seletor('prova', [['1', 'Vira prova do cartão'], ['0', 'Só guarda']], 'Ao concluir'))}</div>`);
+      ${campo('Ao concluir', seletor('prova', [['1', 'Vira prova'], ['0', 'Só guarda']], 'Ao concluir'))}</div>`);
   const entre = (i) => `<div class="mt-entre${MT.inserir === i ? ' is-aberto' : ''}" data-entre="${i}">${MT.inserir === i ? mtMenuTipos(i)
     : `<button type="button" class="pg-caixa" data-inserir="${i}" aria-label="Acrescentar um campo aqui" title="Acrescentar um campo aqui">${MT_IC.mais}</button>`}</div>`;
   const pilha = `<div class="mt-pilha" data-mt-pilha>${(r.campos || []).map((c, i) => `${i ? entre(i) : ''}${mtItem(c, i)}`).join('')}</div>
@@ -177,7 +165,17 @@ function mtDesenharEditor(el, id) {
       : '<p class="pg-apoio">Ainda não está em nenhum cartão.</p>'}
     <button type="button" class="u-botao pg-meia" id="mt-ligar">Ligar a etapas, entregas e eventos</button>`);
   el.innerHTML = `<div class="mt-editor">
-      <div class="mt-folha"><div class="mt-escala"><div class="mt-folhas" data-mt-folhas></div></div></div>
+      <div class="mt-previa">
+        <div class="mt-previa__cab">
+          <span class="pg-seletor" role="radiogroup" aria-label="Prévia">
+            <button type="button" role="radio" data-mt-vista="formulario" aria-checked="${MT.vista === 'formulario'}">Formulário</button>
+            <button type="button" role="radio" data-mt-vista="folha" aria-checked="${MT.vista === 'folha'}">Folha (PDF)</button></span>
+          ${MT.vista === 'folha' ? `<span class="pg-seletor" role="radiogroup" aria-label="Folha">
+            <button type="button" role="radio" data-mt-folha="vazia" aria-checked="${MT.folha === 'vazia'}">Vazia</button>
+            <button type="button" role="radio" data-mt-folha="preenchida" aria-checked="${MT.folha === 'preenchida'}" title="Com o que foi digitado na vista Formulário">Preenchida</button></span>` : '<span class="pg-apoio">o que se preenche no cartão do projeto · nada aqui é gravado</span>'}
+        </div>
+        ${MT.vista === 'folha' ? '<div class="mt-folha"><div class="mt-escala"><div class="mt-folhas" data-mt-folhas></div></div></div>' : '<div class="mt-formulario" data-mt-form></div>'}
+      </div>
       <div class="mt-blocos">${bPadrao}${bFolha}${bCampos}${bLig}
         <p class="mt-arquivar"><button type="button" class="btn-link perigo" id="mt-arquivar">Arquivar padrão</button></p></div>
     </div>
@@ -224,6 +222,11 @@ function mtMudou({ redesenhar = false } = {}) {
 }
 function mtLigarEditor(el, id) {
   const r = MT.r;
+  el.querySelectorAll('[data-mt-vista]').forEach((b) => b.onclick = () => {
+    MT.vista = b.dataset.mtVista; try { localStorage.setItem('pgt:mt-vista', MT.vista); } catch (_) { /* sem armazenamento */ }
+    mtDesenharEditor(el, id);
+  });
+  el.querySelectorAll('[data-mt-folha]').forEach((b) => b.onclick = () => { MT.folha = b.dataset.mtFolha; mtDesenharEditor(el, id); });
   el.querySelectorAll('[data-mt-set]').forEach((b) => b.onclick = () => {
     const [k, v] = b.dataset.mtSet.split('|');
     r[k] = k === 'prova' ? Number(v) : v;

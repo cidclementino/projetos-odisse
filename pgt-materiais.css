@@ -5,15 +5,18 @@
 .mt-secao__cab .pg-secao-h { margin: 0; font-size: 17px; font-weight: 650; }
 .mt-secao__cab .u-botao { display: inline-flex; align-items: center; gap: 6px; }
 .mt-secao__cab .u-botao svg, .mt-acrescentar svg { width: 14px; height: 14px; }
-.mt-grade { display: grid; grid-template-columns: minmax(0, 2fr) 160px 110px 150px 32px; gap: 12px; align-items: center; }
+.mt-grade { display: grid; grid-template-columns: 52px minmax(0, 2fr) 160px 110px 150px 32px; gap: 12px; align-items: center; }
 .mt-nome { display: flex; flex-direction: column; min-width: 0; }
 .mt-nome b { font-size: 14px; font-weight: 650; }
 .mt-nome small { font-size: 12px; color: var(--u-tinta-2, #5B6773); }
 .pg-linha.mt-grade .pg-caixa svg { width: 14px; height: 14px; }
 
 /* editor: folha à esquerda, Blocos à direita */
-.mt-editor { display: grid; grid-template-columns: minmax(380px, 46%) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 8px; }
-.mt-folha { position: sticky; top: 16px; background: #E3E5E2; border-radius: 8px; padding: 16px; display: flex; justify-content: center; max-height: calc(100vh - 32px); overflow: auto; }
+.mt-editor { display: grid; grid-template-columns: minmax(380px, 40%) minmax(0, 1fr); gap: 24px; align-items: start; margin-top: 8px; }
+.mt-previa { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100vh - 32px); min-width: 0; }
+.mt-previa__cab { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mt-folha { background: #E3E5E2; border-radius: 8px; padding: 16px; display: flex; justify-content: center; overflow: auto; min-height: 0; }
+.mt-formulario { background: #E3E5E2; border-radius: 8px; padding: 14px; overflow: auto; min-height: 0; }
 .mt-escala { position: relative; overflow: hidden; }
 .mt-folhas { width: 794px; transform-origin: 0 0; display: flex; flex-direction: column; gap: 24px; }
 .mt-folhas > * { box-shadow: 0 6px 24px rgba(46, 48, 54, .16); }
@@ -80,6 +83,42 @@
 .mt-dlg__pe { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--u-linha, #D7DADD); }
 .mat-padrao { margin-top: 6px; }
 .mat-padrao select { padding: 5px 8px; border: 1px dashed var(--u-linha-forte, #C3C8CD); border-radius: 6px; font: inherit; font-size: 12.5px; background: transparent; color: var(--u-tinta-2, #5B6773); }
-@media (max-width: 1100px) { .mt-editor { grid-template-columns: 1fr; } .mt-folha { position: static; } .mt-grade { grid-template-columns: minmax(0, 1fr) 130px 32px; } .mt-grade > :nth-child(3), .mt-grade > :nth-child(4) { display: none; } }
+@media (max-width: 1100px) { .mt-editor { grid-template-columns: 1fr; } .mt-previa { position: static; max-height: none; } .mt-grade { grid-template-columns: 52px minmax(0, 1fr) 130px 32px; } .mt-grade > :nth-child(4), .mt-grade > :nth-child(5) { display: none; } }
 @media (max-width: 640px) { .mt-cols, .mt-item__det { grid-template-columns: 1fr; } .mt-item__det { padding-left: 12px; } }
 @media (prefers-reduced-motion: reduce) { .mt-item, .mt-entre::before, .mt-entre .pg-caixa { transition: none; } }
+
+/* Folha: os quatro seletores numa linha só */
+.mt-cols--linha { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.mt-cols--linha .mt-campo-f > span:first-child { margin-bottom: 4px; }
+.mt-cols--linha .pg-seletor button { padding: 4px 9px; font-size: 12px; white-space: nowrap; }
+
+/* Miniatura da folha no Registro (a primeira página reduzida) */
+.mt-mini { position: relative; display: block; width: 44px; height: 62px; overflow: hidden; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px var(--u-linha, #D7DADD), 0 2px 6px rgba(46, 48, 54, .10); }
+.mt-mini__folhas { position: absolute; left: 0; top: 0; width: 794px; transform-origin: 0 0; pointer-events: none; }
+.mt-mini__folhas > :not(:first-child) { display: none; }
+.pg-linha.mt-grade { padding-top: 6px; padding-bottom: 6px; }
+
+/* ---------------------------------------------------------------- formulário digital (material-padrao.js) */
+.mp-form { display: flex; flex-direction: column; gap: 10px; }
+.mp-bloco .pg-bloco-cab { padding: 12px 18px 2px; }
+.mp-bloco .pg-bloco-h { font-size: 14px; }
+.mp-bloco .pg-bloco-corpo { padding: 10px 18px 16px; }
+.mp-grade { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px; }
+.mp-largo { grid-column: 1 / -1; }
+.mp-campo > span:first-child { display: block; margin-bottom: 5px; font-size: 12.5px; font-weight: 550; color: var(--u-tinta-2, #5B6773); }
+.mp-campo input[type="text"], .mp-campo input[type="date"], .mp-campo textarea, .mp-campo select { width: 100%; box-sizing: border-box; padding: 7px 10px;
+  border: 1px solid var(--u-linha-forte, #C3C8CD); border-radius: 6px; font: inherit; font-size: 13px; background: #fff; color: var(--u-tinta, #3F4B57); }
+.mp-campo textarea { resize: vertical; }
+.mp-unidade input { width: 110px; }
+.mp-auto { display: block; padding: 7px 10px; border-radius: 6px; background: var(--pg-veu, rgba(63, 75, 87, .05)); font-size: 13px; color: var(--u-tinta, #3F4B57); }
+.mp-lista { display: flex; flex-direction: column; gap: 6px; }
+.mp-marcar { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--u-linha, #D7DADD); border-radius: 6px; background: #fff; font-size: 13px; cursor: pointer; }
+.mp-marcar input { width: 16px; height: 16px; accent-color: var(--odisse-ardosia, #3F4B57); }
+.mp-tabela { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: 4px; }
+.mp-tabela b { font-size: 10.5px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--u-tinta-2, #5B6773); padding: 2px 2px 4px; }
+.mp-tabela input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--u-linha, #D7DADD); border-radius: 4px; font: inherit; font-size: 12.5px; background: #fff; }
+.mp-linha-mais { margin-top: 6px; border: 0; background: none; padding: 0; font: inherit; font-size: 12.5px; color: var(--u-tinta-2, #5B6773); text-decoration: underline; cursor: pointer; }
+.mp-assinaturas { display: flex; flex-wrap: wrap; gap: 16px; }
+.mp-assinatura { display: flex; flex-direction: column; gap: 6px; min-width: 200px; flex: 1; font-size: 12.5px; color: var(--u-tinta-2, #5B6773); }
+.mp-assinatura__caixa { display: flex; align-items: center; justify-content: center; height: 56px; border: 1.5px dashed var(--u-linha-forte, #C3C8CD); border-radius: 6px; background: #fff; color: var(--u-tinta-3, #8A939C); }
+@media (max-width: 640px) { .mp-grade { grid-template-columns: 1fr; } }
