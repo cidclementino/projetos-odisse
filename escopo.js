@@ -372,10 +372,13 @@ function escDesenharLinha(el, E) {
   }
   const X = escLinhaDados(E);
   if (!X.nos.length) { el.innerHTML = '<div class="pg-vazio">Nenhum cartão no escopo.</div>'; return; }
+  // no computador, a linha cabe na tela (faixas Estúdio 1,5 · Cliente 1 · Terceiros 1); no celular, a página rola
+  const ajustar = window.innerWidth >= 1100;
+  document.body.classList.toggle('esc-cabe', ajustar);
   const redesenhar = () => { escLinhaGuardar(); ESC.aoMudar && ESC.aoMudar(); };
   LinhaNos.desenhar(el, {
     estado: L, recolhidas: L.recolhidas, nos: X.nos, passos: X.passos, gatilhos: X.gatilhos, hiatos: X.hiatos, pausas: X.pausas,
-    hoje: X.M.hoje, util: X.M.util, cliente: L.cliente, folgaBase: 12,
+    hoje: X.M.hoje, util: X.M.util, cliente: L.cliente, folgaBase: 12, ajustar,
     aoMudar: redesenhar,
     aoAbrir: (id) => {
       if (id.startsWith('nc:')) return escAcrescentarDoPgt(id.slice(3));
@@ -397,10 +400,10 @@ function escDesenharLinha(el, E) {
     },
     legenda: `<span><i class="ln-am ln-am--ent"></i> entrega</span><span><i class="ln-am ln-am--evt"></i> evento</span>
       <span><i class="ln-am ln-am--grupo"></i> correm juntas</span><span><i class="ln-am ln-am--gat"></i> gatilho da decisão</span>
-      <span><i class="ln-am ln-am--trac"></i> acrescentado, ainda por decidir ou não contratado</span>
-      <span><i class="ln-am esc-am--atraso"></i> passou do contratado (atraso)</span><span><i class="ln-am esc-am--empurrado"></i> começa depois do contratado</span>
-      <span>* sem prazo no PGT · ~ estimado (cliente 3, terceiros 7 dias úteis)</span>
-      <span>vários: Ctrl+clique ou arraste no vazio · Esc limpa · Extenso: Ctrl + roda muda a largura do dia</span>`,
+      <span><i class="ln-am ln-am--trac"></i> acrescentado · por decidir · não contratado</span>
+      <span><i class="ln-am esc-am--atraso"></i> atraso</span><span><i class="ln-am esc-am--empurrado"></i> empurrado</span>
+      <span>* sem prazo no PGT · ~ estimado</span>
+      <span>Ctrl+clique ou laço: vários · Esc limpa · roda sobre uma faixa cheia: rola a faixa · Extenso: Ctrl + roda, largura do dia</span>`,
   });
 }
 

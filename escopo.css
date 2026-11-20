@@ -146,3 +146,39 @@ body.escm-aberto { overflow: hidden; }
 .escm .u-botao svg { width: 14px; height: 14px; flex: 0 0 auto; }
 .escm .u-botao { display: inline-flex; align-items: center; gap: 6px; }
 .escm .esc-ctl .pg-caixa { width: 30px; height: 32px; border-radius: 6px; }
+
+/* ---------------------------------------------------------------- Escopo: tela de trabalho (Cid, 20/11/2026)
+   abas + uma faixa só (projeto, vista, filtros, datas, situação); a linha ocupa o resto, sem rolar a página */
+body.esc-tela .ficha { max-width: none; padding: 14px 24px 0; }
+body.esc-cabe { overflow: hidden; }
+body.esc-tela .abas-caixa-linha { margin-bottom: 10px; }
+.esc-banda { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 5px 10px; margin-bottom: 8px; box-sizing: border-box;
+  background: #fff; border: 1px solid var(--u-linha, #D7DADD); border-radius: 8px; flex-wrap: nowrap; }
+.esc-banda > * { flex: 0 0 auto; }
+.esc-banda .pg-empurra { flex: 1 1 0; min-width: 0; }
+.esc-banda__tit { display: flex; flex-direction: column; min-width: 120px; max-width: 380px; margin-right: 2px; flex: 0 1 auto !important; }
+
+.esc-banda__trilha { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--u-tinta-2, #5B6773); text-decoration: none; }
+.esc-banda__trilha:hover { color: var(--u-tinta, #3F4B57); }
+.esc-banda__tit b { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.esc-banda__sep { width: 1px; align-self: stretch; margin: 4px 2px; background: var(--u-linha, #D7DADD); }
+.esc-banda .u-botao { padding: 5px 10px; font-size: 12px; }
+.esc-banda .pg-seletor button { padding: 5px 10px; font-size: 12px; }
+.esc-banda .pg-etq { padding: 2px 7px; font-size: 11px; }
+.esc-banda .esc-inicio { font-size: 11.5px; }
+.esc-banda .esc-inicio input { padding: 3px 6px; font-size: 12px; }
+.esc-banda .esc-fim { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--u-tinta-2, #5B6773); white-space: nowrap; margin: 0; }
+.esc-banda .esc-fim b { font-size: 13px; }
+.esc-banda select { padding: 4px 8px; font: inherit; font-size: 12px; border: 1px solid var(--u-linha-forte, #C3C8CD); border-radius: 6px; background: #fff; color: var(--u-tinta, #3F4B57); }
+body.esc-tela .esc-selbar { bottom: 30px; }
+
+/* telas menores: a faixa encolhe sem quebrar a linha */
+@media (max-width: 1540px) {
+  .esc-banda { gap: 6px; padding: 5px 8px; }
+  .esc-banda .u-botao, .esc-banda .pg-seletor button { padding: 5px 8px; }
+  .esc-banda .esc-inicio { font-size: 0; gap: 0; } .esc-banda .esc-inicio input { font-size: 12px; }
+  .esc-banda__trilha { display: none; }
+  .esc-banda__tit { max-width: 240px; }
+}
+@media (max-width: 1380px) { .esc-banda .esc-fim { font-size: 0; gap: 3px; } .esc-banda .esc-fim b { font-size: 12.5px; } .esc-banda__sep { display: none; } }
+@media (max-width: 1100px) { .esc-banda { flex-wrap: wrap; } }

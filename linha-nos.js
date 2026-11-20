@@ -17,6 +17,11 @@
 //   * a linha ocupa a largura da janela e desce até a base; a régua e os nomes das camadas ficam presos;
 //   * seleção (destaca os fios e os vizinhos), Ctrl/Shift + clique e laço para vários, + sobre o fio, minimapa.
 //
+//   * ajustar (Escopo, 20/11/2026): a linha cabe na tela, sem rolar a página. O que sobra abaixo da cabeça da
+//     linha se divide entre Estúdio 1,5×, Cliente 1× e Terceiros 1×. Em cada faixa o cartão vai do texto inteiro
+//     ao nome em até 2 linhas e, por fim, só ao código com as datas e os controles; se nem assim couber, a faixa
+//     rola sozinha (barra na borda direita). Os fios e os cartões sobre as linhas acompanham. Legenda numa linha.
+//
 //   LinhaNos.desenhar(el, cfg) — cfg:
 //     estado: objeto que o chamador guarda ({ modo, dia, sel, selecao: Set, rolagem }) · recolhidas: Set
 //     nos: [{ id, ini, fim (dia útil seguinte ao último), ator: est|cli|out|l1|l2|tres, ent, fase: { id, nome, cor },
@@ -35,7 +40,9 @@ const LinhaNos = (() => {
   const W_COMP = 184;        // compacto: espaço entre datas
   const FRESTA = 12;         // extenso: o fim de semana inteiro (sábado leva a fresta, domingo nada)
   const GAP = 12;
-  const Y_FASE = 0, Y_ETAPA = 24, Y_REGUA = 50, Y_COMP = 86, Y_CAM = 108;
+  let Y_FASE = 0, Y_ETAPA = 24, Y_REGUA = 50, Y_COMP = 86, Y_CAM = 108;
+  const ALTURAS = { normal: [0, 24, 50, 86, 108], ajustada: [0, 22, 44, 78, 88] };
+  const NIVEIS = ['cheio', 'reduzido', 'minimo'];
   const SEM = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
   const MES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -116,7 +123,7 @@ const LinhaNos = (() => {
   function cartao(n, c, V) {
     const cls = ['ln-no', n.resumo ? 'ln-no--resumo' : n.ent ? 'ln-no--ent' : 'ln-no--evt', n.cls || '',
       ['l1', 'l2', 'tres'].includes(n.ator) ? 'ln-no--linha' : '', n.ator === 'tres' ? 'ln-no--tres' : '',
-      V.noGrupo[n.id] ? 'ln-no--membro' : '', n.fantasma ? 'is-fantasma' : '', c.estreito ? 'is-estreito' : ''].filter(Boolean).join(' ');
+      V.noGrupo[n.id] ? 'ln-no--membro' : '', n.fantasma ? 'is-fantasma' : '', c.estreito ? 'is-estreito' : '', c.nivel && c.nivel !== 'cheio' ? 'nivel-' + c.nivel : ''].filter(Boolean).join(' ');
     const pos = c.t == null ? `width:${c.w}px` : `left:${c.l}px;top:${c.t}px;width:${c.w}px${c.hFixa ? `;height:${c.hFixa}px` : ''}`;
     return `<div class="${cls}" data-no="${esc(n.id)}" style="${pos};--fase:${n.fase.cor}" title="${esc(n.titulo || '')}" tabindex="0">${n.html}</div>`;
   }
@@ -189,12 +196,111 @@ const LinhaNos = (() => {
     return { caixa, cam, l1, l2, altura: y + 8, largura: S.largura, topo };
   }
 
+  // ---------------------------------------------------------------- geometria que cabe na tela (ajustar)
+  function geometriaAjustada(cfg, V, S, medidor, alturaUtil) {
+    const caixa = {};
+    const minW = S.modo === 'extenso' ? 24 : 60;
+    for (const n of V.nos) {
+      const w = Math.max(minW, S.x(n.fim) - S.x(n.ini) - GAP);
+      caixa[n.id] = { l: S.x(n.ini) + GAP / 2, w, estreito: S.modo === 'extenso' && w < 96 };
+    }
+    for (const g of V.grupos) for (const id of g.ids) { const c = caixa[id]; c.w = Math.max(minW - 4, c.w - 8); c.l += 4; }
+    // mede cada cartão nos três níveis de uma vez
+    const alt = {};
+    medidor.innerHTML = V.nos.map((n) => NIVEIS.map((nv) => cartao(n, { w: caixa[n.id].w, estreito: caixa[n.id].estreito, nivel: nv }, V)).join('')).join('');
+    [...medidor.children].forEach((elx, i) => { const n = V.nos[Math.floor(i / 3)]; (alt[n.id] = alt[n.id] || {})[NIVEIS[i % 3]] = Math.ceil(elx.getBoundingClientRect().height); });
+    medidor.innerHTML = '';
+    const naLinha = (n) => ['l1', 'l2', 'tres'].includes(n.ator);
+    // faixas: Estúdio 1,5 · Cliente 1 · Terceiros 1 (sem o estúdio, metade para cada)
+    const H = Math.max(240, alturaUtil - Y_CAM);
+    const pesoEst = cfg.cliente ? 0 : 1.5;
+    const un = H / (pesoEst + 2);
+    const cam = {};
+    let y = Y_CAM;
+    if (!cfg.cliente) { cam.est = { y, h: un * 1.5 }; y += cam.est.h; }
+    const l1 = y; cam.cli = { y, h: un }; y += un;
+    const l2 = y; cam.out = { y, h: H + Y_CAM - y };
+    // cartões sobre as linhas: nome em até 2 linhas
+    for (const n of V.nos) if (naLinha(n)) { caixa[n.id].nivel = 'reduzido'; caixa[n.id].h = alt[n.id].reduzido; }
+    const meia = (ator) => Math.max(14, ...V.nos.filter((n) => n.ator === ator).map((n) => caixa[n.id].h / 2));
+    const meia1 = meia('l1'), meia2 = meia('l2');
+    // em cada faixa, o maior nível que cabe; senão, o menor e a faixa rola
+    const itensDe = (k) => {
+      const ids = V.nos.filter((n) => n.ator === k && !V.noGrupo[n.id]).map((n) => n.id);
+      if (k === 'est') ids.push(...V.grupos.map((g) => g.id));
+      return ids;
+    };
+    const vp = {}; const camDe = {};
+    // o nível é escolhido em cada trecho onde os cartões se sobrepõem: um cartão sozinho fica com o texto inteiro,
+    // uma pilha encolhe até caber; se nem só com o código couber, a faixa rola
+    const faixa = (k, topo, espaco) => {
+      const ext = itensDe(k).map((id) => {
+        const g = V.grupos.find((x) => x.id === id);
+        if (!g) return { id, l: caixa[id].l, r: caixa[id].l + caixa[id].w };
+        const ini = Math.min(...g.ids.map((m) => V.porId[m].ini)), fim = Math.max(...g.ids.map((m) => V.porId[m].fim));
+        const l = S.x(ini) + GAP / 2; const w = Math.max(minW, S.x(fim) - S.x(ini) - GAP);
+        return { id, g, l, r: l + w, w };
+      }).sort((a, b) => a.l - b.l);
+      const blocos = []; let cur = null;
+      for (const it of ext) {
+        if (cur && it.l < cur.r - 2) { cur.itens.push(it); cur.r = Math.max(cur.r, it.r); } else { cur = { itens: [it], r: it.r }; blocos.push(cur); }
+      }
+      let maior = 0;
+      for (const b of blocos) {
+        let esc = null;
+        for (const nv of NIVEIS) {
+          const h = (it) => (it.g ? 4 + it.g.ids.reduce((t, m) => t + alt[m][nv] + 4, 0) : alt[it.id][nv]);
+          const ps = [];
+          for (const it of b.itens) {
+            let p = ps.find((x) => x.fimX <= it.l - 4);
+            if (!p) { p = { fimX: 0, h: 0, itens: [] }; ps.push(p); }
+            p.fimX = it.r; p.h = Math.max(p.h, h(it)); p.itens.push(it);
+          }
+          const total = ps.reduce((t, p) => t + p.h, 0) + Math.max(0, ps.length - 1) * 6;
+          esc = { nv, ps, total, h };
+          if (total <= espaco) break;
+        }
+        let t = topo;
+        for (const p of esc.ps) {
+          for (const it of p.itens) {
+            if (it.g) {
+              caixa[it.id] = { l: it.l, w: it.w, t, h: esc.h(it) };
+              let tm = t + 4;
+              for (const m of it.g.ids) { Object.assign(caixa[m], { t: tm, h: alt[m][esc.nv], nivel: esc.nv }); tm += alt[m][esc.nv] + 4; camDe[m] = k; }
+            } else Object.assign(caixa[it.id], { t, h: esc.h(it), nivel: esc.nv });
+            camDe[it.id] = k;
+          }
+          t += p.h + 6;
+        }
+        maior = Math.max(maior, esc.total);
+      }
+      vp[k] = { top: topo - 4, h: espaco + 8, conteudo: maior + 8, rolagem: 0 };
+    };
+    if (cam.est) faixa('est', cam.est.y + 10, cam.est.h - 10 - meia1 - 10);
+    faixa('cli', l1 + meia1 + 8, cam.cli.h - meia1 - meia2 - 16);
+    faixa('out', l2 + meia2 + 8, cam.out.h - meia2 - 18);
+    for (const n of V.nos) {
+      if (!naLinha(n)) continue;
+      const c = caixa[n.id];
+      if (n.ator === 'l1') c.t = l1 - c.h / 2;
+      else if (n.ator === 'l2') c.t = l2 - c.h / 2;
+      else { c.t = l1 - meia1; c.hFixa = l2 - l1 + meia1 + meia2; c.h = c.hFixa; }
+    }
+    return { caixa, cam, l1, l2, altura: Y_CAM + H, largura: S.largura, topo: cam.est ? cam.est.y : Y_CAM, vp, camDe };
+  }
+  // posição na tela, descontada a rolagem da faixa (e presa à janela dela)
+  const yNaTela = (G, id, y) => {
+    const k = G.camDe && G.camDe[id]; if (!k) return y;
+    const v = G.vp[k]; const r = y - v.rolagem;
+    return Math.max(v.top, Math.min(v.top + v.h, r));
+  };
+
   // ---------------------------------------------------------------- fios: sequência e gatilhos
   function fios(cfg, V, G) {
     const raiz = (id) => V.noGrupo[id]?.id || id;
     const ancora = (id, lado) => {
       const c = G.caixa[id];
-      return { x: lado === 'saida' ? c.l + c.w : c.l, y: c.t + Math.min(c.h / 2, 24) };
+      return { x: lado === 'saida' ? c.l + c.w : c.l, y: yNaTela(G, id, c.t + Math.min(c.h / 2, 24)) };
     };
     const lista = []; const visto = new Set();
     for (let i = 1; i < V.passos.length; i++) {
@@ -209,7 +315,7 @@ const LinhaNos = (() => {
       const a = raiz(g.de), b = raiz(g.para);
       if (!G.caixa[a] || !G.caixa[b] || a === b) continue;
       const c = G.caixa[a]; const d = G.caixa[b];
-      lista.push({ a, b, gatilho: true, rotulo: g.rotulo, A: { x: c.l + c.w / 2, y: c.t + c.h }, B: { x: d.l + Math.min(d.w / 2, 40), y: d.t } });
+      lista.push({ a, b, gatilho: true, rotulo: g.rotulo, A: { x: c.l + c.w / 2, y: yNaTela(G, a, c.t + c.h) }, B: { x: d.l + Math.min(d.w / 2, 40), y: yNaTela(G, b, d.t) } });
     }
     const caminho = (f) => {
       const { A, B } = f;
@@ -294,20 +400,22 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
   let medidor = null;
   function desenhar(el, cfg) {
     if (!medidor) { medidor = document.createElement('div'); medidor.className = 'lnn-medidor'; document.body.appendChild(medidor); }
+    medidor.className = `lnn-medidor lnn${cfg.ajustar ? ' lnn--ajustada' : ''}`;   // medir com a mesma letra do desenho
     const E = cfg.estado;
     if (!E.selecao) E.selecao = new Set();
+    [Y_FASE, Y_ETAPA, Y_REGUA, Y_COMP, Y_CAM] = cfg.ajustar ? ALTURAS.ajustada : ALTURAS.normal;
     const antes = el.querySelector('.lnn-rolo');
     if (antes) E.rolagem = { x: antes.scrollLeft, y: antes.scrollTop, t: E.rolagem?.t };
     if (!cfg.nos.length) { el.innerHTML = cfg.vazio || '<div class="vazio"><p>Nada para mostrar.</p></div>'; return null; }
     const V = vista(cfg);
     const S = escala(cfg, V);
     // altura útil: da linha até a base da janela
-    el.innerHTML = '<div class="lnn"><div class="lnn-quadro"><div class="lnn-rolo"></div></div></div>';
+    el.innerHTML = `<div class="lnn${cfg.ajustar ? ' lnn--ajustada' : ''}"><div class="lnn-quadro"><div class="lnn-rolo"></div></div></div>`;
     const quadro = el.querySelector('.lnn-quadro');
     sangrar(quadro);
     const topoDoc = quadro.getBoundingClientRect().top + window.scrollY;
-    const alturaRolo = Math.max(440, window.innerHeight - topoDoc - (cfg.folgaBase ?? 12));
-    const G = geometria(cfg, V, S, medidor, alturaRolo - 14);
+    const alturaRolo = cfg.ajustar ? Math.max(360, window.innerHeight - topoDoc - 30) : Math.max(440, window.innerHeight - topoDoc - (cfg.folgaBase ?? 12));
+    const G = cfg.ajustar ? geometriaAjustada(cfg, V, S, medidor, alturaRolo - 12) : geometria(cfg, V, S, medidor, alturaRolo - 14);
     const F = fios(cfg, V, G);
     const C = cabeca(cfg, V, S, G);
     const xHoje = cfg.hoje != null && cfg.hoje >= S.tMin && cfg.hoje <= S.tMax ? S.x(cfg.hoje) + (S.modo === 'extenso' ? S.larg(cfg.hoje) / 2 : 0) : null;
@@ -321,7 +429,15 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
       <div class="ln-linha" style="top:${G.l1}px;width:${G.largura}px"></div><div class="ln-linha" style="top:${G.l2}px;width:${G.largura}px"></div>`;
     const grupos = V.grupos.map((g) => { const c = G.caixa[g.id];
       return `<div class="ln-grupo" data-no="${esc(g.id)}" style="left:${c.l}px;top:${c.t}px;width:${c.w}px;height:${c.h}px;--fase:${V.porId[g.ids[0]].fase.cor}" title="Entregas que correm juntas: contam pela mais longa"></div>`; }).join('');
-    const cartoes = V.nos.map((n) => cartao(n, G.caixa[n.id], V)).join('');
+    let cartoes;
+    let gruposHtml = null;
+    if (G.vp) {
+      const porCam = { est: [], cli: [], out: [], fora: [] };
+      for (const g of V.grupos) porCam[G.camDe[g.id] || 'est'].push(`<div class="ln-grupo" data-no="${esc(g.id)}" style="left:${G.caixa[g.id].l}px;top:${G.caixa[g.id].t}px;width:${G.caixa[g.id].w}px;height:${G.caixa[g.id].h}px;--fase:${V.porId[g.ids[0]].fase.cor}" title="Entregas que correm juntas: contam pela mais longa"></div>`);
+      for (const n of V.nos) porCam[G.camDe[n.id] || 'fora'].push(cartao(n, G.caixa[n.id], V));
+      cartoes = Object.entries(G.vp).map(([k, v]) => `<div class="lnn-vp" data-vp="${k}" style="top:${v.top}px;height:${v.h}px;width:${G.largura}px"><div class="lnn-vp__mov" style="top:${-v.top}px">${porCam[k].join('')}</div></div>`).join('') + porCam.fora.join('');
+      gruposHtml = '';
+    } else cartoes = V.nos.map((n) => cartao(n, G.caixa[n.id], V)).join('');
     const lat = `${cfg.cliente ? '' : `<div class="ln-rot ln-rot--cam" style="top:${G.cam.est.y + 12}px">Estúdio</div>`}
       <div class="ln-rot ln-rot--linha" style="top:${G.l1 - 9}px">1ª linha<small>interação com o cliente · visibilidade</small></div>
       <div class="ln-rot ln-rot--cam" style="top:${G.l1 + 36}px">Cliente</div>
@@ -334,7 +450,7 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
           ${(cfg.pausas || []).map((p) => faixaCruzada(p, 'ln-pausa', p.html)).join('')}
           ${(cfg.hiatos || []).map((h) => faixaCruzada(h, 'ln-hiato', h.html)).join('')}
           ${xHoje != null ? `<div class="ln-hoje" style="left:${xHoje}px;top:${G.topo}px;height:${G.altura - G.topo}px"></div>` : ''}
-          ${F.svg}${grupos}${cartoes}</div>
+          <div class="lnn-fios">${F.svg}</div>${gruposHtml ?? grupos}${cartoes}</div>
         <div class="lnn-cab" style="left:${LAT}px;width:${G.largura}px;height:${Y_CAM}px">${C.faixas}${C.regua}${C.comp}
           ${xHoje != null ? `<div class="ln-hoje ln-hoje--cab" style="left:${xHoje}px;top:${Y_REGUA + 30}px;height:${Y_CAM - Y_REGUA - 30}px"></div>` : ''}</div>
         <div class="lnn-lat" style="width:${LAT}px;height:${G.altura}px">${lat}</div>
@@ -343,7 +459,12 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
           <div class="ln-rot" style="top:${Y_REGUA + 8}px">datas</div><div class="ln-rot" style="top:${Y_COMP - 5}px">compressão</div></div>
       </div>`;
     quadro.insertAdjacentHTML('beforeend', `<div class="lnn-mini" title="Clique para ir ao trecho">${mini(V, G)}</div>`);
-    if (cfg.legenda) el.querySelector('.lnn').insertAdjacentHTML('beforeend', `<div class="ln-legenda small">${cfg.legenda}</div>`);
+    // barras de rolagem das faixas que não couberam (na borda direita da tela)
+    if (G.vp) for (const [k, v] of Object.entries(G.vp)) {
+      if (v.conteudo <= v.h + 1) continue;
+      quadro.insertAdjacentHTML('beforeend', `<div class="lnn-vbar" data-vbar="${k}" style="top:${v.top}px;height:${v.h}px" title="Rolar esta faixa"><i style="height:${Math.max(24, (v.h * v.h) / v.conteudo)}px"></i></div>`);
+    }
+    if (cfg.legenda) (cfg.ajustar ? quadro : el.querySelector('.lnn')).insertAdjacentHTML('beforeend', `<div class="ln-legenda small${cfg.ajustar ? ' ln-legenda--linha' : ''}">${cfg.legenda}</div>`);
     const R = { V, S, G, F, xHoje };
     ligar(el, cfg, R);
     return R;
@@ -371,7 +492,7 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
 
   // ---------------------------------------------------------------- interação
   function ligar(el, cfg, R) {
-    const { V, S, G, F } = R;
+    const { V, S, G } = R;
     const E = cfg.estado;
     const lnn = el.querySelector('.lnn');
     lnn._redesenhar = () => cfg.aoMudar && cfg.aoMudar();
@@ -406,7 +527,7 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
       const sel = E.sel && V.noGrupo[E.sel] ? V.noGrupo[E.sel].id : E.sel;
       tela.parentElement.classList.toggle('tem-sel', !!E.sel);
       const lig = new Set(E.sel ? [E.sel] : []);
-      F.lista.forEach((f, i) => {
+      R.F.lista.forEach((f, i) => {
         const on = !!sel && (f.a === sel || f.b === sel);
         tela.querySelector(`[data-fio="${i}"]`)?.classList.toggle('is-lig', on);
         if (on) { lig.add(f.a); lig.add(f.b); }
@@ -481,7 +602,8 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
         for (const n of V.nos) {
           if (n.resumo || n.fantasma) continue;
           const c = G.caixa[n.id];
-          if (c.l < cx.r && c.l + c.w > cx.l && c.t < cx.b && c.t + c.h > cx.t) E.selecao.add(n.id);
+          const t = c.t - (G.camDe && G.camDe[n.id] ? G.vp[G.camDe[n.id]].rolagem : 0);
+          if (c.l < cx.r && c.l + c.w > cx.l && t < cx.b && t + c.h > cx.t) E.selecao.add(n.id);
         }
         marcarVarios();
       };
@@ -489,6 +611,7 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
       ev.preventDefault();
     });
     // + sobre o fio
+    let ligarMais = () => {};
     if (cfg.podeNovo && cfg.aoNovoNoFio) {
       const mais = document.createElement('button');
       mais.type = 'button'; mais.className = 'ln-mais'; mais.hidden = true; mais.setAttribute('aria-label', 'Novo cartão aqui');
@@ -497,9 +620,9 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
       let atual = null; let saida = null;
       const deOnde = (f) => { const g = V.grupos.find((x) => x.id === f.a); return cfg.podeNovo(g ? g.ids[g.ids.length - 1] : f.a); };
       const esconder = () => { saida = setTimeout(() => { if (!tela.querySelector('.ln-novo')) mais.hidden = true; }, 250); };
-      tela.querySelectorAll('[data-toque]').forEach((p) => {
+      ligarMais = () => tela.querySelectorAll('[data-toque]').forEach((p) => {
         p.addEventListener('mouseenter', () => {
-          const f = F.lista[Number(p.dataset.toque)];
+          const f = R.F.lista[Number(p.dataset.toque)];
           const id = deOnde(f);
           if (!id || tela.querySelector('.ln-novo')) return;
           clearTimeout(saida);
@@ -509,6 +632,7 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
         });
         p.addEventListener('mouseleave', esconder);
       });
+      ligarMais();
       mais.addEventListener('mouseenter', () => clearTimeout(saida));
       mais.addEventListener('mouseleave', esconder);
       mais.onclick = (ev) => { ev.stopPropagation(); mais.hidden = true; cfg.aoNovoNoFio(atual, { x: parseFloat(mais.style.left), y: parseFloat(mais.style.top) }, tela); };
@@ -538,12 +662,52 @@ const segmento = (l, w, n, titulo) => `<div class="ln-comp" style="left:${l + 2}
         return;
       }
       if (ev.shiftKey || Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) return;
+      const k = R.faixaSob && R.faixaSob(ev.clientY);
+      if (k) {
+        const v = G.vp[k]; const max = v.conteudo - v.h;
+        if ((ev.deltaY > 0 && v.rolagem < max) || (ev.deltaY < 0 && v.rolagem > 0)) { R.rolarFaixa(k, v.rolagem + ev.deltaY * (ev.deltaMode === 1 ? 32 : 1)); ev.preventDefault(); return; }
+      }
       const max = rolo.scrollWidth - rolo.clientWidth;
       if ((ev.deltaY > 0 && rolo.scrollLeft < max - 1) || (ev.deltaY < 0 && rolo.scrollLeft > 0)) {
         rolo.scrollLeft += ev.deltaY * (ev.deltaMode === 1 ? 32 : 1);
         ev.preventDefault();
       }
     }, { passive: false });
+    // rolagem própria das faixas (modo ajustar): roda sobre a faixa, ou arrastar a barra
+    if (G.vp) {
+      if (!E.vrol) E.vrol = {};
+      const rolarFaixa = (k, y) => {
+        const v = G.vp[k]; const max = Math.max(0, v.conteudo - v.h);
+        v.rolagem = Math.max(0, Math.min(max, y)); E.vrol[k] = v.rolagem;
+        const mov = tela.querySelector(`[data-vp="${k}"] .lnn-vp__mov`); if (mov) mov.style.transform = `translateY(${-v.rolagem}px)`;
+        const bar = el.querySelector(`[data-vbar="${k}"] i`);
+        if (bar && max) bar.style.transform = `translateY(${(v.rolagem / max) * (v.h - bar.offsetHeight)}px)`;
+        redesenharFios();
+      };
+      let quadroPendente = 0;
+      const redesenharFios = () => {
+        if (quadroPendente) return;
+        quadroPendente = requestAnimationFrame(() => { quadroPendente = 0; R.F = fios(cfg, V, G); tela.querySelector('.lnn-fios').innerHTML = R.F.svg; ligarMais(); marcar(); });
+      };
+      for (const k of Object.keys(G.vp)) if (E.vrol[k]) rolarFaixa(k, E.vrol[k]);
+      R.rolarFaixa = rolarFaixa;
+      el.querySelectorAll('[data-vbar]').forEach((b) => {
+        const k = b.dataset.vbar; const v = G.vp[k];
+        b.addEventListener('mousedown', (ev) => {
+          ev.preventDefault();
+          const thumb = b.querySelector('i'); const r = b.getBoundingClientRect();
+          const max = v.conteudo - v.h; const curso = v.h - thumb.offsetHeight;
+          const ir = (e) => rolarFaixa(k, ((e.clientY - r.top - thumb.offsetHeight / 2) / curso) * max);
+          ir(ev);
+          const solta = () => { window.removeEventListener('mousemove', ir); window.removeEventListener('mouseup', solta); };
+          window.addEventListener('mousemove', ir); window.addEventListener('mouseup', solta);
+        });
+      });
+      R.faixaSob = (clientY) => {
+        const y = clientY - rolo.getBoundingClientRect().top;
+        return Object.keys(G.vp).find((k) => y >= G.vp[k].top && y <= G.vp[k].top + G.vp[k].h && G.vp[k].conteudo > G.vp[k].h + 1);
+      };
+    }
     cfg.aoLigar && cfg.aoLigar(tela, R);
   }
 

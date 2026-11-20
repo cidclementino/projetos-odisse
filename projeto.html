@@ -12,8 +12,8 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="projetos.css?v=20261120a">
 <link rel="stylesheet" href="pgt-servicos.css?v=20261120b">
-<link rel="stylesheet" href="pgt-linha.css?v=20261120c">
-<link rel="stylesheet" href="escopo.css?v=20261120b">
+<link rel="stylesheet" href="pgt-linha.css?v=20261120d">
+<link rel="stylesheet" href="escopo.css?v=20261120c">
 </head>
 <body>
 
@@ -29,8 +29,8 @@
 <script src="auth.js"></script>
 <script>exigirAutenticacao();</script>
 <script src="base.js"></script>
-<script src="linha-nos.js?v=20261120c"></script>
-<script src="escopo.js?v=20261120b"></script>
+<script src="linha-nos.js?v=20261120d"></script>
+<script src="escopo.js?v=20261120c"></script>
 <script>
 // Projeto: projeto.html#prj_… (Ficha) · #prj_…/escopo (o escopo em Linha ou Cartões; #prj_…/pgt continua valendo) · #prj_…/alteracoes (Alterações de escopo)
 // (Cid, 20/11/2026) O PGT do projeto é a ferramenta de gestão do projeto ativo.
@@ -84,15 +84,19 @@ async function gerarDoContratoSeFaltar() {
   GERANDO = false;
 }
 
-function cabecalho() {
+function abasProjeto() {
   const p = F.registro;
   const s = sub();
-  const clientes = [p.cliente_nome, ...F.coclientes.map(c => c.nome)].filter(Boolean);
   const nAlt = ESC.E ? ESC.E.alteracoes.filter(a => !(['duracao', 'mover'].includes(a.tipo) && !a.dias) && a.tipo !== 'inicio').length : 0;
   return `<div class="abas-caixa-linha"><span class="u-rotulo">Projeto</span><nav class="abas-caixa" aria-label="Subpáginas do projeto">
       <a href="#${p.id}" class="${s === 'ficha' ? 'ativa' : ''}">Ficha</a>
       <a href="#${p.id}/escopo" class="${s === 'pgt' ? 'ativa' : ''}">Escopo</a>
-      <a href="#${p.id}/alteracoes" class="${s === 'alteracoes' ? 'ativa' : ''}">Alterações de escopo${nAlt ? ` <span class="esc-n">${nAlt}</span>` : ''}</a></nav></div>
+      <a href="#${p.id}/alteracoes" class="${s === 'alteracoes' ? 'ativa' : ''}">Alterações de escopo${nAlt ? ` <span class="esc-n">${nAlt}</span>` : ''}</a></nav></div>`;
+}
+function cabecalho() {
+  const p = F.registro;
+  const clientes = [p.cliente_nome, ...F.coclientes.map(c => c.nome)].filter(Boolean);
+  return `${abasProjeto()}
     <nav class="u-trilha" aria-label="Caminho"><a href="index.html">Projetos</a><span class="sep">/</span><span aria-current="page">${escHtml(p.codigo)}</span></nav>
     <div class="ficha__cab esc-cab">
       <div>
@@ -109,7 +113,10 @@ function cabecalho() {
 
 function desenhar() {
   const s = sub();
+  document.body.classList.toggle('esc-tela', s === 'pgt');
+  if (s !== 'pgt') document.body.classList.remove('esc-cabe');
   if (s === 'ficha') { desenharFicha(); escDesenharSelecao(); return; }
+  if (s === 'pgt') { raiz.innerHTML = abasProjeto() + `<div id="esc-corpo"></div><div id="aviso"></div>`; desenharEscopo(); return; }
   raiz.innerHTML = cabecalho() + `<div id="esc-corpo"></div>`;
   ligarCabecalho();
   desenharEscopo();
@@ -136,22 +143,27 @@ function desenharEscopo() {
   const susp = (ESC.E.projeto.suspensoes || []).find(x => !x.ate);
   const linha = ESC.modo !== 'cartoes';
   const chave = (id, on, rot, dica) => `<button type="button" class="u-botao ln-chave" id="${id}" aria-pressed="${on}" title="${dica}">${rot}</button>`;
-  corpo.innerHTML = `<div class="pg-filtros esc-filtros">
+  const pr = F.registro;
+  const sep = '<span class="esc-banda__sep" aria-hidden="true"></span>';
+  corpo.innerHTML = `<div class="esc-banda">
+      <div class="esc-banda__tit"><a class="esc-banda__trilha" href="index.html">Projetos /</a><b title="${escHtml(pr.codigo + ' · ' + pr.nome)}">${escHtml(pr.codigo)} · ${escHtml(pr.nome)}</b></div>
+      ${pr.servico ? `<span class="pg-etq">${escHtml(pr.servico)}</span>` : ''}${susp ? `<span class="pg-etq atencao">suspenso desde ${escDiaFmt(susp.de)}</span>` : ''}${sep}
       <span class="pg-seletor" role="radiogroup" aria-label="Como ver">
         <button type="button" role="radio" data-modo="linha" aria-checked="${linha}">Linha</button>
         <button type="button" role="radio" data-modo="cartoes" aria-checked="${!linha}">Cartões</button></span>
       ${linha ? `${LinhaNos.seletorModo(L)}
-        ${chave('esc-cli', L.cliente, 'Ver como cliente', 'Esconde a camada do estúdio')}
+        ${chave('esc-cli', L.cliente, 'Como cliente', 'Esconde a camada do estúdio')}
         ${chave('esc-nc', L.naoContratados, 'Não contratados', 'Mostra, tracejados, os cartões do PGT que ficaram fora do escopo; um clique acrescenta (potencial aditivo)')}
-        <button type="button" class="u-botao" id="esc-rec">${L.recolhidas.size ? 'Abrir tudo' : 'Recolher etapas'}</button>` : ''}
-      <label class="esc-inicio">Começa em <input type="date" id="esc-inicio" value="${ESC.E.projeto.escopo_inicio || ''}"></label>
+        <button type="button" class="u-botao" id="esc-rec">${L.recolhidas.size ? 'Abrir tudo' : 'Recolher'}</button>` : ''}
       <span class="pg-empurra"></span>
-      ${X.fimBase ? `<span class="esc-fim"><span class="u-rotulo">Fim contratado</span><b>${escDMA(X.fimBase)}</b></span>` : ''}
-      <span class="esc-fim"><span class="u-rotulo">Fim previsto</span><b class="${X.difFim > 0 ? 'atraso' : ''}">${escDMA(X.fimPrev)}</b>${X.difFim ? `<span class="pg-etq ${X.difFim > 0 ? 'atencao' : 'ok'}">${X.difFim > 0 ? '+' : ''}${X.difFim}d</span>` : ''}</span>
-      ${susp ? `<span class="pg-etq atencao">suspenso desde ${escDiaFmt(susp.de)}</span>` : ''}
-      <button type="button" class="u-botao" id="esc-hoje">Ir para hoje</button>
+      <label class="esc-inicio">Início <input type="date" id="esc-inicio" value="${ESC.E.projeto.escopo_inicio || ''}"></label>${sep}
+      ${X.fimBase ? `<span class="esc-fim">Contratado <b>${escDMA(X.fimBase)}</b></span>` : ''}
+      <span class="esc-fim">Previsto <b class="${X.difFim > 0 ? 'atraso' : ''}">${escDMA(X.fimPrev)}</b>${X.difFim ? `<span class="pg-etq ${X.difFim > 0 ? 'atencao' : 'ok'}">${X.difFim > 0 ? '+' : ''}${X.difFim}d</span>` : ''}</span>${sep}
+      <button type="button" class="u-botao" id="esc-hoje">Hoje</button>
+      <select id="sit-projeto" aria-label="Situação do projeto">${opcoes(SITUACOES_PROJETO, pr.situacao)}</select>
     </div>
     <div id="esc-vista"></div>`;
+  ligarCabecalho();
   corpo.querySelectorAll('[data-modo]').forEach(b => b.onclick = () => { ESC.modo = b.dataset.modo; try { localStorage.setItem('esc:modo', ESC.modo); } catch (_) {} desenharEscopo(); escDesenharSelecao(); });
   corpo.querySelector('#esc-inicio').onchange = (ev) => { if (ev.target.value) escAcao({ acao: 'inicio', dia: ev.target.value }); };
   if (linha) {
@@ -168,7 +180,7 @@ function desenharEscopo() {
     document.querySelector('.esc-linha.hoje')?.scrollIntoView({ block: 'center' });
   };
   const vista = corpo.querySelector('#esc-vista');
-  if (ESC.modo === 'cartoes') escDesenharCartoes(vista, ESC.E); else escDesenharLinha(vista, ESC.E);
+  if (ESC.modo === 'cartoes') { document.body.classList.remove('esc-cabe'); escDesenharCartoes(vista, ESC.E); } else escDesenharLinha(vista, ESC.E);
   escDesenharSelecao();
 }
 
