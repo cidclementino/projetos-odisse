@@ -579,8 +579,9 @@ function escPainelAtualizar() {
       <p class="pg-apoio escm-dica">O resultado que libera uma rodada a põe no escopo como extra previsto. Clicar de novo no resultado escolhido desfaz.</p>`) : '';
   const listaMats = !P && ESC.pgtCarregando ? '<p class="pg-apoio">Lendo os materiais do PGT…</p>'
     : mats.length ? `<div class="escm-mats">${mats.map((m) => `<div class="escm-mat${m.id === ESC_P.mat ? ' is-on' : ''}">
-        <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml(m.nome)}</b><small>${escHtml(m.tipo || 'material')}${m.alvo_id === et.origem_id && !etapa ? ' · da etapa' : ''}</small></span>
-        ${m.link ? `<button type="button" class="u-botao" data-ler="${m.id}">${m.id === ESC_P.mat ? 'Fechar' : 'Ler aqui'}</button><a class="pg-caixa" href="${escHtml(m.link)}" target="_blank" rel="noopener" aria-label="Abrir em nova aba" title="Abrir em nova aba">${ESC_IC.fora}</a>` : '<span class="pg-apoio">sem link</span>'}</div>`).join('')}</div>`
+        <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml((m.modelo_id && (P.modelos || []).find((x) => x.id === m.modelo_id)?.nome) || m.nome)}</b><small>${escHtml(m.tipo || 'material')}${m.modelo_id ? ' · padrão do PGT' : ''}${m.alvo_id === et.origem_id && !etapa ? ' · da etapa' : ''}</small></span>
+        ${m.link ? `<button type="button" class="u-botao" data-ler="${m.id}">${m.id === ESC_P.mat ? 'Fechar' : 'Ler aqui'}</button><a class="pg-caixa" href="${escHtml(m.link)}" target="_blank" rel="noopener" aria-label="Abrir em nova aba" title="Abrir em nova aba">${ESC_IC.fora}</a>`
+          : m.modelo_id ? `<a class="u-botao" href="pgt.html#materiais/${m.modelo_id}" target="_blank" rel="noopener">Ver o padrão</a>` : '<span class="pg-apoio">sem link</span>'}</div>`).join('')}</div>`
       : `<p class="pg-apoio">${c.origem_id ? 'Este cartão não tem materiais no PGT.' : 'Cartão acrescentado: sem materiais do PGT.'}</p>`;
   const alts = E.alteracoes.filter((a) => a.cartao_id === c.id && !(['duracao', 'mover'].includes(a.tipo) && !a.dias));
   const listaAlts = alts.length ? `<div class="escm-alts">${alts.map((a) => {

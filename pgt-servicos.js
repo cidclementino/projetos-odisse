@@ -33,6 +33,8 @@ function lerRota() {
   if ((a === 'servico' || a === 'servicos') && b) return { aba: 'servicos', abrir: b };
   // endereços antigos da página (abas plano/linha/materiais) e das Bases
   if (a === 'plano' || a === 'linha') return { aba: 'fluxo' };
+  // 20/11: o editor de um padrão de material é a subpágina da aba Materiais
+  if (a === 'materiais' && b) return { aba: 'materiais', padrao: b };
   return { aba: ABAS[a] ? a : 'servicos' };
 }
 function irPara(hash, { cartoes = false } = {}) {
@@ -628,7 +630,7 @@ function desenharNotas() {
     fluxo: [['Plano do fluxo', 'Fases encadeadas: prazos em sequência e parcelas ao concluir cada fase. Só aparecem os serviços em fluxo. A Linha mostra o mesmo plano no tempo.'],
       ['Correr junto', 'O símbolo de uma entrega a liga à de cima. A primeira do grupo fica no tom forte; as ligadas abaixo, no tom sutil. No prazo da etapa conta a mais longa do grupo.']],
     ilhas: [['Plano das ilhas', 'Serviços avulsos, contratados à parte, fora do encadeamento e das parcelas. Cada ilha tem as próprias etapas e cartões; o que se cria numa ilha já nasce marcado para ela.']],
-    materiais: [['Materiais', 'Modelos, formulários, checklists e referências de uso interno, ligados a uma etapa, a uma entrega ou a um evento. Por enquanto, por link; o envio de arquivos e a criação de formulários vêm depois. Os filtros de cima também valem aqui.']],
+    materiais: [['Padrões', 'Formulários, checklists e modelos de documento feitos aqui, na folha da Marca. Um padrão se liga a quantas etapas, entregas e eventos for preciso, de qualquer fase e serviço; mudou o padrão, muda em todos. Nos projetos vale a versão publicada do PGT.'], ['Materiais com link', 'Arquivos do Drive, documentos e referências ligados a um cartão por link. Os filtros de cima valem para esta lista.']],
   };
   const lista = N[ROTA.aba] || [];
   el.innerHTML = lista.length ? `<section class="pg-secao pg-notas">${lista.map(([t, p]) => `<div><h3 class="u-rotulo">${t}</h3><p>${p}</p></div>`).join('')}</section>` : '';

@@ -9,7 +9,7 @@
 // rota da API de cada tipo de registro (pelo prefixo do id)
 const ROTA_DE = {
   srv: 'bases-servicos', tca: 'bases-categorias', tus: 'bases-usos',
-  pfa: 'pgt-fases', pet: 'pgt-etapas', pen: 'pgt-entregaveis', pma: 'pgt-materiais'
+  pfa: 'pgt-fases', pet: 'pgt-etapas', pen: 'pgt-entregaveis', pev: 'pgt-eventos', pma: 'pgt-materiais', pmo: 'pgt-modelos'
 };
 const rotaDe = (id) => ROTA_DE[String(id).slice(0, 3)];
 

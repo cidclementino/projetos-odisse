@@ -13,6 +13,8 @@
 <link rel="stylesheet" href="projetos.css?v=20261120a">
 <link rel="stylesheet" href="pgt-linha.css?v=20261120d">
 <link rel="stylesheet" href="pgt-servicos.css?v=20261120b">
+<link rel="stylesheet" href="https://marca.odisse.com.br/v1/documentos/documentos.css">
+<link rel="stylesheet" href="pgt-materiais.css?v=20261120a">
 </head>
 <body>
 
@@ -76,10 +78,11 @@
 <script src="auth.js"></script>
 <script>exigirAutenticacao();</script>
 <script src="base.js"></script>
-<script src="gestao.js"></script>
+<script src="gestao.js?v=20261120a"></script>
 <script src="linha-nos.js?v=20261120d"></script>
+<script src="pgt-materiais.js?v=20261120a"></script>
 <script src="pgt-linha.js?v=20261120b"></script>
-<script src="pgt-servicos.js?v=20261120b"></script>
+<script src="pgt-servicos.js?v=20261120c"></script>
 <script>
 // ==========================================================================
 // Plano Geral de Trabalho — uma interface única (passo 3e) com eventos (passo 3f, migração 0008).
@@ -370,7 +373,7 @@ function desenhar() {
   montarFiltroAlvo();
   desenharMateriais();
   desenharLinha();
-  desenharArquivados(document.getElementById('arquivados'), D.arquivados, { etapa: 'Etapa', entregavel: 'Entrega', evento: 'Evento', material: 'Material' }, recarregar);
+  desenharArquivados(document.getElementById('arquivados'), D.arquivados, { etapa: 'Etapa', entregavel: 'Entrega', evento: 'Evento', material: 'Material', padrao: 'Padrão' }, recarregar);
 }
 
 // ================================================================ plano: estados › fases › etapas › entregas e eventos › materiais
@@ -784,12 +787,15 @@ function blocoMateriais(alvo, titulo, arrasta) {
       <div class="linha grade">
         <div class="ctl">${arrasta ? `<button type="button" class="alca" data-alca="${m.id}" title="Arrastar" aria-label="Mover" ${trv ? 'disabled' : ''}>⋮⋮</button>` : '<span class="ctl__vazio"></span>'}</div>
         <div><span class="chip">${escHtml(nomeDe(TIPOS_MAT, m.tipo))}</span></div>
-        <div class="mat__nome">${m.link ? `<a href="${escHtml(m.link)}" target="_blank" rel="noopener">${escHtml(m.nome)}</a>` : escHtml(m.nome)}</div>
+        <div class="mat__nome">${m.modelo_id ? `<a href="#materiais/${m.modelo_id}">${escHtml(mtModelo(m.modelo_id)?.nome || m.nome)}</a> <span class="chip">padrão</span>`
+          : m.link ? `<a href="${escHtml(m.link)}" target="_blank" rel="noopener">${escHtml(m.nome)}</a>` : escHtml(m.nome)}</div>
         <div class="mat__tirar">${trv ? '' : `<button type="button" class="btn-link" data-tirar-mat="${m.id}">tirar</button>`}</div>
       </div></div>`).join('')}</div>
     ${trv ? '' : `<div class="mat-novo" data-alvo="${alvo}">
       <select aria-label="Tipo">${opcoes(TIPOS_MAT, 'checklist')}</select><input type="text" placeholder="Nome do material" aria-label="Nome do material">
-      <input type="url" placeholder="https:// (opcional)" aria-label="Link"><button type="button" class="btn btn--ghost btn--small">+ material</button></div>`}`;
+      <input type="url" placeholder="https:// (opcional)" aria-label="Link"><button type="button" class="btn btn--ghost btn--small">+ material</button></div>
+      ${mtModelos().some((x) => !ms.some((m) => m.modelo_id === x.id)) ? `<div class="mat-padrao" data-alvo="${alvo}"><select aria-label="Ligar um padrão"><option value="">Ligar um padrão…</option>
+        ${mtModelos().filter((x) => !ms.some((m) => m.modelo_id === x.id)).map((x) => `<option value="${x.id}">${escHtml(x.nome)}</option>`).join('')}</select></div>` : ''}`}`;
 }
 
 // "+ Nova etapa" / "+ Nova entrega" / "+ Novo evento": vira um campo ali mesmo e cria na hora
@@ -933,6 +939,12 @@ function ligarPlano(el) {
     b.disabled = true;
     try { await arquivarRegistro(registroEm(D0, b.dataset.tirarMat)); await recarregar(); } catch (err) { aviso(mensagemDe(err)); b.disabled = false; }
   });
+  el.querySelectorAll('.mat-padrao select').forEach((sel) => sel.onchange = async () => {
+    const x = mtModelo(sel.value); if (!x) return;
+    sel.disabled = true;
+    try { await Universo.criar('pgt-materiais', { alvo_id: sel.closest('.mat-padrao').dataset.alvo, modelo_id: x.id, tipo: x.tipo, nome: x.nome }); await recarregar(); }
+    catch (err) { aviso(mensagemDe(err)); sel.disabled = false; }
+  });
   el.querySelectorAll('.mat-novo').forEach((box) => {
     const [tipo, nome, link] = box.querySelectorAll('select, input');
     const enviar = async () => {
@@ -1066,31 +1078,7 @@ function irAoCartao(id) {
   const c = document.querySelector(x?.encerramento ? `[data-card-enc="${x.etapa_id}"]` : `[data-card="${id}"]`);
   if (c) { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.classList.add('destaque'); setTimeout(() => c.classList.remove('destaque'), 1600); }
 }
-function desenharMateriais() {
-  const el = document.getElementById('materiais');
-  const alvo = document.getElementById('f-alvo').value;
-  const f = filtro();
-  const casa = (m) => {
-    const passo = entDe(m.alvo_id) || evtDe(m.alvo_id);
-    const eta = passo ? etapaDe(passo.etapa_id) : etapaDe(m.alvo_id);
-    if (!eta) return false;
-    return (!f.eta || eta.id === f.eta) && (!f.srv || f.todos || (passo ? passo.servicos[f.srv] : eta.servicos[f.srv]))
-      && (!f.q || semAcento(m.nome + ' ' + alvoNome(m.alvo_id)).includes(f.q));
-  };
-  const lista = (alvo ? materiaisDe(alvo) : D.materiais).filter(casa);
-  if (!lista.length) {
-    el.innerHTML = `<div class="vazio"><p>${alvo ? `Nenhum material ligado a ${escHtml(alvoNome(alvo))}.` : D.materiais.length ? 'Nenhum material com esses filtros.'
-      : 'Nenhum material ainda. Acrescente abrindo uma entrega, um evento ou uma etapa no Plano do fluxo ou no Plano das ilhas.'}</p>
-      ${alvo ? '<button type="button" class="btn btn--ghost btn--small" id="mat-ir">Acrescentar material</button>' : ''}</div>`;
-    const b = el.querySelector('#mat-ir'); if (b) b.onclick = () => irAoCartao(alvo);
-    return;
-  }
-  el.innerHTML = `<table class="tabela"><thead><tr><th>Tipo</th><th>Material</th><th>Ligado a</th></tr></thead><tbody>
-    ${lista.map((m) => `<tr><td><span class="chip">${escHtml(nomeDe(TIPOS_MAT, m.tipo))}</span></td>
-      <td>${m.link ? `<a href="${escHtml(m.link)}" target="_blank" rel="noopener">${escHtml(m.nome)}</a>` : escHtml(m.nome)}</td>
-      <td class="small"><a href="#" data-alvo="${m.alvo_id}">${escHtml(alvoNome(m.alvo_id))}</a></td></tr>`).join('')}</tbody></table>`;
-  el.querySelectorAll('[data-alvo]').forEach((a) => a.onclick = (ev) => { ev.preventDefault(); irAoCartao(a.dataset.alvo); });
-}
+// desenharMateriais (padrões e materiais com link): pgt-materiais.js
 
 // ---------------------------------------------------------------- legenda, filtros, abas
 const exPert = (p) => celulaPert(p, 'exemplo', 'tabindex="-1" aria-hidden="true"');
