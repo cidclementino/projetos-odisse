@@ -85,7 +85,7 @@ function escMontar(P, B, cfg) {
       const d = diasDe(x);
       etapaCartoes.push({ ref: x.id, tipo: ehEntP(x) ? 'entrega' : 'evento', etapa_ref: e.id, origem_id: x.id, codigo: x.codigo, texto: x.texto || x.nome,
         fase_id: e.fase_id, fase_nome: fa.nome || '', evento_tipo: x.tipo || null, tempo: ehEntP(x) ? null : (x.tempo || 'estudio'),
-        cliente: !!x.cliente, terceiros: !!x.terceiros, junto_anterior: ehEntP(x) && !!x.junto_anterior, dias: d.dias, sem_prazo: !!d.sem,
+        cliente: !!x.cliente, terceiros: !!x.terceiros, junto_anterior: ehEntP(x) && !!x.junto_anterior && etapaCartoes[etapaCartoes.length - 1]?.tipo === 'entrega', dias: d.dias, sem_prazo: !!d.sem,
         decisao: x.decisao || null, liberado_por_ref: lib || null });
     }
     // prazo personalizado da etapa (proposta ou "Gerar escopo"): as entregas e os eventos do estúdio se ajustam na proporção
@@ -112,8 +112,8 @@ function escDuracaoDaSequencia(lista, soma = false) {
   if (soma) return lista.reduce((t, c) => t + c.dias, 0);
   let t = 0, grupo = 0;
   for (const c of lista) {
-    if (c.tipo === 'entrega' && c.junto_anterior && grupo) { const g = Math.max(grupo, c.dias); t += g - grupo; grupo = g; }
-    else { t += c.dias; grupo = c.tipo === 'entrega' ? c.dias : 0; }
+    if (c.junto_anterior && grupo) { const g = Math.max(grupo, c.dias); t += g - grupo; grupo = g; }
+    else { t += c.dias; grupo = c.dias; }
   }
   return t;
 }
@@ -145,14 +145,14 @@ function escCalendario(E) {
     const doEtapa = [];
     for (const c of filhos) {
       if (!ativo(c)) continue;
-      const base = c.tipo === 'entrega' && c.junto_anterior && grupo ? grupo.ini : cursor;
+      const base = c.junto_anterior && grupo ? grupo.ini : cursor;     // 0028: eventos também correm juntos
       const ini = c.folga > 0 ? somar(base, c.folga) : c.folga < 0 ? voltar(base, -c.folga) : base;
       if (c.folga > 0) hiatos.push({ antes: c, ini: base, fim: ini, dias: c.folga });
       const fim = somar(ini, c.dias);
       const it = { c, ini, fim, estado: fim <= hoje ? 'feito' : ini <= hoje ? 'hoje' : 'adiante' };
       itens.push(it); doEtapa.push(it);
-      if (c.tipo === 'entrega' && c.junto_anterior && grupo) { grupo.fim = Math.max(grupo.fim, fim); cursor = grupo.fim; }
-      else { cursor = fim; grupo = c.tipo === 'entrega' ? { ini, fim } : null; }
+      if (c.junto_anterior && grupo) { grupo.fim = Math.max(grupo.fim, fim); cursor = grupo.fim; }
+      else { cursor = fim; grupo = { ini, fim }; }
     }
     if (doEtapa.length && !et.suprimido_em) etapas.push({ c: et, ini: Math.min(...doEtapa.map((x) => x.ini)), fim: Math.max(...doEtapa.map((x) => x.fim)) });
   }
@@ -319,8 +319,8 @@ function escLinhaDados(E) {
       cls: [`is-${it.estado === 'hoje' ? 'hoje' : it.estado}`, atraso ? 'is-atrasado' : '', empurrado ? 'is-empurrado' : '', c.adicionado ? 'is-acrescentado' : '', c.encerramento ? 'ln-no--enc' : '', c.decisao && c.decisao.length ? 'ln-no--dec' : ''].filter(Boolean).join(' '),
       titulo: `${c.codigo || ''} ${c.texto}\n${escDMA(it.ini)} a ${escDMA(M.ultimoDia(it.fim))} · ${c.dias} dia(s) útil(eis)${c.dias_contratados ? ` · contratado: ${c.dias_contratados}` : ''}` });
     // passos: entregas que correm juntas formam um passo só
-    if (c.tipo === 'entrega' && c.junto_anterior && grupo && grupo.etapa === c.etapa_id && c.folga === 0) grupo.ids.push(c.id);
-    else { grupo = c.tipo === 'entrega' ? { etapa: c.etapa_id, ids: [c.id] } : null; passos.push(grupo ? grupo.ids : [c.id]); }
+    if (c.junto_anterior && grupo && grupo.etapa === c.etapa_id && c.folga === 0) grupo.ids.push(c.id);
+    else { grupo = { etapa: c.etapa_id, ids: [c.id] }; passos.push(grupo.ids); }
   }
   // decisões: os cartões que um resultado ainda pode liberar aparecem tracejados depois da decisão
   const gatilhos = [];
@@ -420,7 +420,65 @@ async function escAcrescentarDoPgt(origemId) {
     evento_tipo: f.ent ? null : f.x.tipo || null, sem_prazo: f.ent && !f.x.prazo_turnos });
 }
 
-// barra de seleção (vários cartões): duração de cada um, adiar ou adiantar o bloco (move o primeiro; os outros seguem), suprimir
+// ---------------------------------------------------------------- andamento (0028): ao mesmo tempo ou em sequência
+// O mesmo plano do Universo (worker/dados/escopo.js › planejarAndamento): com buracos na seleção, os selecionados passam
+// à frente dos do meio (reorganiza a pilha) e os códigos da etapa acompanham a nova ordem.
+const ESC_RX_ENT = /^(.+)-(\d+)$/, ESC_RX_EVT = /^(.+)-M(\d+)$/;
+function escPlanejarAndamento(filhos, ids, modo) {
+  const lista = [...filhos].sort((a, b) => a.ordem - b.ordem);
+  const sel = lista.filter((c) => ids.includes(c.id));
+  const mud = new Map();
+  const por = (c, k, v) => { if (c[k] !== v) { const m = mud.get(c.id) || {}; m[k] = v; mud.set(c.id, m); } };
+  if (modo === 'sequencia') {
+    for (const c of sel) { por(c, 'junto_anterior', 0); if (c.folga < 0) por(c, 'folga', 0); }
+    return mud;
+  }
+  const [prim, ...resto] = sel;
+  const nova = lista.filter((c) => !resto.includes(c));
+  nova.splice(nova.indexOf(prim) + 1, 0, ...resto);
+  const ordens = lista.map((c) => c.ordem);
+  nova.forEach((c, i) => por(c, 'ordem', ordens[i]));
+  for (const c of resto) { por(c, 'junto_anterior', 1); por(c, 'folga', 0); }
+  for (const rx of [ESC_RX_EVT, ESC_RX_ENT]) {
+    const doGrupo = (c) => c.codigo && rx.test(c.codigo) && (rx === ESC_RX_EVT || !ESC_RX_EVT.test(c.codigo));
+    const nums = lista.filter(doGrupo).map((c) => c.codigo).sort((a, b) => Number(a.match(rx)[2]) - Number(b.match(rx)[2]));
+    nova.filter(doGrupo).forEach((c, i) => por(c, 'codigo', nums[i]));
+  }
+  return mud;
+}
+function escAplicarAndamento(E, ids, modo) {
+  const sel = E.cartoes.filter((c) => ids.includes(c.id));
+  if (!sel.length) return;
+  const filhos = E.cartoes.filter((c) => c.etapa_id === sel[0].etapa_id);
+  for (const [id, campos] of escPlanejarAndamento(filhos, ids, modo)) Object.assign(E.cartoes.find((c) => c.id === id), campos);
+  E.cartoes.sort((a, b) => a.ordem - b.ordem);
+}
+// o que a seleção permite e como ela está: { ids, motivo (por que não dá), modo atual, efeito de cada opção }
+function escAndamentoDaSelecao(ids) {
+  const E = ESC.E;
+  const cand = ids.map(escCartao).filter((c) => c && c.tipo !== 'etapa' && !c.encerramento && !c.suprimido_em).sort((a, b) => a.ordem - b.ordem);
+  if (!cand.length) return { motivo: 'Escolha entregas ou eventos (sem a etapa e o Encerramento).' };
+  if (new Set(cand.map((c) => c.etapa_id)).size > 1) return { motivo: 'Escolha cartões de uma etapa só.' };
+  const filhos = E.cartoes.filter((c) => c.etapa_id === cand[0].etapa_id && !c.suprimido_em);
+  const pos = cand.map((c) => filhos.indexOf(c));
+  const seguidos = pos.every((p, i) => !i || p === pos[i - 1] + 1);
+  const juntos = cand.length > 1 && seguidos && cand.slice(1).every((c) => c.junto_anterior && !c.folga);
+  const sequencia = cand.every((c) => !c.junto_anterior && c.folga >= 0);
+  const efeito = (modo) => {
+    if (modo === 'juntos' && cand.length < 2) return null;
+    const r = escSimular(E, (C) => escAplicarAndamento(C, cand.map((c) => c.id), modo));
+    const M = escCalendario(E);
+    const dias = r.fimDepois > r.fimAntes ? escUteis(r.fimAntes, r.fimDepois, M.util) : -escUteis(r.fimDepois, r.fimAntes, M.util);
+    return { ...r, dias };
+  };
+  return { ids: cand.map((c) => c.id), modo: juntos ? 'juntos' : sequencia ? 'sequencia' : null, efeito };
+}
+function escAndamento(ids, modo, dias) {
+  escAcao({ acao: 'andamento', cartoes: ids, modo, dias }, (E) => escAplicarAndamento(E, ids, modo));
+}
+
+// barra de seleção (vários cartões): duração de cada um, andamento (ao mesmo tempo ou em sequência), adiar ou adiantar
+// o bloco (move o primeiro; os outros seguem), suprimir
 function escDesenharSelecao() {
   let bar = document.getElementById('esc-selbar');
   const L = ESC.linha;
@@ -428,10 +486,29 @@ function escDesenharSelecao() {
   if (!bar) { bar = document.createElement('div'); bar.id = 'esc-selbar'; bar.className = 'esc-selbar'; document.body.appendChild(bar); }
   bar.hidden = !ids.length || !document.querySelector('#esc-vista .lnn');
   if (bar.hidden) return;
+  const A = escAndamentoDaSelecao(ids);
+  const opcao = (modo, rot) => {
+    if (A.motivo) return `<button type="button" role="radio" aria-checked="false" disabled title="${escHtml(A.motivo)}">${rot}</button>`;
+    const ef = A.modo === modo ? null : A.efeito(modo);
+    const pode = A.modo === modo || ef;
+    const tit = !pode ? 'Escolha ao menos dois cartões' : A.modo === modo ? 'É como estão agora'
+      : `${ef.fimAntes === ef.fimDepois ? `O fim previsto continua em ${escDMA(ef.fimAntes)}` : `O fim previsto passa de ${escDMA(ef.fimAntes)} para ${escDMA(ef.fimDepois)}`}${modo === 'juntos' ? '. Os de fora da seleção que estão no meio vão para depois.' : ''}`;
+    return `<button type="button" role="radio" aria-checked="${A.modo === modo}" data-and="${modo}" ${pode ? '' : 'disabled'} title="${escHtml(tit)}">${rot}</button>`;
+  };
+  const efJ = !A.motivo && A.modo !== 'juntos' ? A.efeito('juntos') : null;
+  const dica = A.motivo ? A.motivo : efJ && efJ.dias ? `juntos: fim em ${escDM(efJ.fimDepois)} (${efJ.dias > 0 ? '+' : '−'}${Math.abs(efJ.dias)} d)` : '';
   bar.innerHTML = `<strong>${plural(ids.length, 'cartão selecionado', 'cartões selecionados')}</strong>
     <span class="esc-selbar__g">Duração de cada um <button type="button" class="u-botao" data-sb="dur|-1">− 1 dia</button><button type="button" class="u-botao" data-sb="dur|1">+ 1 dia</button></span>
+    <span class="esc-selbar__g">Andamento <span class="pg-seletor" role="radiogroup" aria-label="Andamento">${opcao('juntos', 'Ao mesmo tempo')}${opcao('sequencia', 'Em sequência')}</span>${dica ? `<small class="esc-selbar__dica">${escHtml(dica)}</small>` : ''}</span>
     <span class="esc-selbar__g">O bloco <button type="button" class="u-botao" data-sb="mov|-1">Adiantar 1 dia</button><button type="button" class="u-botao" data-sb="mov|1">Adiar 1 dia</button></span>
     <span class="esc-selbar__g"><button type="button" class="u-botao" data-sb="sup|0">Suprimir</button><button type="button" class="u-botao" data-sb="limpar|0">Limpar (Esc)</button></span>`;
+  bar.querySelectorAll('[data-and]').forEach((b) => b.onclick = () => {
+    const modo = b.dataset.and;
+    if (A.motivo || A.modo === modo) return;
+    const ef = A.efeito(modo);
+    escAndamento(A.ids, modo, ef ? ef.dias : null);
+    escDesenharSelecao(); reabrirDepois(escDesenharSelecao);
+  });
   bar.querySelectorAll('[data-sb]').forEach((b) => b.onclick = async () => {
     const [a, d] = b.dataset.sb.split('|');
     if (a === 'limpar') { L.selecao.clear(); ESC.aoMudar && ESC.aoMudar(); escDesenharSelecao(); return; }
@@ -495,7 +572,59 @@ function escDesenharCartoes(el, E) {
 //   Blocos: Datas (começa em, termina em, duração, hiato ou paralelo; a data nova mostra antes quanto empurra),
 //   Decisão, Materiais (do PGT; o que tem link abre ao lado, para ler sem sair), Observações e as Alterações deste
 //   cartão (com o motivo). No pé: suprimir/restaurar e acrescentar depois deste. Etapa: só o que cabe a ela.
-const ESC_P = { id: null, mat: null, previa: null };
+const ESC_P = { id: null, mat: null, previa: null, matModo: null, busca: '' };
+// ---------------------------------------------------------------- materiais do cartão (0028)
+//   Os do PGT publicado ligados ao cartão (ou à etapa dele) vêm sozinhos; o cartão guarda { mais, menos }: os que se
+//   acrescentaram do banco de materiais do PGT e os do PGT que se tiraram. O cartão aponta para o banco (link vivo).
+const ESC_TIPOS_MAT = [['modelo', 'Modelo'], ['formulario', 'Formulário'], ['checklist', 'Checklist'], ['referencia', 'Referência']];
+const escNormal = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const escTipoMat = (t) => (ESC_TIPOS_MAT.find((x) => x[0] === t) || [t, t || 'material'])[1];
+function escCarregarBanco(forcar) {
+  if ((ESC.banco && !forcar) || ESC.bancoCarregando) return ESC.bancoCarregando || Promise.resolve();
+  ESC.bancoCarregando = Universo.get('escopo/materiais').then((b) => { ESC.banco = b; })
+    .catch(() => { /* fica sem o banco: só os do PGT publicado */ })
+    .finally(() => { ESC.bancoCarregando = null; escPainelAtualizar(); });
+  return ESC.bancoCarregando;
+}
+// a lista do cartão: [{ id, nome, tipo, link, modelo_id, origem: 'pgt' | 'etapa' | 'projeto' }]
+function escMateriaisDoCartao(c, P) {
+  const et = c.tipo === 'etapa' ? c : escCartao(c.etapa_id) || {};
+  const cm = c.materiais || { mais: [], menos: [] };
+  const banco = ESC.banco || { materiais: [], modelos: [] };
+  const viva = (m) => banco.materiais.find((x) => x.id === m.id) || m;
+  const nomeModelo = (id) => banco.modelos.find((x) => x.id === id)?.nome || (P && (P.modelos || []).find((x) => x.id === id)?.nome);
+  const base = P ? (P.materiais || []).filter((m) => m.alvo_id && (m.alvo_id === c.origem_id || (c.tipo !== 'etapa' && m.alvo_id === et.origem_id))) : [];
+  const lista = base.filter((m) => !cm.menos.includes(m.id)).map((m) => { const v = viva(m);
+    return { ...v, nome: (v.modelo_id && nomeModelo(v.modelo_id)) || v.nome, origem: m.alvo_id === et.origem_id && c.tipo !== 'etapa' ? 'etapa' : 'pgt' }; });
+  for (const id of cm.mais) {
+    if (lista.some((x) => x.id === id)) continue;
+    if (/^pmo_/.test(id)) { const o = banco.modelos.find((x) => x.id === id); if (o) lista.push({ id, nome: o.nome, tipo: o.tipo, modelo_id: id, origem: 'projeto' }); continue; }
+    const m = banco.materiais.find((x) => x.id === id);
+    if (m) lista.push({ ...m, nome: (m.modelo_id && nomeModelo(m.modelo_id)) || m.nome, origem: 'projeto' });
+  }
+  return lista;
+}
+// onde um material do banco está ligado no PGT (código da entrega/evento ou sigla da etapa), para a busca
+function escOndeNoPgt(alvo, P) {
+  if (!P || !alvo) return '';
+  const x = (P.entregaveis || []).find((e) => e.id === alvo) || (P.eventos || []).find((e) => e.id === alvo);
+  if (x) return x.codigo || '';
+  const e = (P.etapas || []).find((y) => y.id === alvo);
+  return e ? e.sigla : '';
+}
+function escCandidatosDoBanco(c, P, jaTem) {
+  const banco = ESC.banco || { materiais: [], modelos: [] };
+  const et = c.tipo === 'etapa' ? c : escCartao(c.etapa_id) || {};
+  const daEtapa = new Set([et.origem_id, ...(P ? [...(P.entregaveis || []), ...(P.eventos || [])].filter((x) => x.etapa_id === et.origem_id).map((x) => x.id) : [])]);
+  const tem = new Set(jaTem.flatMap((m) => [m.id, m.modelo_id].filter(Boolean)));
+  const lista = [];
+  for (const o of banco.modelos) if (!tem.has(o.id)) lista.push({ id: o.id, nome: o.nome, tipo: o.tipo, onde: 'padrão do PGT', peso: 1 });
+  for (const m of banco.materiais) {
+    if (m.modelo_id || tem.has(m.id)) continue;      // ligação de um padrão: entra pelo padrão
+    lista.push({ id: m.id, nome: m.nome, tipo: m.tipo, onde: escOndeNoPgt(m.alvo_id, P), peso: daEtapa.has(m.alvo_id) ? 0 : 2 });
+  }
+  return lista.sort((a, b) => a.peso - b.peso || a.nome.localeCompare(b.nome, 'pt'));
+}
 function escLeitura(url) {
   try {
     const u = new URL(url);
@@ -509,7 +638,8 @@ function escLeitura(url) {
 }
 function escAbrirCartao(id) {
   if (!escCartao(id)) return;
-  ESC_P.id = id; ESC_P.mat = null; ESC_P.previa = null;
+  ESC_P.id = id; ESC_P.mat = null; ESC_P.previa = null; ESC_P.matModo = null; ESC_P.busca = '';
+  escCarregarBanco();
   if (!ESC.pgt && !ESC.pgtCarregando) {
     ESC.pgtCarregando = true;
     escCarregarPgt().then((d) => { ESC.pgt = d; }).catch(() => { /* materiais ficam sem a lista */ }).finally(() => { ESC.pgtCarregando = false; escPainelAtualizar(); });
@@ -543,9 +673,7 @@ function escPainelAtualizar() {
   document.body.classList.add('escm-aberto');
   // materiais do PGT ligados ao cartão (ou à etapa dele)
   const P = ESC.pgt && ESC.pgt.P;
-  const mats = P ? (P.materiais || []).filter((m) => m.alvo_id && (m.alvo_id === c.origem_id || (!etapa && m.alvo_id === et.origem_id))) : [];
-  const comLink = mats.filter((m) => m.link);
-  const sel = comLink.find((m) => m.id === ESC_P.mat);
+  const sel = (P || ESC.banco ? escMateriaisDoCartao(c, P) : []).find((m) => m.link && m.id === ESC_P.mat);
   // situação
   const B = escBase(E);
   const b = B.itens.find((x) => x.c.id === c.id);
@@ -577,12 +705,31 @@ function escPainelAtualizar() {
   const dec = c.decisao && c.decisao.length ? bloco('Decisão', `<span class="pg-seletor" role="radiogroup" aria-label="Resultado">
       ${c.decisao.map((r, i) => `<button type="button" role="radio" data-res="${escHtml(r.id)}" aria-checked="${c.decisao_resultado === r.id}" title="${i === 0 ? 'caminho esperado' : (r.libera || []).length ? `libera ${r.libera.map((x) => escCartao(x)?.codigo || '').join(', ')}` : ''}">${escHtml(r.nome)}</button>`).join('')}</span>
       <p class="pg-apoio escm-dica">O resultado que libera uma rodada a põe no escopo como extra previsto. Clicar de novo no resultado escolhido desfaz.</p>`) : '';
-  const listaMats = !P && ESC.pgtCarregando ? '<p class="pg-apoio">Lendo os materiais do PGT…</p>'
-    : mats.length ? `<div class="escm-mats">${mats.map((m) => `<div class="escm-mat${m.id === ESC_P.mat ? ' is-on' : ''}">
-        <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml((m.modelo_id && (P.modelos || []).find((x) => x.id === m.modelo_id)?.nome) || m.nome)}</b><small>${escHtml(m.tipo || 'material')}${m.modelo_id ? ' · padrão do PGT' : ''}${m.alvo_id === et.origem_id && !etapa ? ' · da etapa' : ''}</small></span>
+  const ORIGEM = { pgt: 'do PGT', etapa: 'do PGT · da etapa', projeto: 'acrescentado neste projeto' };
+  const linhaMat = (m) => `<div class="escm-mat${m.id === ESC_P.mat ? ' is-on' : ''}">
+        <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml(m.nome)}</b><small>${escHtml(escTipoMat(m.tipo))}${m.modelo_id ? ' · padrão' : ''} · ${ORIGEM[m.origem]}</small></span>
         ${m.link ? `<button type="button" class="u-botao" data-ler="${m.id}">${m.id === ESC_P.mat ? 'Fechar' : 'Ler aqui'}</button><a class="pg-caixa" href="${escHtml(m.link)}" target="_blank" rel="noopener" aria-label="Abrir em nova aba" title="Abrir em nova aba">${ESC_IC.fora}</a>`
-          : m.modelo_id ? `<a class="u-botao" href="pgt.html#materiais/${m.modelo_id}" target="_blank" rel="noopener">Ver o padrão</a>` : '<span class="pg-apoio">sem link</span>'}</div>`).join('')}</div>`
-      : `<p class="pg-apoio">${c.origem_id ? 'Este cartão não tem materiais no PGT.' : 'Cartão acrescentado: sem materiais do PGT.'}</p>`;
+          : m.modelo_id ? `<a class="u-botao" href="pgt.html#materiais/${m.modelo_id}" target="_blank" rel="noopener">Ver o padrão</a>` : '<span class="pg-apoio">sem link</span>'}
+        <button type="button" class="pg-caixa" data-tirar="${m.id}" aria-label="Tirar do cartão" title="Tirar do cartão (continua no banco do PGT)">${ESC_IC.fechar}</button></div>`;
+  const alvoNovo = c.origem_id ? (c.codigo || c.sigla || 'este cartão') : et.sigla ? `etapa ${et.sigla}` : '';
+  const podeNovo = !!(/^(pen|pev|pet)_/.test(c.origem_id || '') || /^pet_/.test(et.origem_id || ''));
+  const escolher = ESC_P.matModo === 'banco' ? `<div class="escm-matbox">
+      <label class="u-campo"><span>Buscar no banco de materiais do PGT</span><input type="search" id="m-busca" value="${escHtml(ESC_P.busca)}" placeholder="nome ou código (PP-03, CE…)" autocomplete="off"></label>
+      <div class="escm-cands" id="m-cands"></div>
+      <div class="escm-matbox__pe"><button type="button" class="u-botao" data-mm="">Fechar a busca</button></div></div>`
+    : ESC_P.matModo === 'novo' ? `<div class="escm-matbox">
+      <div class="u-campo"><span>Tipo</span><span class="pg-seletor" role="radiogroup" aria-label="Tipo" id="m-tipo">${ESC_TIPOS_MAT.map(([v, r], i) => `<button type="button" role="radio" data-tipo="${v}" aria-checked="${i === 0}">${r}</button>`).join('')}</span></div>
+      <div class="escm-grade"><label class="u-campo"><span>Nome</span><input type="text" id="m-nnome" maxlength="160" placeholder="ex.: Prancha de similares"></label>
+        <label class="u-campo"><span>Link</span><input type="url" id="m-nlink" placeholder="https://…"><small>Drive, Docs, Biblioteca…</small></label></div>
+      <p class="pg-apoio escm-dica">Entra na hora no banco de materiais do PGT, ligado a ${escHtml(alvoNovo)}, e fica disponível para outros projetos. Nos escopos novos, vem sozinho depois de publicar o PGT. Para um formulário feito no Universo, crie um padrão em <a href="pgt.html#materiais" target="_blank" rel="noopener">PGT › Materiais</a> e acrescente pelo banco.</p>
+      <p class="escm-erro" id="m-nerro" role="alert"></p>
+      <div class="escm-matbox__pe"><button type="button" class="u-botao forte" id="m-nsalvar">Criar e acrescentar</button><button type="button" class="u-botao" data-mm="">Cancelar</button></div></div>` : '';
+  const matsCartao = P || ESC.banco ? escMateriaisDoCartao(c, P) : [];
+  const listaMats = (!P && ESC.pgtCarregando) || (!ESC.banco && ESC.bancoCarregando) ? '<p class="pg-apoio">Lendo os materiais do PGT…</p>'
+    : `${matsCartao.length ? `<div class="escm-mats">${matsCartao.map(linhaMat).join('')}</div>`
+      : `<p class="pg-apoio">${c.origem_id ? 'Nenhum material neste cartão.' : 'Cartão acrescentado: nenhum material ainda.'}</p>`}
+      ${escolher || `<div class="escm-matcmd"><button type="button" class="u-botao" data-mm="banco">${ESC_IC.mais}<span>Do banco do PGT</span></button>
+        <button type="button" class="u-botao" data-mm="novo" ${podeNovo ? '' : 'disabled title="Este cartão não tem entrega, evento ou etapa no PGT para ligar o material"'}>${ESC_IC.mais}<span>Novo material</span></button></div>`}`;
   const alts = E.alteracoes.filter((a) => a.cartao_id === c.id && !(['duracao', 'mover'].includes(a.tipo) && !a.dias));
   const listaAlts = alts.length ? `<div class="escm-alts">${alts.map((a) => {
       const [nat, cls] = ESC_NATUREZA[a.natureza] || [a.natureza, ''];
@@ -634,6 +781,45 @@ function escPainelAtualizar() {
   if (dz) dz.onclick = () => { ESC_P.previa = null; escPainelAtualizar(); };
   raiz.querySelectorAll('[data-res]').forEach((b2) => b2.onclick = () => escAcao({ acao: 'decisao', cartao_id: c.id, resultado: b2.dataset.res === c.decisao_resultado ? null : b2.dataset.res }));
   raiz.querySelectorAll('[data-ler]').forEach((b2) => b2.onclick = () => { ESC_P.mat = ESC_P.mat === b2.dataset.ler ? null : b2.dataset.ler; escPainelAtualizar(); });
+  // materiais (0028): tirar, acrescentar do banco, criar novo
+  const matsOtimista = (fn) => (E2) => { const x = E2.cartoes.find((y) => y.id === c.id); if (x) { x.materiais = { mais: [...(x.materiais?.mais || [])], menos: [...(x.materiais?.menos || [])] }; fn(x.materiais); } };
+  raiz.querySelectorAll('[data-tirar]').forEach((b2) => b2.onclick = () => {
+    const id = b2.dataset.tirar;
+    if (ESC_P.mat === id) ESC_P.mat = null;
+    escAcao({ acao: 'materiais', cartao_id: c.id, tirar: id }, matsOtimista((m) => { if (m.mais.includes(id)) m.mais = m.mais.filter((x) => x !== id); else m.menos.push(id); }));
+  });
+  raiz.querySelectorAll('[data-mm]').forEach((b2) => b2.onclick = () => { ESC_P.matModo = b2.dataset.mm || null; ESC_P.busca = ''; escPainelAtualizar();
+    const f = raiz.querySelector(ESC_P.matModo === 'banco' ? '#m-busca' : '#m-nnome'); if (f) f.focus(); });
+  const caixaCands = $('#m-cands');
+  if (caixaCands) {
+    const todos = escCandidatosDoBanco(c, P, escMateriaisDoCartao(c, P));
+    const desenhar = () => {
+      const q = escNormal(ESC_P.busca);
+      const vis = todos.filter((m) => !q || escNormal(`${m.nome} ${m.onde} ${escTipoMat(m.tipo)}`).includes(q)).slice(0, 40);
+      caixaCands.innerHTML = !ESC.banco ? '<p class="pg-apoio">Lendo o banco…</p>' : vis.length ? vis.map((m) => `<button type="button" class="escm-cand" data-cand="${m.id}">
+          <span class="escm-mat__ic">${ESC_IC.doc}</span><span class="escm-mat__txt"><b>${escHtml(m.nome)}</b><small>${escHtml(escTipoMat(m.tipo))}${m.onde ? ` · ${escHtml(m.onde)}` : ''}${m.peso === 0 ? ' · desta etapa' : ''}</small></span><span class="pg-caixa">${ESC_IC.mais}</span></button>`).join('')
+        : '<p class="pg-apoio">Nada no banco com esse nome.</p>';
+      caixaCands.querySelectorAll('[data-cand]').forEach((b3) => b3.onclick = () => {
+        const id = b3.dataset.cand; ESC_P.matModo = null;
+        escAcao({ acao: 'materiais', cartao_id: c.id, acrescentar: id }, matsOtimista((m) => { if (m.menos.includes(id)) m.menos = m.menos.filter((x) => x !== id); else m.mais.push(id); }));
+      });
+    };
+    desenhar();
+    $('#m-busca').oninput = (ev) => { ESC_P.busca = ev.target.value; desenhar(); };
+  }
+  const tipos = $('#m-tipo');
+  if (tipos) tipos.querySelectorAll('[data-tipo]').forEach((b3) => b3.onclick = () => tipos.querySelectorAll('[data-tipo]').forEach((x) => x.setAttribute('aria-checked', String(x === b3))));
+  const ns = $('#m-nsalvar');
+  if (ns) ns.onclick = async () => {
+    const nome = $('#m-nnome').value.trim(), link = $('#m-nlink').value.trim();
+    const tipo = tipos.querySelector('[aria-checked="true"]').dataset.tipo;
+    const erro = (t, f) => { $('#m-nerro').textContent = t; $(f).focus(); };
+    if (!nome) return erro('Diga o nome do material.', '#m-nnome');
+    if (!/^https:\/\/\S+$/i.test(link)) return erro('O link precisa começar com https://', '#m-nlink');
+    ns.disabled = true; ESC_P.matModo = null;
+    await escAcao({ acao: 'material_novo', cartao_id: c.id, tipo, nome, link });
+    escCarregarBanco(true);
+  };
   const go = $('#m-obs');
   go.onchange = () => escAcao({ acao: 'observacoes', cartao_id: c.id, observacoes: go.value });
   raiz.querySelectorAll('[data-motivo]').forEach((b2) => b2.onclick = async () => {
@@ -694,7 +880,7 @@ function escAbrirAcrescentar(depoisDe) {
 
 // ---------------------------------------------------------------- Alterações de escopo
 const ESC_NATUREZA = { aditivo: ['potencial aditivo', 'atencao'], prazo: ['ajuste de prazo', ''], extra: ['extra previsto', 'ok'] };
-const ESC_TIPO = { duracao: 'Duração', mover: 'Movido', suprimir: 'Suprimido', restaurar: 'Restaurado', acrescentar: 'Acrescentado',
+const ESC_TIPO = { andamento: 'Andamento', duracao: 'Duração', mover: 'Movido', suprimir: 'Suprimido', restaurar: 'Restaurado', acrescentar: 'Acrescentado',
   decisao: 'Decisão', suspender: 'Suspensão', retomar: 'Retomada', inicio: 'Início' };
 let ESC_FILTRO = 'todas';
 function escTextoAlteracao(a) {
