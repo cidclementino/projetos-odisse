@@ -434,6 +434,7 @@ function lnDesenharBarraSelecao() {
       <button type="button" class="btn btn--small" data-sel-pert="" title="Não se aplica nos serviços escolhidos">—</button></span>
     <span class="ln-sel__grupo"><select id="ln-sel-prazo" aria-label="Prazo"><option value="">prazo…</option>${PRAZOS.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}<option value="0">sem prazo</option></select></span>
     <span class="ln-sel__grupo">${ents.length > 1 ? '<button type="button" class="btn-link" data-sel="juntas">correr juntas</button><button type="button" class="btn-link" data-sel="separar">separar</button>' : ''}
+      ${ids.length === 2 ? '<button type="button" class="btn-link" data-sel="inverter" title="Os dois trocam de lugar na sequência da etapa (e de código)">inverter a ordem</button>' : ''}
       <button type="button" class="btn-link" data-sel="travar">travar</button><button type="button" class="btn-link" data-sel="destravar">destravar</button>
       <button type="button" class="btn-link" data-sel="arquivar">arquivar</button>
       <button type="button" class="btn-link" data-sel="todos">selecionar todos da linha</button>
@@ -484,6 +485,25 @@ async function lnSelAplicar(acao, valor) {
     }
     return fim(n ? `${n} entrega(s) ${acao === 'juntas' ? 'passam a correr junto com a anterior' : 'separadas'}. Falta salvar.${aviso2}`
       : acao === 'juntas' ? 'Só correm juntas entregas seguidas na mesma etapa, todas selecionadas.' : 'Nada a separar.');
+  }
+  if (acao === 'inverter') {
+    // dois cartões da mesma etapa trocam de lugar na sequência; o código acompanha a posição (Cid, 21/11)
+    const [a, b] = ids.map((id) => entDe(id) || evtDe(id));
+    if (ids.length !== 2 || !a || !b) return aviso('Selecione exatamente dois cartões.');
+    if (a.encerramento || b.encerramento) return aviso('O Encerramento não muda de lugar.');
+    if (a.etapa_id !== b.etapa_id) return aviso('Só se inverte a ordem de cartões da mesma etapa.');
+    if (travado(a.id) || travado(b.id)) return aviso('Um dos cartões está travado: destrave para inverter.');
+    const seq = D.seq[a.etapa_id].map((y) => y.id);
+    const i = seq.indexOf(a.id), j = seq.indexOf(b.id);
+    [seq[i], seq[j]] = [seq[j], seq[i]];
+    // entre duas entregas, o "correr junto com a anterior" é do lugar, não da entrega
+    if (ehEnt(a) && ehEnt(b) && (a.junto_anterior || 0) !== (b.junto_anterior || 0)) {
+      mudar({ tipo: 'ed', id: a.id, campos: { junto_anterior: b.junto_anterior || 0 } });
+      mudar({ tipo: 'ed', id: b.id, campos: { junto_anterior: a.junto_anterior || 0 } });
+    }
+    const [ca, cb] = [codigoDe(a.id), codigoDe(b.id)];
+    mudar({ tipo: 'sq', grupo: a.etapa_id, ids: seq });
+    return fim(`${ca} e ${cb} trocaram de lugar. Falta salvar.`);
   }
   if (acao === 'travar' || acao === 'destravar') {
     ids.forEach((id) => mudar({ tipo: 'ed', id, campos: { travado: acao === 'travar' ? 1 : 0 } }));

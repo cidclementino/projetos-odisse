@@ -212,3 +212,6 @@ body.esc-tela .esc-selbar { bottom: 30px; }
 .escm-erro { margin: 0; font-size: 12px; color: #B3261E; min-height: 0; }
 .escm-erro:empty { display: none; }
 .escm-matbox .pg-seletor { align-self: flex-start; flex-wrap: wrap; }
+.esc-selbar [data-troca] { display: inline-flex; align-items: center; gap: 6px; }
+.esc-selbar [data-troca] svg { width: 13px; height: 13px; }
+.esc-selbar .u-botao[disabled] { opacity: .45; cursor: not-allowed; }

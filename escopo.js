@@ -23,6 +23,7 @@ const ESC_IC = {
   cliente: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.2" r="2.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M3 13.5c.6-2.6 2.6-4 5-4s4.4 1.4 5 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
   terceiros: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="5.2" cy="5.6" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="10.8" cy="5.6" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M1.6 13c.4-2 1.8-3.2 3.6-3.2S8.4 11 8.8 13M7.2 13c.4-2 1.8-3.2 3.6-3.2s3.2 1.2 3.6 3.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
   doc: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2H4.5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V5Z M9.5 2v3h3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>',
+  troca: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M2.5 4.5h8.5M8.5 2l2.5 2.5L8.5 7M11.5 9.5H3M5.5 7 3 9.5 5.5 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   fora: '<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M8 2.5h3.5V6M11.5 2.5 6.5 7.5M10 8.5v3H2.5V4h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 const ESC_DIA = 86400000;
@@ -439,12 +440,29 @@ function escPlanejarAndamento(filhos, ids, modo) {
   const ordens = lista.map((c) => c.ordem);
   nova.forEach((c, i) => por(c, 'ordem', ordens[i]));
   for (const c of resto) { por(c, 'junto_anterior', 1); por(c, 'folga', 0); }
+  escRenumerar(lista, nova, por);
+  return mud;
+}
+function escRenumerar(lista, nova, por) {
   for (const rx of [ESC_RX_EVT, ESC_RX_ENT]) {
     const doGrupo = (c) => c.codigo && rx.test(c.codigo) && (rx === ESC_RX_EVT || !ESC_RX_EVT.test(c.codigo));
     const nums = lista.filter(doGrupo).map((c) => c.codigo).sort((a, b) => Number(a.match(rx)[2]) - Number(b.match(rx)[2]));
     nova.filter(doGrupo).forEach((c, i) => por(c, 'codigo', nums[i]));
   }
-  return mud;
+}
+// inverter a ordem de dois cartões (o mesmo de planejarTroca no Universo): trocam de lugar; o lugar (junto com o
+// anterior, hiato, paralelo) fica onde estava; os códigos acompanham
+function escAplicarTroca(E, a, b) {
+  const A = E.cartoes.find((c) => c.id === a), B = E.cartoes.find((c) => c.id === b);
+  if (!A || !B) return;
+  const lista = E.cartoes.filter((c) => c.etapa_id === A.etapa_id).sort((x, y) => x.ordem - y.ordem);
+  const nova = lista.map((c) => (c === A ? B : c === B ? A : c));
+  const mud = new Map();
+  const por = (c, k, v) => { if (c[k] !== v) { const m = mud.get(c.id) || {}; m[k] = v; mud.set(c.id, m); } };
+  for (const k of ['ordem', 'junto_anterior', 'folga']) { const va = A[k], vb = B[k]; por(A, k, vb); por(B, k, va); }
+  escRenumerar(lista, nova, por);
+  for (const [id, campos] of mud) Object.assign(E.cartoes.find((c) => c.id === id), campos);
+  E.cartoes.sort((x, y) => x.ordem - y.ordem);
 }
 function escAplicarAndamento(E, ids, modo) {
   const sel = E.cartoes.filter((c) => ids.includes(c.id));
@@ -496,12 +514,26 @@ function escDesenharSelecao() {
     return `<button type="button" role="radio" aria-checked="${A.modo === modo}" data-and="${modo}" ${pode ? '' : 'disabled'} title="${escHtml(tit)}">${rot}</button>`;
   };
   const efJ = !A.motivo && A.modo !== 'juntos' ? A.efeito('juntos') : null;
+  const troca = !A.motivo && A.ids.length === 2 ? (() => {
+    const r = escSimular(ESC.E, (C) => escAplicarTroca(C, A.ids[0], A.ids[1])); const M0 = escCalendario(ESC.E);
+    return { ...r, dias: r.fimDepois > r.fimAntes ? escUteis(r.fimAntes, r.fimDepois, M0.util) : -escUteis(r.fimDepois, r.fimAntes, M0.util) };
+  })() : null;
+  const titTroca = A.motivo ? A.motivo : !troca ? 'Selecione exatamente dois cartões da mesma etapa'
+    : `Os dois trocam de lugar e de código${troca.fimAntes === troca.fimDepois ? `; o fim previsto continua em ${escDMA(troca.fimAntes)}` : `; o fim previsto passa de ${escDMA(troca.fimAntes)} para ${escDMA(troca.fimDepois)}`}`;
   const dica = A.motivo ? A.motivo : efJ && efJ.dias ? `juntos: fim em ${escDM(efJ.fimDepois)} (${efJ.dias > 0 ? '+' : '−'}${Math.abs(efJ.dias)} d)` : '';
   bar.innerHTML = `<strong>${plural(ids.length, 'cartão selecionado', 'cartões selecionados')}</strong>
     <span class="esc-selbar__g">Duração de cada um <button type="button" class="u-botao" data-sb="dur|-1">− 1 dia</button><button type="button" class="u-botao" data-sb="dur|1">+ 1 dia</button></span>
-    <span class="esc-selbar__g">Andamento <span class="pg-seletor" role="radiogroup" aria-label="Andamento">${opcao('juntos', 'Ao mesmo tempo')}${opcao('sequencia', 'Em sequência')}</span>${dica ? `<small class="esc-selbar__dica">${escHtml(dica)}</small>` : ''}</span>
+    <span class="esc-selbar__g">Andamento <span class="pg-seletor" role="radiogroup" aria-label="Andamento">${opcao('juntos', 'Ao mesmo tempo')}${opcao('sequencia', 'Em sequência')}</span>${dica ? `<small class="esc-selbar__dica">${escHtml(dica)}</small>` : ''}
+      <button type="button" class="u-botao" data-troca ${troca ? '' : 'disabled'} title="${escHtml(titTroca)}">${ESC_IC.troca}<span>Inverter a ordem</span></button></span>
     <span class="esc-selbar__g">O bloco <button type="button" class="u-botao" data-sb="mov|-1">Adiantar 1 dia</button><button type="button" class="u-botao" data-sb="mov|1">Adiar 1 dia</button></span>
     <span class="esc-selbar__g"><button type="button" class="u-botao" data-sb="sup|0">Suprimir</button><button type="button" class="u-botao" data-sb="limpar|0">Limpar (Esc)</button></span>`;
+  const bt = bar.querySelector('[data-troca]');
+  if (bt) bt.onclick = () => {
+    if (!troca) return;
+    const [a, b] = A.ids;
+    escAcao({ acao: 'trocar', cartoes: [a, b], dias: troca.dias }, (E) => escAplicarTroca(E, a, b));
+    escDesenharSelecao(); reabrirDepois(escDesenharSelecao);
+  };
   bar.querySelectorAll('[data-and]').forEach((b) => b.onclick = () => {
     const modo = b.dataset.and;
     if (A.motivo || A.modo === modo) return;
