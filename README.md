@@ -1,3 +1,17 @@
+# Projetos — servidor e endereços antigos
+
+**As telas do Projetos moram no Universo desde 24/11/2026: https://universo.odisse.com.br/projetos/**
+(repositório `universo-odisse`, pasta `projetos/`; login único com a senha da equipe; menu lateral da `base/v2`).
+
+Este repositório ficou com:
+
+- `worker/` — a API do Projetos (Cloudflare Worker `projetos-odisse`), publicada a cada mudança em `worker/`.
+- `projetos.odisse.com.br` (GitHub Pages + `CNAME`) — cada página antiga redireciona para o mesmo lugar em
+  `universo.odisse.com.br/projetos/`; `inicio/`, `residencial/`, `interiores/` e os formulários seguem levando
+  às landing pages em servicos.odisse.com.br (endereços de anúncios antigos).
+
+---
+
 # projetos-odisse
 
 **Projetos** do Odisse, em https://projetos.odisse.com.br: projetos, etapas, prazos e apontamento de horas.

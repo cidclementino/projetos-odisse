@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Equipe · Projetos — Odisse</title>
-<meta name="robots" content="noindex, nofollow">
-<!-- A equipe virou cadastro comum do Universo (migração 0011): esta página só leva para lá. -->
-<meta http-equiv="refresh" content="0; url=https://universo.odisse.com.br/#/equipe">
-<link rel="icon" href="https://marca.odisse.com.br/favicon/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="https://marca.odisse.com.br/v1/marca.css">
-<link rel="stylesheet" href="https://universo.odisse.com.br/base/v1/universo.css">
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Projetos — agora no Universo</title>
+<script>
+  // Desde 24/11/2026 o Projetos mora no Universo: universo.odisse.com.br/projetos/ (mesma senha da equipe).
+  (function () {
+    var p = location.pathname.split('/').pop() || 'index.html';
+    var destino = p === 'login.html' ? '/' : p === 'equipe.html' ? '/' : '/projetos/' + (p === '404.html' ? '' : p);
+    if (p === 'equipe.html') { location.replace('https://universo.odisse.com.br/#/equipe'); return; }
+    location.replace('https://universo.odisse.com.br' + destino + location.search + location.hash);
+  })();
+</script>
 </head>
-<body class="u-pagina" style="padding:48px">
-  <p>A equipe agora é editada no Universo: <a href="https://universo.odisse.com.br/#/equipe">universo.odisse.com.br/#/equipe</a>.</p>
-</body>
+<body><p>O Projetos agora fica no <a href="https://universo.odisse.com.br/projetos/">Universo</a>.</p></body>
 </html>

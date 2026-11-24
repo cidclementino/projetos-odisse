@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Projetos — agora no Universo</title>
+<script>
+  // Desde 24/11/2026 o Projetos mora no Universo: universo.odisse.com.br/projetos/ (mesma senha da equipe).
+  (function () {
+    var p = location.pathname.split('/').pop() || 'index.html';
+    var destino = p === 'login.html' ? '/' : p === 'equipe.html' ? '/' : '/projetos/' + (p === '404.html' ? '' : p);
+    if (p === 'equipe.html') { location.replace('https://universo.odisse.com.br/#/equipe'); return; }
+    location.replace('https://universo.odisse.com.br' + destino + location.search + location.hash);
+  })();
+</script>
+</head>
+<body><p>O Projetos agora fica no <a href="https://universo.odisse.com.br/projetos/">Universo</a>.</p></body>
+</html>
